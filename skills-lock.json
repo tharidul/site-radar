@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "anti-slop-frontend-design": {
+      "source": "tharidul/anti-slop-frontend-design",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "a2f47b0c689a74127c775be6601470c141be6b0095bcbb54a200efa85935bfa2"
+    }
+  }
+}
