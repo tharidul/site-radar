@@ -41,14 +41,14 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
       </div>
 
       {/* Metadata Card */}
-      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2 text-xs">
+      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-2 text-xs">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
               <Globe className="w-3.5 h-3.5 text-orange-500" />
               <span>Target URL:</span>
             </span>
-            <div className="font-mono text-zinc-800 dark:text-zinc-200 truncate mt-0.5">
+            <div className="font-medium text-zinc-800 dark:text-zinc-200 truncate mt-0.5">
               {inspection.target?.url}
             </div>
           </div>
@@ -80,7 +80,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
       </div>
 
       {/* Export Action Card */}
-      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-3">
+      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-3">
         <div>
           <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
             Download Audit Artifacts
@@ -94,7 +94,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
           <button
             type="button"
             onClick={handleExportJson}
-            className="flex items-center justify-center gap-2 rounded-xl bg-[#e88438] hover:bg-orange-600 text-white py-2.5 px-3 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-lg bg-[#e88438] hover:bg-orange-600 text-white py-2.5 px-3 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
           >
             {downloadedType === 'json' ? (
               <Check className="w-4 h-4 text-white" />
@@ -107,7 +107,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
           <button
             type="button"
             onClick={handleExportHtml}
-            className="flex items-center justify-center gap-2 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-3 text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center justify-center gap-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-3 text-xs font-semibold transition-colors cursor-pointer"
           >
             {downloadedType === 'html' ? (
               <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />

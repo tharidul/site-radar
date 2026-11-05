@@ -49,9 +49,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'critical' ? 'all' : 'critical')}
-          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
             activeSeverityFilter === 'critical'
-              ? 'border-rose-600 bg-rose-950 ring-1 ring-rose-500'
+              ? 'border-rose-600 bg-rose-950/80 text-rose-300'
               : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Critical findings"
@@ -63,9 +63,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'high' ? 'all' : 'high')}
-          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
             activeSeverityFilter === 'high'
-              ? 'border-orange-600 bg-orange-950 ring-1 ring-orange-500'
+              ? 'border-orange-600 bg-orange-950/80 text-orange-300'
               : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by High findings"
@@ -77,23 +77,23 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'medium' ? 'all' : 'medium')}
-          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
             activeSeverityFilter === 'medium'
-              ? 'border-amber-600 bg-amber-950 ring-1 ring-amber-500'
+              ? 'border-orange-500 bg-orange-950/60 text-orange-300'
               : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Medium findings"
         >
-          <div className="text-lg font-bold tabular-nums text-amber-400">{counts.medium}</div>
+          <div className="text-lg font-bold tabular-nums text-orange-400">{counts.medium}</div>
           <div className="text-xs font-medium text-zinc-400">Medium</div>
         </button>
 
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'low' ? 'all' : 'low')}
-          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
             activeSeverityFilter === 'low'
-              ? 'border-zinc-500 bg-zinc-800 ring-1 ring-zinc-400'
+              ? 'border-zinc-600 bg-zinc-800 text-zinc-200'
               : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Low findings"
@@ -105,9 +105,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'info' ? 'all' : 'info')}
-          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
             activeSeverityFilter === 'info'
-              ? 'border-zinc-600 bg-zinc-800 ring-1 ring-zinc-500'
+              ? 'border-zinc-600 bg-zinc-800 text-zinc-200'
               : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Info findings"

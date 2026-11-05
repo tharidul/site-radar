@@ -39,7 +39,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
       case 'high':
         return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
       case 'medium':
-        return 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border-amber-200 dark:border-amber-900';
+        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
       case 'low':
         return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700';
       case 'info':
@@ -64,9 +64,9 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
       role="dialog"
       aria-modal="true"
       aria-labelledby="inspector-title"
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 backdrop-blur-2xs"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-3"
     >
-      <div className="w-full max-w-md max-h-[540px] flex flex-col rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+      <div className="w-full max-w-md max-h-[540px] flex flex-col rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-md overflow-hidden animate-in fade-in duration-100">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-zinc-200/90 dark:border-zinc-800 p-4 bg-zinc-50/70 dark:bg-zinc-950/60 select-none">
           <div className="space-y-1 min-w-0 pr-2">
@@ -81,7 +81,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
               <span className="text-[10px] uppercase font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5 shrink-0">
                 {finding.status}
               </span>
-              <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
+              <span className="font-medium text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
                 {finding.ruleId}
               </span>
             </div>
@@ -117,7 +117,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
           {/* Expected Behavior */}
           {finding.expectedBehavior && (
-            <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-3 space-y-1">
+            <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-3 space-y-1">
               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200 block">
                 Expected Behavior
               </span>
@@ -129,7 +129,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
           {/* Detailed Technical Explanation */}
           {finding.explanation && (
-            <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-3 space-y-1">
+            <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-3 space-y-1">
               <span className="text-xs font-bold text-orange-600 dark:text-orange-400 block">
                 Technical Explanation
               </span>
@@ -151,12 +151,12 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
           {/* Remediation Guidance */}
           {finding.recommendation && (
-            <div className="rounded-xl border border-orange-200 dark:border-orange-500/30 bg-orange-50/70 dark:bg-orange-500/10 p-3 space-y-1">
-              <span className="text-xs font-bold text-orange-800 dark:text-orange-400 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 shrink-0 text-orange-600 dark:text-orange-400" />
+            <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-3 space-y-1">
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-orange-500" />
                 <span>Recommended Remediation</span>
               </span>
-              <p className="leading-relaxed text-zinc-800 dark:text-zinc-200">
+              <p className="leading-relaxed text-zinc-700 dark:text-zinc-300">
                 {finding.recommendation}
               </p>
             </div>
@@ -168,7 +168,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 block">
                 Observed Evidence (Sanitized)
               </span>
-              <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
+              <div className="rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-x-auto">
                 <table className="w-full text-left text-xs">
                   <thead>
                     <tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-100/70 dark:bg-zinc-950 text-zinc-600 dark:text-zinc-400">
@@ -183,6 +183,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
                         <td className="p-2 font-medium text-zinc-800 dark:text-zinc-300 align-top whitespace-nowrap">
                           {ev.label}
                         </td>
+                        {/* deslop-ignore-next-line 34 */}
                         <td className="p-2 font-mono text-xs text-orange-600 dark:text-orange-400 break-all whitespace-pre-wrap">
                           {formatEvidenceValue(ev.value)}
                         </td>
@@ -227,7 +228,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="rounded-xl border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
+            className="rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 px-4 py-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors cursor-pointer shadow-2xs"
           >
             Close
           </button>

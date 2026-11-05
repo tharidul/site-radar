@@ -286,9 +286,10 @@ export function App() {
 
         {/* Cancelled Banner */}
         {scanStatus === 'cancelled' && (
-          <div className="border-b border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
-            <span className="text-orange-700 dark:text-orange-400 font-semibold">
-              Inspection was cancelled by user.
+          <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
+            <span className="text-zinc-900 dark:text-zinc-100 font-medium">
+              <span className="text-orange-500 font-bold mr-1.5">•</span>
+              Inspection was cancelled.
             </span>
             <button
               type="button"
@@ -302,9 +303,12 @@ export function App() {
 
         {/* Failed Banner */}
         {scanStatus === 'failed' && (
-          <div className="border-b border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
-            <div className="font-bold text-rose-700 dark:text-rose-400">Inspection Failed</div>
-            <p className="text-xs text-zinc-600 dark:text-zinc-300">{errorMessage || 'An unknown error occurred.'}</p>
+          <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
+            <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <span className="text-rose-500 font-bold">•</span>
+              <span>Inspection Failed</span>
+            </div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-400">{errorMessage || 'An unknown error occurred.'}</p>
             <button
               type="button"
               onClick={() => setScanStatus('idle')}

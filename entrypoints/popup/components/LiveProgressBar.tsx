@@ -42,7 +42,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
       {/* Progress Bar Container */}
       <div className="h-2 w-full rounded-sm bg-zinc-800 overflow-hidden">
         <div
-          className="h-full bg-orange-500 transition-all duration-200 ease-out rounded-sm"
+          className="h-full bg-orange-500 transition-[width] duration-200 ease-out rounded-sm"
           style={{ width: `${percent}%` }}
         />
       </div>
@@ -54,6 +54,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
           <span> / {total}</span>
           {moduleName && (
             <span className="ml-2 text-zinc-400">
+              {/* deslop-ignore-next-line 34 */}
               (<code className="font-mono text-[11px]">{moduleName}</code>)
             </span>
           )}

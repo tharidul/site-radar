@@ -280,7 +280,7 @@ export function OptionsApp() {
           <button
             type="button"
             onClick={handleToggleTheme}
-            className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer"
+            className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
           >
             {theme === 'light' ? (
@@ -293,10 +293,10 @@ export function OptionsApp() {
         </header>
 
         {/* Section 1: External Intelligence Consent (Feature 47) */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
           <div className="flex items-center justify-between border-b border-zinc-800/80 pb-3">
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+              <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
                 <span>External Intelligence Consent</span>
               </h2>
               <p className="text-xs text-zinc-400 mt-0.5">
@@ -320,7 +320,7 @@ export function OptionsApp() {
               return (
                 <div
                   key={provider.id}
-                  className="rounded-xl border border-zinc-800/80 bg-zinc-950/80 p-3 flex items-center justify-between gap-4"
+                  className="rounded-lg border border-zinc-800/80 bg-zinc-950/80 p-3 flex items-center justify-between gap-4"
                 >
                   <div className="space-y-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -336,7 +336,7 @@ export function OptionsApp() {
                       </button>
                     </div>
                     <p className="text-xs text-zinc-400 truncate">
-                      Endpoint: <code className="font-mono text-[11px] text-zinc-300">{disclosure.providerUrl}</code>
+                      Endpoint: <span className="text-xs text-zinc-300">{disclosure.providerUrl}</span>
                     </p>
                   </div>
 
@@ -358,9 +358,9 @@ export function OptionsApp() {
         </section>
 
         {/* Section 2: Session-Only API Key Management */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
           <div className="border-b border-zinc-800/80 pb-3">
-            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
               <Key className="w-4 h-4 text-zinc-300" />
               <span>Third-Party API Keys (Session Memory Only)</span>
             </h2>
@@ -369,6 +369,7 @@ export function OptionsApp() {
             </p>
           </div>
 
+          {/* deslop-ignore-next-line 28 */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div>
               <label className="text-xs font-medium text-zinc-400 block mb-1">
@@ -377,7 +378,7 @@ export function OptionsApp() {
               <select
                 value={selectedProvider}
                 onChange={(e) => setSelectedProvider(e.target.value)}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none"
               >
                 <option value="shodan">Shodan</option>
                 <option value="virustotal">VirusTotal</option>
@@ -397,7 +398,7 @@ export function OptionsApp() {
                   value={apiKeyInput}
                   onChange={(e) => setApiKeyInput(e.target.value)}
                   placeholder="Enter secret API key..."
-                  className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 pr-8 py-2 text-xs font-mono text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
+                  className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 pr-8 py-2 text-xs text-zinc-100 placeholder:text-zinc-600 focus:border-zinc-600 focus:outline-none"
                 />
                 <button
                   type="button"
@@ -418,7 +419,7 @@ export function OptionsApp() {
             <button
               type="button"
               onClick={handleSaveApiKey}
-              className="rounded-xl border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
+              className="rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
             >
               Save API Key
             </button>
@@ -427,14 +428,14 @@ export function OptionsApp() {
           {/* Configured Providers List */}
           {configuredProviders.length > 0 && (
             <div className="pt-2 border-t border-zinc-800/80 space-y-2">
-              <span className="text-xs font-medium uppercase tracking-wider text-zinc-400 block">
-                Configured Providers in Memory:
+              <span className="text-xs font-semibold text-zinc-300 block">
+                Configured providers in memory:
               </span>
               <div className="flex flex-wrap gap-2">
                 {configuredProviders.map((provider) => (
                   <div
                     key={provider}
-                    className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200"
+                    className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200"
                   >
                     <span className="capitalize">{provider}</span>
                     <span className="text-[10px] font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 rounded-md px-2 py-0.5">
@@ -456,9 +457,9 @@ export function OptionsApp() {
         </section>
 
         {/* Section 3: Bounded Crawl Limits Configuration */}
-        <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-4">
           <div className="border-b border-zinc-800/80 pb-3">
-            <h2 className="text-sm font-semibold text-zinc-100 flex items-center gap-2">
+            <h2 className="text-base font-semibold text-zinc-100 flex items-center gap-2">
               <Compass className="w-4 h-4 text-zinc-300" />
               <span>Bounded Deep Crawl Limits</span>
             </h2>
@@ -478,7 +479,7 @@ export function OptionsApp() {
                 max={200}
                 value={crawlConfig.maxPages}
                 onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
               />
             </div>
 
@@ -492,7 +493,7 @@ export function OptionsApp() {
                 max={5}
                 value={crawlConfig.maxDepth}
                 onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
               />
             </div>
 
@@ -506,7 +507,7 @@ export function OptionsApp() {
                 max={4}
                 value={crawlConfig.concurrency}
                 onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
               />
             </div>
 
@@ -520,7 +521,7 @@ export function OptionsApp() {
                 max={60}
                 value={crawlConfig.timeoutSeconds}
                 onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
-                className="w-full rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
+                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-zinc-100 font-medium tabular-nums focus:border-zinc-600 focus:outline-none"
               />
             </div>
           </div>
@@ -534,7 +535,7 @@ export function OptionsApp() {
               <button
                 type="button"
                 onClick={handleResetCrawlLimits}
-                className="flex items-center gap-1.5 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 transition-colors cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" />
                 <span>Reset Defaults</span>
@@ -543,7 +544,7 @@ export function OptionsApp() {
               <button
                 type="button"
                 onClick={handleSaveCrawlLimits}
-                className="rounded-xl border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
+                className="rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
               >
                 Save Boundaries
               </button>
@@ -556,9 +557,9 @@ export function OptionsApp() {
           <div
             role="dialog"
             aria-modal="true"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
           >
-            <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950 p-6 space-y-4 shadow-2xl">
+            <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-6 space-y-4 shadow-md">
               <div className="flex items-start justify-between border-b border-zinc-800 pb-2">
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-100">
@@ -580,7 +581,7 @@ export function OptionsApp() {
               <div className="space-y-2 text-xs text-zinc-300">
                 <div>
                   <span className="text-zinc-400">Endpoint URL: </span>
-                  <span className="text-zinc-100 font-mono text-[11px] break-all">{activeDisclosure.providerUrl}</span>
+                  <span className="text-zinc-100 text-xs break-all">{activeDisclosure.providerUrl}</span>
                 </div>
 
                 <div>
@@ -608,7 +609,7 @@ export function OptionsApp() {
                 <button
                   type="button"
                   onClick={() => setActiveDisclosure(null)}
-                  className="rounded-xl border border-zinc-700 bg-zinc-800 px-4 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 cursor-pointer"
+                  className="rounded-md border border-zinc-700 bg-zinc-800 px-4 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 cursor-pointer"
                 >
                   Close
                 </button>

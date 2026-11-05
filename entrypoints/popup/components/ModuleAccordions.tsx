@@ -122,12 +122,12 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
           return (
             <div
               key={def.key}
-              className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-xs overflow-hidden transition-all"
+              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs overflow-hidden"
             >
               <button
                 type="button"
                 onClick={() => toggleAccordion(def.key)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer select-none"
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors duration-150 cursor-pointer select-none"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   {isExpanded ? (
@@ -169,14 +169,14 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   {sources.length > 0 && (
                     <div className="text-zinc-600 dark:text-zinc-400">
                       <span>Sources: </span>
-                      <span className="font-mono text-zinc-800 dark:text-zinc-200">{sources.join(', ')}</span>
+                      <span className="font-medium text-zinc-800 dark:text-zinc-200">{sources.join(', ')}</span>
                     </div>
                   )}
 
                   {limitations.length > 0 && (
-                    <div className="rounded-lg border border-orange-200 dark:border-orange-500/30 bg-orange-50/60 dark:bg-orange-500/10 p-2.5 space-y-1">
-                      <div className="font-semibold flex items-center gap-1.5 text-orange-800 dark:text-orange-400 text-xs">
-                        <AlertCircle className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                    <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-2.5 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
+                        <AlertCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
                         <span>Operational Limitations:</span>
                       </div>
                       <ul className="list-disc pl-4 space-y-0.5 text-zinc-700 dark:text-zinc-300 text-[11px]">
@@ -188,9 +188,9 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {errors.length > 0 && (
-                    <div className="rounded-lg border border-rose-200 dark:border-rose-500/30 bg-rose-50/60 dark:bg-rose-500/10 p-2.5 space-y-1">
-                      <div className="font-semibold flex items-center gap-1.5 text-rose-800 dark:text-rose-400 text-xs">
-                        <ShieldAlert className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                    <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-2.5 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
+                        <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         <span>Execution Errors:</span>
                       </div>
                       <ul className="list-disc pl-4 space-y-0.5 text-zinc-700 dark:text-zinc-300 text-[11px]">

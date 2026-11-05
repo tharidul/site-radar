@@ -51,7 +51,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors duration-150 cursor-pointer ${
                   isActive
                     ? 'bg-orange-500 text-white shadow-xs'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/50 dark:hover:bg-zinc-900'
@@ -63,7 +63,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                   <span
                     className={`ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-md tabular-nums ${
                       isActive
-                        ? 'bg-white/20 text-white'
+                        ? 'bg-orange-700 text-white'
                         : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
                     }`}
                   >

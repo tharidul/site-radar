@@ -2,7 +2,6 @@
  * @file entrypoints/popup/components/FindingsExplorer.tsx
  * @description Multi-facet findings explorer with text search, severity, category,
  * and status filtering (Feature 45).
- * Styled to seamlessly harmonize with the Website Intelligence redesign.
  */
 
 import React, { useState, useMemo } from 'react';
@@ -102,7 +101,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       case 'high':
         return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
       case 'medium':
-        return 'text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/80 border-amber-200 dark:border-amber-900';
+        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
       case 'low':
         return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700';
       case 'info':
@@ -130,7 +129,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
           placeholder="Filter by rule ID, title, or keyword..."
-          className="w-full rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-9 pr-8 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs"
+          className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-9 pr-8 py-2 text-xs sm:text-sm text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs"
         />
         {searchQuery && (
           <button
@@ -197,7 +196,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       {/* Findings List */}
       <div className="space-y-2 max-h-[310px] overflow-y-auto pr-1">
         {filteredFindings.length === 0 ? (
-          <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 text-center text-zinc-500 dark:text-zinc-400 text-xs shadow-xs">
+          <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-6 text-center text-zinc-500 dark:text-zinc-400 text-xs shadow-2xs">
             <p>No findings match the current search or filters.</p>
             {hasActiveFilters && (
               <button
@@ -214,7 +213,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             <div
               key={finding.id}
               onClick={() => onSelectFinding(finding)}
-              className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 hover:border-orange-400 dark:hover:border-zinc-700 transition-all cursor-pointer select-none shadow-xs"
+              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 hover:border-orange-400 dark:hover:border-zinc-700 transition-colors duration-150 cursor-pointer select-none shadow-2xs"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0 flex-wrap">
@@ -225,7 +224,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   >
                     {finding.severity}
                   </span>
-                  <span className="font-mono text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
+                  <span className="font-medium text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
                     {finding.ruleId}
                   </span>
                   {finding.category && (

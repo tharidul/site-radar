@@ -33,7 +33,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
 
       {/* Summary Stat Cards */}
       <div className="grid grid-cols-4 gap-2 text-center text-xs">
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+        <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
           <FileCode className="w-4 h-4 text-orange-500 mx-auto mb-1" />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {scripts.length}
@@ -41,7 +41,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Scripts</div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+        <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
           <FileSpreadsheet className="w-4 h-4 text-orange-500 mx-auto mb-1" />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {stylesheets.length}
@@ -49,7 +49,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Stylesheets</div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+        <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
           <ImageIcon className="w-4 h-4 text-orange-500 mx-auto mb-1" />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {images.length}
@@ -57,7 +57,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Images</div>
         </div>
 
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+        <div className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
           <Globe className="w-4 h-4 text-orange-500 mx-auto mb-1" />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {origins.length}
@@ -67,7 +67,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
       </div>
 
       {/* Origin Domains Card */}
-      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2">
+      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-2">
         <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
           <Database className="w-3.5 h-3.5 text-orange-500" />
           <span>Connected Third-Party Origins ({origins.length})</span>
@@ -81,7 +81,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {origins.map((origin: string, idx: number) => (
               <span
                 key={idx}
-                className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300"
+                className="text-xs font-medium px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300"
               >
                 {origin}
               </span>

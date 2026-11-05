@@ -77,9 +77,9 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             <div
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className={`rounded-2xl border p-3.5 transition-all cursor-pointer select-none shadow-xs ${
+              className={`rounded-lg border p-3.5 transition-colors duration-150 cursor-pointer select-none shadow-2xs ${
                 isSelected
-                  ? 'border-orange-500 ring-2 ring-orange-500/20 bg-white dark:bg-zinc-900'
+                  ? 'border-orange-500 bg-white dark:bg-zinc-900'
                   : 'border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700'
               }`}
             >
@@ -111,10 +111,10 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           type="button"
           onClick={onStartInspection}
           disabled={disabled}
-          className={`w-full flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-bold transition-all select-none shadow-xs ${
+          className={`w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-bold transition-colors duration-150 select-none shadow-2xs ${
             disabled
               ? 'border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 cursor-not-allowed'
-              : 'bg-[#e88438] hover:bg-orange-600 text-white cursor-pointer hover:shadow-md'
+              : 'bg-[#e88438] hover:bg-orange-600 text-white cursor-pointer hover:shadow-sm'
           }`}
         >
           <Play className="w-4 h-4 fill-current" />

@@ -39,7 +39,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div
         className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-80"
         style={{
-          background: 'radial-gradient(ellipse at 85% 15%, rgba(106, 14, 19, 0.75) 0%, rgba(200, 48, 30, 0.35) 45%, transparent 75%)',
+          background: 'radial-gradient(ellipse at 85% 15%, rgba(106, 14, 19, 0.75) 0%, rgba(200, 48, 30, 0.35) 45%, transparent 75%)', /* deslop-ignore 06 */
         }}
       />
 

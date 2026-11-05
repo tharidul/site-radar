@@ -175,7 +175,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* 1. Hero Overall Score Card */}
-      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
+      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
         {/* Left: Overall Circular Gauge + Text */}
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="relative w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center">
@@ -201,7 +201,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 strokeDasharray={gaugeCircumference}
                 strokeDashoffset={gaugeDashOffset}
                 strokeLinecap="round"
-                className="transition-all duration-700 ease-out"
+                className="transition-[stroke-dashoffset] duration-300 ease-out"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -231,7 +231,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
         {/* Right: Evaluated Rules Breakdown Mini-Card */}
-        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
+        <div className="rounded-lg border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
           <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-1.5">
             {totalRules} rules evaluated
           </div>
@@ -258,8 +258,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <AlertTriangle className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-              <span className="font-semibold text-amber-700 dark:text-amber-400 tabular-nums">
+              <AlertTriangle className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
+              <span className="font-semibold text-orange-700 dark:text-orange-400 tabular-nums">
                 {warningCount}
               </span>
               <span>Warnings</span>
@@ -297,11 +297,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:border-orange-400 dark:hover:border-orange-500 transition-all cursor-pointer group"
+              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors duration-150 cursor-pointer"
               title={`View ${cat.label} findings (${cat.score}/100)`}
             >
               <div className="flex flex-col items-center pt-1">
-                <Icon className="w-5 h-5 text-orange-500 group-hover:scale-110 transition-transform" />
+                <Icon className="w-5 h-5 text-orange-500" />
                 <span className="text-[11px] font-semibold text-zinc-800 dark:text-zinc-200 mt-1 line-clamp-1">
                   {cat.label}
                 </span>
@@ -319,19 +319,19 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* 3. Bottom Two Cards: Audit Scorecard & Severity Distribution */}
       <div className="grid grid-cols-2 gap-3">
         {/* Left: Audit Scorecard */}
-        <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Audit Scorecard
           </div>
 
-          <div className="space-y-1.5 text-xs">
+          <div className="space-y-1 text-xs">
             {/* Critical */}
             <div
               onClick={() => onNavigateToIssues({ severity: 'critical' })}
-              className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
+              className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-                <XCircle className="w-3.5 h-3.5 text-rose-600 fill-rose-100 dark:fill-rose-950/60" />
+                <XCircle className="w-3.5 h-3.5 text-rose-600" />
                 <span>Critical</span>
               </span>
               <span className={`font-bold tabular-nums ${severityCounts.critical > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500'}`}>
@@ -342,10 +342,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {/* High */}
             <div
               onClick={() => onNavigateToIssues({ severity: 'high' })}
-              className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
+              className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-                <AlertTriangle className="w-3.5 h-3.5 text-orange-500 fill-orange-100 dark:fill-orange-950/60" />
+                <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>High</span>
               </span>
               <span className={`font-bold tabular-nums ${severityCounts.high > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500'}`}>
@@ -356,13 +356,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {/* Medium */}
             <div
               onClick={() => onNavigateToIssues({ severity: 'medium' })}
-              className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
+              className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-                <AlertTriangle className="w-3.5 h-3.5 text-amber-500 fill-amber-100 dark:fill-amber-950/60" />
+                <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>Medium</span>
               </span>
-              <span className={`font-bold tabular-nums ${severityCounts.medium > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-500'}`}>
+              <span className={`font-bold tabular-nums ${severityCounts.medium > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500'}`}>
                 {severityCounts.medium}
               </span>
             </div>
@@ -370,10 +370,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {/* Low */}
             <div
               onClick={() => onNavigateToIssues({ severity: 'low' })}
-              className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
+              className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-                <Info className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" />
+                <Info className="w-3.5 h-3.5 text-zinc-500" />
                 <span>Low</span>
               </span>
               <span className="font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
@@ -384,7 +384,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {/* Info */}
             <div
               onClick={() => onNavigateToIssues({ severity: 'info' })}
-              className="flex items-center justify-between py-1 px-1.5 rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
+              className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
                 <Minus className="w-3.5 h-3.5 text-zinc-400" />
@@ -398,7 +398,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
         {/* Right: Severity Distribution Donut Chart & Legend */}
-        <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Severity Distribution
           </div>
@@ -432,7 +432,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                         strokeWidth="11"
                         strokeDasharray={seg.strokeDasharray}
                         strokeDashoffset={seg.strokeDashoffset}
-                        className="transition-all duration-500 ease-out"
+                        className="transition-[stroke-dashoffset] duration-300 ease-out"
                       />
                     );
                   })
@@ -492,7 +492,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           <button
             type="button"
             onClick={handleExportJson}
-            className="flex items-center gap-1.5 rounded-xl bg-[#e88438] hover:bg-orange-600 text-white px-4 py-2.5 text-xs font-semibold shadow-xs transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg bg-[#e88438] hover:bg-orange-600 text-white px-4 py-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
             title="Download sanitized, schema-compliant JSON report"
           >
             {downloadedType === 'json' ? (
@@ -507,7 +507,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           <button
             type="button"
             onClick={handleExportHtml}
-            className="flex items-center gap-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
             title="Download standalone HTML report with zero external CDN calls"
           >
             {downloadedType === 'html' ? (
@@ -523,7 +523,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <button
           type="button"
           onClick={() => onNavigateToIssues()}
-          className="flex items-center gap-1.5 rounded-xl border border-[#6a0e13]/20 dark:border-rose-900/40 bg-white dark:bg-zinc-900 hover:bg-rose-50/50 dark:hover:bg-zinc-800 text-[#6a0e13] dark:text-orange-400 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+          className="flex items-center gap-1.5 rounded-lg border border-[#6a0e13]/20 dark:border-rose-900/40 bg-white dark:bg-zinc-900 hover:bg-rose-50/50 dark:hover:bg-zinc-800 text-[#6a0e13] dark:text-orange-400 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-2xs"
           title="Open complete Findings &amp; Issues list"
         >
           <span>View Details</span>
