@@ -1,69 +1,182 @@
+@import "tailwindcss";
+
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
+  --color-1: #e88438;
+  --color-2: #c8301e;
+  --color-3: #6a0e13;
+  --color-4: #f3f1f1;
+  --color-5: #161616;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+
+  --color-c1: var(--color-1);
+  --color-c2: var(--color-2);
+  --color-c3: var(--color-3);
+  --color-c4: var(--color-4);
+  --color-c5: var(--color-5);
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
+@layer base {
+  :root, .dark, [data-theme='dark'] {
+    color-scheme: dark;
+    --color-1: #e88438;
+    --color-2: #c8301e;
+    --color-3: #6a0e13;
+    --color-4: #f3f1f1;
+    --color-5: #161616;
 
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
+    /* Base neutral surfaces generated directly from --color-5 (#161616) and --color-4 (#f3f1f1) */
+    --color-zinc-950: var(--color-5);
+    --color-zinc-900: color-mix(in srgb, var(--color-5) 88%, var(--color-4));
+    --color-zinc-850: color-mix(in srgb, var(--color-5) 80%, var(--color-4));
+    --color-zinc-800: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
+    --color-zinc-700: color-mix(in srgb, var(--color-5) 64%, var(--color-4));
+    --color-zinc-600: color-mix(in srgb, var(--color-5) 50%, var(--color-4));
+    --color-zinc-500: color-mix(in srgb, var(--color-5) 36%, var(--color-4));
+    --color-zinc-400: color-mix(in srgb, var(--color-4) 62%, var(--color-5));
+    --color-zinc-300: color-mix(in srgb, var(--color-4) 78%, var(--color-5));
+    --color-zinc-200: color-mix(in srgb, var(--color-4) 90%, var(--color-5));
+    --color-zinc-100: var(--color-4);
+    --color-zinc-50:  #ffffff;
 
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
+    /* Status and alert tokens derived strictly from the 5-color palette */
+    /* Critical / Failed / Blocked: --color-2 (#c8301e) and --color-3 (#6a0e13) */
+    --color-rose-400: var(--color-2);
+    --color-rose-500: var(--color-2);
+    --color-rose-600: var(--color-2);
+    --color-rose-700: var(--color-3);
+    --color-rose-800: var(--color-3);
+    --color-rose-900: var(--color-3);
+    --color-rose-950: color-mix(in srgb, var(--color-3) 65%, var(--color-5));
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+    /* High / Alert: --color-1 (#e88438) and --color-2 (#c8301e) */
+    --color-orange-400: var(--color-1);
+    --color-orange-500: var(--color-1);
+    --color-orange-600: color-mix(in srgb, var(--color-1) 80%, var(--color-2));
+    --color-orange-700: var(--color-2);
+    --color-orange-800: color-mix(in srgb, var(--color-2) 60%, var(--color-3));
+    --color-orange-950: color-mix(in srgb, var(--color-3) 45%, var(--color-5));
+
+    /* Medium / Warning: --color-1 (#e88438) */
+    --color-amber-400: var(--color-1);
+    --color-amber-500: var(--color-1);
+    --color-amber-600: var(--color-1);
+    --color-amber-700: color-mix(in srgb, var(--color-1) 75%, var(--color-3));
+    --color-amber-800: color-mix(in srgb, var(--color-1) 50%, var(--color-5));
+    --color-amber-950: color-mix(in srgb, var(--color-1) 22%, var(--color-5));
+
+    /* Low / Neutral / Info: --color-4 (#f3f1f1) with opacity/contrast */
+    --color-sky-400: color-mix(in srgb, var(--color-4) 85%, var(--color-1));
+    --color-sky-500: color-mix(in srgb, var(--color-4) 75%, var(--color-1));
+    --color-sky-600: var(--color-1);
+    --color-sky-800: color-mix(in srgb, var(--color-4) 30%, var(--color-5));
+    --color-sky-950: color-mix(in srgb, var(--color-4) 14%, var(--color-5));
+
+    --color-cyan-400: var(--color-4);
+    --color-cyan-500: color-mix(in srgb, var(--color-4) 80%, var(--color-5));
+    --color-cyan-600: color-mix(in srgb, var(--color-4) 60%, var(--color-5));
+    --color-cyan-800: color-mix(in srgb, var(--color-4) 30%, var(--color-5));
+    --color-cyan-950: color-mix(in srgb, var(--color-4) 12%, var(--color-5));
+
+    /* Pass / Completed: High-contrast crisp --color-4 (#f3f1f1) */
+    --color-emerald-400: var(--color-4);
+    --color-emerald-500: var(--color-4);
+    --color-emerald-600: color-mix(in srgb, var(--color-4) 80%, var(--color-5));
+    --color-emerald-800: color-mix(in srgb, var(--color-4) 40%, var(--color-5));
+    --color-emerald-950: color-mix(in srgb, var(--color-4) 15%, var(--color-5));
+
+    --scrollbar-track: var(--color-5);
+    --scrollbar-thumb: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
+    --scrollbar-hover: var(--color-1);
   }
-  a:hover {
-    color: #747bff;
+
+  .light, [data-theme='light'] {
+    color-scheme: light;
+    /* Clean high-contrast light mode with --color-4 (#f3f1f1) base and --color-5 (#161616) text */
+    --color-zinc-950: #ffffff;
+    --color-zinc-900: var(--color-4);
+    --color-zinc-800: color-mix(in srgb, var(--color-4) 88%, var(--color-5));
+    --color-zinc-700: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
+    --color-zinc-600: color-mix(in srgb, var(--color-4) 60%, var(--color-5));
+    --color-zinc-500: color-mix(in srgb, var(--color-5) 60%, var(--color-4));
+    --color-zinc-400: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
+    --color-zinc-300: color-mix(in srgb, var(--color-5) 85%, var(--color-4));
+    --color-zinc-200: color-mix(in srgb, var(--color-5) 92%, var(--color-4));
+    --color-zinc-100: var(--color-5);
+    --color-zinc-50:  var(--color-5);
+
+    --color-rose-400: var(--color-2);
+    --color-rose-500: var(--color-2);
+    --color-rose-600: var(--color-2);
+    --color-rose-800: var(--color-3);
+    --color-rose-950: color-mix(in srgb, var(--color-2) 12%, #ffffff);
+
+    --color-orange-400: var(--color-1);
+    --color-orange-500: var(--color-1);
+    --color-orange-600: var(--color-1);
+    --color-orange-800: var(--color-2);
+    --color-orange-950: color-mix(in srgb, var(--color-1) 15%, #ffffff);
+
+    --color-amber-400: var(--color-1);
+    --color-amber-500: var(--color-1);
+    --color-amber-600: var(--color-1);
+    --color-amber-800: var(--color-2);
+    --color-amber-950: color-mix(in srgb, var(--color-1) 12%, #ffffff);
+
+    --color-sky-400: var(--color-3);
+    --color-sky-500: var(--color-3);
+    --color-sky-800: var(--color-5);
+    --color-sky-950: color-mix(in srgb, var(--color-3) 10%, #ffffff);
+
+    --color-cyan-400: var(--color-5);
+    --color-cyan-500: var(--color-5);
+    --color-cyan-800: var(--color-5);
+    --color-cyan-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
+
+    --color-emerald-400: var(--color-5);
+    --color-emerald-500: var(--color-5);
+    --color-emerald-800: var(--color-5);
+    --color-emerald-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
+
+    --scrollbar-track: var(--color-4);
+    --scrollbar-thumb: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
+    --scrollbar-hover: var(--color-1);
   }
-  button {
-    background-color: #f9f9f9;
+
+  body {
+    background-color: var(--color-zinc-950);
+    color: var(--color-zinc-100);
+    font-family: var(--font-sans);
+    font-size: 13.5px;
+    line-height: 1.5;
+    letter-spacing: -0.011em;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    width: 520px;
+    min-height: 540px;
+    max-height: 600px;
+    overflow-x: hidden;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  /* Custom compact scrollbar adhering to anti-slop design */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-hover);
   }
 }

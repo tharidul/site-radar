@@ -1,0 +1,237 @@
+/**
+ * @file entrypoints/popup/components/FindingsExplorer.tsx
+ * @description Multi-facet findings explorer with text search, severity, category,
+ * and status filtering (Feature 45).
+ * Adheres strictly to anti-slop guidelines: compact, functional, high information density.
+ */
+
+import React, { useState, useMemo } from 'react';
+import { Search, X, Filter, ChevronRight } from 'lucide-react';
+import type { AuditFinding, Severity, FindingStatus } from '@/types/inspection';
+
+interface FindingsExplorerProps {
+  findings: AuditFinding[];
+  activeSeverityFilter: Severity | 'all';
+  onSelectSeverityFilter: (severity: Severity | 'all') => void;
+  onSelectFinding: (finding: AuditFinding) => void;
+}
+
+export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
+  findings,
+  activeSeverityFilter,
+  onSelectSeverityFilter,
+  onSelectFinding,
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<FindingStatus | 'all'>('all');
+
+  // Discover distinct categories
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    for (const f of findings) {
+      if (f.category) set.add(f.category);
+    }
+    return Array.from(set).sort();
+  }, [findings]);
+
+  // Filter findings based on active criteria
+  const filteredFindings = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+
+    return findings.filter((f) => {
+      // Severity filter
+      if (activeSeverityFilter !== 'all' && f.severity !== activeSeverityFilter) {
+        return false;
+      }
+
+      // Category filter
+      if (categoryFilter !== 'all' && f.category?.toLowerCase() !== categoryFilter.toLowerCase()) {
+        return false;
+      }
+
+      // Status filter
+      if (statusFilter !== 'all' && f.status !== statusFilter) {
+        return false;
+      }
+
+      // Search text query
+      if (q) {
+        const titleMatch = f.title?.toLowerCase().includes(q);
+        const descMatch = f.description?.toLowerCase().includes(q);
+        const ruleMatch = f.ruleId?.toLowerCase().includes(q);
+        const catMatch = f.category?.toLowerCase().includes(q);
+        if (!titleMatch && !descMatch && !ruleMatch && !catMatch) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [findings, activeSeverityFilter, categoryFilter, statusFilter, searchQuery]);
+
+  const hasActiveFilters =
+    activeSeverityFilter !== 'all' ||
+    categoryFilter !== 'all' ||
+    statusFilter !== 'all' ||
+    Boolean(searchQuery.trim());
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setCategoryFilter('all');
+    setStatusFilter('all');
+    onSelectSeverityFilter('all');
+  };
+
+  const getSeverityBadgeClass = (severity: Severity) => {
+    switch (severity) {
+      case 'critical':
+        return 'text-rose-400 bg-rose-950/60 border-rose-800/80';
+      case 'high':
+        return 'text-orange-400 bg-orange-950/60 border-orange-800/80';
+      case 'medium':
+        return 'text-amber-400 bg-amber-950/60 border-amber-800/80';
+      case 'low':
+        return 'text-zinc-300 bg-zinc-800/60 border-zinc-700/80';
+      case 'info':
+      default:
+        return 'text-zinc-400 bg-zinc-900 border-zinc-800';
+    }
+  };
+
+  return (
+    <div className="border-b border-zinc-800 bg-zinc-950 p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+          Findings Explorer
+        </span>
+        <span className="text-xs text-zinc-400">
+          Showing {filteredFindings.length} of {findings.length}
+        </span>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-2.5 top-2.5 w-4 h-4 text-zinc-400" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Filter by rule ID, title, or keyword..."
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/90 pl-9 pr-8 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-zinc-600 focus:outline-none transition-colors"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery('')}
+            className="absolute right-2.5 top-2.5 p-0.5 text-zinc-400 hover:text-zinc-200"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
+      </div>
+
+      {/* Multi-Facet Filter Controls */}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <label className="text-xs font-medium text-zinc-400 block mb-1">Category</label>
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-zinc-200 text-xs focus:border-zinc-600 focus:outline-none"
+          >
+            <option value="all">All Categories</option>
+            {categories.map((cat) => (
+              <option key={cat} value={cat}>
+                {cat}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className="text-xs font-medium text-zinc-400 block mb-1">Status</label>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value as any)}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-zinc-200 text-xs focus:border-zinc-600 focus:outline-none"
+          >
+            <option value="all">All Statuses</option>
+            <option value="failed">Failed</option>
+            <option value="warning">Warning</option>
+            <option value="passed">Passed</option>
+          </select>
+        </div>
+      </div>
+
+      {hasActiveFilters && (
+        <div className="flex items-center justify-between pt-1">
+          <span className="text-xs text-zinc-400">
+            Active filters applied
+          </span>
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="text-xs font-medium text-rose-400 hover:text-rose-300 underline cursor-pointer"
+          >
+            Clear Filters
+          </button>
+        </div>
+      )}
+
+      {/* Findings List */}
+      <div className="space-y-1.5 max-h-[260px] overflow-y-auto pr-1">
+        {filteredFindings.length === 0 ? (
+          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/40 p-6 text-center text-zinc-400 text-xs">
+            <p>No findings match the current search or filters.</p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="mt-2 text-xs text-zinc-200 underline cursor-pointer"
+              >
+                Reset all filters
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredFindings.map((finding) => (
+            <div
+              key={finding.id}
+              onClick={() => onSelectFinding(finding)}
+              className="rounded-xl border border-zinc-800/80 bg-zinc-900/70 p-2.5 hover:border-zinc-700 hover:bg-zinc-800/50 transition-colors cursor-pointer select-none"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                  <span
+                    className={`text-xs uppercase font-bold border rounded-full px-2.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
+                      finding.severity,
+                    )}`}
+                  >
+                    {finding.severity}
+                  </span>
+                  <span className="font-mono text-xs text-zinc-400 shrink-0">
+                    {finding.ruleId}
+                  </span>
+                  {finding.category && (
+                    <span className="text-xs capitalize text-zinc-400 border border-zinc-800 rounded-full px-2.5 py-0.5 shrink-0">
+                      {finding.category}
+                    </span>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+              </div>
+
+              <h4 className="text-sm font-semibold text-zinc-100 mt-1.5 line-clamp-1">
+                {finding.title}
+              </h4>
+              <p className="text-xs text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">
+                {finding.description}
+              </p>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
