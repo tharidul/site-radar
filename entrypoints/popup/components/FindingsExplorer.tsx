@@ -5,8 +5,9 @@
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, X, ChevronRight } from 'lucide-react';
+import { Search, X, ChevronRight, ChevronDown } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus } from '@/types/inspection';
+import { FindingDetailInspector } from './FindingDetailInspector';
 
 interface FindingsExplorerProps {
   findings: AuditFinding[];
@@ -14,7 +15,8 @@ interface FindingsExplorerProps {
   activeCategoryFilter?: string;
   onSelectSeverityFilter: (severity: Severity | 'all') => void;
   onSelectCategoryFilter?: (category: string) => void;
-  onSelectFinding: (finding: AuditFinding) => void;
+  onSelectFinding?: (finding: AuditFinding) => void;
+  initialExpandedFindingId?: string | null;
 }
 
 export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
@@ -24,10 +26,16 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   onSelectSeverityFilter,
   onSelectCategoryFilter,
   onSelectFinding,
+  initialExpandedFindingId,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>(activeCategoryFilter);
   const [statusFilter, setStatusFilter] = useState<FindingStatus | 'all'>('all');
+  const [expandedFindingId, setExpandedFindingId] = useState<string | null>(initialExpandedFindingId || null);
+
+  const toggleFinding = (id: string) => {
+    setExpandedFindingId((prev) => (prev === id ? null : id));
+  };
 
   // Discover distinct categories
   const categories = useMemo(() => {
@@ -209,41 +217,70 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             )}
           </div>
         ) : (
-          filteredFindings.map((finding) => (
-            <div
-              key={finding.id}
-              onClick={() => onSelectFinding(finding)}
-              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 hover:border-orange-400 dark:hover:border-zinc-700 transition-colors duration-150 cursor-pointer select-none shadow-2xs"
-            >
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                  <span
-                    className={`text-[10px] uppercase font-bold border rounded-md px-2 py-0.5 shrink-0 ${getSeverityBadgeClass(
-                      finding.severity,
-                    )}`}
-                  >
-                    {finding.severity}
-                  </span>
-                  <span className="font-medium text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
-                    {finding.ruleId}
-                  </span>
-                  {finding.category && (
-                    <span className="text-[10px] capitalize text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5 shrink-0 font-medium">
-                      {finding.category}
-                    </span>
-                  )}
-                </div>
-                <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
-              </div>
+          filteredFindings.map((finding) => {
+            const isExpanded = expandedFindingId === finding.id;
 
-              <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1.5 line-clamp-1">
-                {finding.title}
-              </h4>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-2 leading-relaxed">
-                {finding.description}
-              </p>
-            </div>
-          ))
+            return (
+              <div
+                key={finding.id}
+                className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xs transition-colors"
+              >
+                {/* Clickable Card Header / Summary */}
+                <div
+                  onClick={() => {
+                    toggleFinding(finding.id);
+                    if (onSelectFinding) onSelectFinding(finding);
+                  }}
+                  className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150 cursor-pointer select-none"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                      <span
+                        className={`text-[10px] uppercase font-bold border rounded-md px-2 py-0.5 shrink-0 ${getSeverityBadgeClass(
+                          finding.severity,
+                        )}`}
+                      >
+                        {finding.severity}
+                      </span>
+                      <span className="text-[10px] uppercase font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5 shrink-0">
+                        {finding.status}
+                      </span>
+                      <span className="font-medium text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
+                        {finding.ruleId}
+                      </span>
+                      {finding.category && (
+                        <span className="text-[10px] capitalize text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5 shrink-0 font-medium">
+                          {finding.category}
+                        </span>
+                      )}
+                    </div>
+                    {isExpanded ? (
+                      <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                    )}
+                  </div>
+
+                  <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1.5 line-clamp-1">
+                    {finding.title}
+                  </h4>
+                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">
+                    {finding.description}
+                  </p>
+                </div>
+
+                {/* Inline Expanded Detail Accordion Panel */}
+                {isExpanded && (
+                  <div className="border-t border-zinc-100 dark:border-zinc-800 p-3.5 bg-zinc-50/50 dark:bg-zinc-950/60">
+                    <FindingDetailInspector
+                      finding={finding}
+                      onCollapse={() => toggleFinding(finding.id)}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
     </div>

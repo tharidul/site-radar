@@ -71,8 +71,8 @@ export function OptionsApp() {
   const [crawlConfig, setCrawlConfig] = useState<CrawlConfig>(DEFAULT_CRAWL_CONFIG);
   const [crawlFeedback, setCrawlFeedback] = useState<string | null>(null);
 
-  // Selected provider disclosure modal/view
-  const [activeDisclosure, setActiveDisclosure] = useState<ConsentDisclosure | null>(null);
+  // Selected provider disclosure inline toggle
+  const [expandedDisclosureProviderId, setExpandedDisclosureProviderId] = useState<string | null>(null);
 
   // Theme management
   const [theme, setTheme] = useState<AppTheme>('dark');
@@ -316,41 +316,74 @@ export function OptionsApp() {
             {PROVIDER_LIST.map((provider) => {
               const isGranted = Boolean(providerConsents[provider.id]);
               const disclosure = consentManager.getDisclosure(provider.id, 'target-example.com');
+              const isDisclosureOpen = expandedDisclosureProviderId === provider.id;
 
               return (
                 <div
                   key={provider.id}
-                  className="rounded-lg border border-zinc-800/80 bg-zinc-950/80 p-3 flex items-center justify-between gap-4"
+                  className="rounded-lg border border-zinc-800/80 bg-zinc-950/80 p-3 space-y-2.5 transition-colors"
                 >
-                  <div className="space-y-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-zinc-200">
-                        {provider.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setActiveDisclosure(disclosure)}
-                        className="text-xs font-medium text-orange-400 hover:text-orange-300 underline cursor-pointer"
-                      >
-                        View Disclosure
-                      </button>
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-medium text-zinc-200">
+                          {provider.name}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setExpandedDisclosureProviderId(isDisclosureOpen ? null : provider.id)}
+                          className="text-xs font-medium text-orange-400 hover:text-orange-300 underline cursor-pointer"
+                        >
+                          {isDisclosureOpen ? 'Hide Disclosure' : 'View Disclosure'}
+                        </button>
+                      </div>
+                      <p className="text-xs text-zinc-400 truncate">
+                        Endpoint: <span className="text-xs text-zinc-300">{disclosure.providerUrl}</span>
+                      </p>
                     </div>
-                    <p className="text-xs text-zinc-400 truncate">
-                      Endpoint: <span className="text-xs text-zinc-300">{disclosure.providerUrl}</span>
-                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => handleToggleProviderConsent(provider.id)}
+                      className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
+                        isGranted
+                          ? 'border-orange-500 bg-orange-950/80 text-orange-400'
+                          : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
+                      }`}
+                    >
+                      {isGranted ? 'Enabled' : 'Disabled'}
+                    </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleToggleProviderConsent(provider.id)}
-                    className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
-                      isGranted
-                        ? 'border-orange-500 bg-orange-950/80 text-orange-400'
-                        : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
-                    }`}
-                  >
-                    {isGranted ? 'Enabled' : 'Disabled'}
-                  </button>
+                  {/* Inline Disclosure Accordion */}
+                  {isDisclosureOpen && (
+                    <div className="pt-2.5 border-t border-zinc-800/80 space-y-2 text-xs text-zinc-300">
+                      <div>
+                        <span className="text-zinc-400">Endpoint URL: </span>
+                        <span className="text-zinc-100 text-xs break-all">{disclosure.providerUrl}</span>
+                      </div>
+
+                      <div>
+                        <span className="text-zinc-400">Data Transmitted: </span>
+                        <span className="text-zinc-100">{disclosure.dataToSend.join(', ')}</span>
+                      </div>
+
+                      {disclosure.privacyPolicyUrl && (
+                        <div>
+                          <span className="text-zinc-400">Privacy Policy: </span>
+                          <a
+                            href={disclosure.privacyPolicyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-orange-400 hover:underline inline-flex items-center gap-1"
+                          >
+                            <span>{disclosure.privacyPolicyUrl}</span>
+                            <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -551,72 +584,6 @@ export function OptionsApp() {
             </div>
           </div>
         </section>
-
-        {/* Disclosure Modal */}
-        {activeDisclosure && (
-          <div
-            role="dialog"
-            aria-modal="true"
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4"
-          >
-            <div className="w-full max-w-lg rounded-xl border border-zinc-800 bg-zinc-950 p-6 space-y-4 shadow-md">
-              <div className="flex items-start justify-between border-b border-zinc-800 pb-2">
-                <div>
-                  <h3 className="text-sm font-semibold text-zinc-100">
-                    Provider Data Disclosure: {activeDisclosure.providerName}
-                  </h3>
-                  <span className="text-xs text-zinc-400">
-                    Explicit Transparency Report
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setActiveDisclosure(null)}
-                  className="rounded-md p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors cursor-pointer"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-2 text-xs text-zinc-300">
-                <div>
-                  <span className="text-zinc-400">Endpoint URL: </span>
-                  <span className="text-zinc-100 text-xs break-all">{activeDisclosure.providerUrl}</span>
-                </div>
-
-                <div>
-                  <span className="text-zinc-400">Data Transmitted: </span>
-                  <span className="text-zinc-100">{activeDisclosure.dataToSend.join(', ')}</span>
-                </div>
-
-                {activeDisclosure.privacyPolicyUrl && (
-                  <div>
-                    <span className="text-zinc-400">Privacy Policy: </span>
-                    <a
-                      href={activeDisclosure.privacyPolicyUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-orange-400 hover:underline inline-flex items-center gap-1"
-                    >
-                      <span>{activeDisclosure.privacyPolicyUrl}</span>
-                      <ExternalLink className="w-3 h-3" />
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-2 border-t border-zinc-800 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setActiveDisclosure(null)}
-                  className="rounded-md border border-zinc-700 bg-zinc-800 px-4 py-1.5 text-xs font-medium text-zinc-200 hover:bg-zinc-700 cursor-pointer"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

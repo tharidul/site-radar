@@ -24,7 +24,6 @@ import { FindingsExplorer } from './components/FindingsExplorer';
 import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
 import { ReportView } from './components/ReportView';
-import { FindingDetailInspector } from './components/FindingDetailInspector';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -38,7 +37,6 @@ export function App() {
   const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
   const [activeSeverityFilter, setActiveSeverityFilter] = useState<Severity | 'all'>('all');
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
-  const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('light');
@@ -188,7 +186,6 @@ export function App() {
       setScanStatus('idle');
       setInspection(null);
       setProgress(null);
-      setSelectedFinding(null);
       setErrorMessage(null);
       setActiveSeverityFilter('all');
       setActiveCategoryFilter('all');
@@ -349,7 +346,6 @@ export function App() {
                 activeCategoryFilter={activeCategoryFilter}
                 onSelectSeverityFilter={setActiveSeverityFilter}
                 onSelectCategoryFilter={setActiveCategoryFilter}
-                onSelectFinding={setSelectedFinding}
               />
             )}
 
@@ -370,14 +366,6 @@ export function App() {
           </div>
         )}
       </main>
-
-      {/* Finding Detail Inspector Modal */}
-      {selectedFinding && (
-        <FindingDetailInspector
-          finding={selectedFinding}
-          onClose={() => setSelectedFinding(null)}
-        />
-      )}
     </div>
   );
 }
