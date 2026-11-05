@@ -174,13 +174,13 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {limitations.length > 0 && (
-                    <div className="rounded-xl border border-amber-900/40 bg-amber-950/30 p-2.5 text-amber-300 text-xs space-y-1">
-                      <div className="font-semibold flex items-center gap-1">
-                        <AlertCircle className="w-3.5 h-3.5 text-amber-400" />
+                    <div className="rounded-xl border border-orange-500/30 bg-orange-500/10 p-3 text-xs space-y-1.5">
+                      <div className="font-semibold flex items-center gap-1.5 text-orange-400">
+                        <AlertCircle className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                         <span>Operational Limitations:</span>
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5">
-                        {limitations.map((lim, i) => (
+                      <ul className="list-disc pl-4 space-y-1 text-zinc-300">
+                        {Array.from(new Set(limitations)).map((lim, i) => (
                           <li key={i}>{lim}</li>
                         ))}
                       </ul>
@@ -188,13 +188,13 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {errors.length > 0 && (
-                    <div className="rounded-xl border border-rose-900/40 bg-rose-950/30 p-2.5 text-rose-300 text-xs space-y-1">
-                      <div className="font-semibold flex items-center gap-1">
-                        <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
+                    <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs space-y-1.5">
+                      <div className="font-semibold flex items-center gap-1.5 text-rose-400">
+                        <ShieldAlert className="w-3.5 h-3.5 text-rose-400 shrink-0" />
                         <span>Execution Errors:</span>
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5">
-                        {errors.map((err, i) => (
+                      <ul className="list-disc pl-4 space-y-1 text-zinc-300">
+                        {Array.from(new Set(errors)).map((err, i) => (
                           <li key={i}>{err}</li>
                         ))}
                       </ul>

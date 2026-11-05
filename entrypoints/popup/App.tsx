@@ -243,12 +243,12 @@ export function App() {
 
         {/* Cancelled Banner */}
         {scanStatus === 'cancelled' && (
-          <div className="border-b border-amber-900/40 bg-amber-950/30 p-3 text-xs text-amber-300 flex items-center justify-between">
-            <span>Inspection was cancelled by user.</span>
+          <div className="border-b border-orange-500/30 bg-orange-500/10 p-3 text-xs flex items-center justify-between text-zinc-300">
+            <span className="text-orange-400 font-medium">Inspection was cancelled by user.</span>
             <button
               type="button"
               onClick={() => setScanStatus('idle')}
-              className="text-xs font-medium text-zinc-200 underline cursor-pointer"
+              className="text-xs font-medium text-zinc-300 hover:text-zinc-100 underline cursor-pointer"
             >
               Back to Launcher
             </button>
@@ -257,13 +257,13 @@ export function App() {
 
         {/* Failed Banner */}
         {scanStatus === 'failed' && (
-          <div className="border-b border-rose-900/50 bg-rose-950/40 p-3 text-xs text-rose-300 space-y-1">
-            <div className="font-semibold">Inspection Failed</div>
-            <p className="text-xs text-rose-200">{errorMessage || 'An unknown error occurred.'}</p>
+          <div className="border-b border-rose-500/30 bg-rose-500/10 p-3 text-xs text-zinc-300 space-y-1">
+            <div className="font-semibold text-rose-400">Inspection Failed</div>
+            <p className="text-xs text-zinc-300">{errorMessage || 'An unknown error occurred.'}</p>
             <button
               type="button"
               onClick={() => setScanStatus('idle')}
-              className="mt-1 text-xs font-medium text-zinc-200 underline cursor-pointer"
+              className="mt-1 text-xs font-medium text-zinc-300 hover:text-zinc-100 underline cursor-pointer"
             >
               Try Again
             </button>

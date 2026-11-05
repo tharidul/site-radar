@@ -114,8 +114,8 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {!schemeValid && schemeReason && (
-        <div className="mt-2.5 rounded-xl border border-rose-900/50 bg-rose-950/40 p-2.5 text-xs text-rose-300">
-          <strong>Cannot inspect tab:</strong> {schemeReason}. Open an HTTP or HTTPS webpage to audit.
+        <div className="mt-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-2.5 text-xs text-zinc-300">
+          <strong className="text-rose-400">Cannot inspect tab:</strong> {schemeReason}. Open an HTTP or HTTPS webpage to audit.
         </div>
       )}
     </header>

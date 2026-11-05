@@ -192,7 +192,7 @@ export const FULL_AUDIT_ADDITIONAL_MODULES: readonly ModulePlanItem[] = [
     priority: 10,
     heavy: true,
     expectedChecks: 15,
-    limitations: ['Automated axe-core checks catch ~30-50% of WCAG issues; manual testing required'],
+    limitations: ['Automated axe-core rules cover 30–50% of WCAG criteria; human review is required for full conformance.'],
   },
 ] as const;
 
