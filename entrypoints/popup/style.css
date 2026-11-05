@@ -189,11 +189,14 @@
     padding: 0;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    width: 520px;
-    min-height: 540px;
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+
+  body:not(.options-page) {
+    width: 580px;
+    min-height: 580px;
     max-height: 600px;
     overflow-x: hidden;
-    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   /* Custom compact scrollbar adhering to anti-slop design */

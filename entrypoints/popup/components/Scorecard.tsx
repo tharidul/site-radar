@@ -36,7 +36,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   return (
     <div className="border-b border-zinc-800 bg-zinc-950 p-4 space-y-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+        <span className="text-xs font-semibold text-zinc-300">
           Audit Scorecard
         </span>
         <span className="text-xs text-zinc-400">
@@ -49,10 +49,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'critical' ? 'all' : 'critical')}
-          className={`rounded-xl border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
             activeSeverityFilter === 'critical'
-              ? 'border-rose-600 bg-rose-950/80 ring-1 ring-rose-500'
-              : 'border-zinc-800 bg-zinc-900/80 hover:border-zinc-700'
+              ? 'border-rose-600 bg-rose-950 ring-1 ring-rose-500'
+              : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Critical findings"
         >
@@ -63,10 +63,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'high' ? 'all' : 'high')}
-          className={`rounded-xl border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
             activeSeverityFilter === 'high'
-              ? 'border-orange-600 bg-orange-950/80 ring-1 ring-orange-500'
-              : 'border-zinc-800 bg-zinc-900/80 hover:border-zinc-700'
+              ? 'border-orange-600 bg-orange-950 ring-1 ring-orange-500'
+              : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by High findings"
         >
@@ -77,10 +77,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'medium' ? 'all' : 'medium')}
-          className={`rounded-xl border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
             activeSeverityFilter === 'medium'
-              ? 'border-amber-600 bg-amber-950/80 ring-1 ring-amber-500'
-              : 'border-zinc-800 bg-zinc-900/80 hover:border-zinc-700'
+              ? 'border-amber-600 bg-amber-950 ring-1 ring-amber-500'
+              : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Medium findings"
         >
@@ -91,10 +91,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'low' ? 'all' : 'low')}
-          className={`rounded-xl border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
             activeSeverityFilter === 'low'
               ? 'border-zinc-500 bg-zinc-800 ring-1 ring-zinc-400'
-              : 'border-zinc-800 bg-zinc-900/80 hover:border-zinc-700'
+              : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Low findings"
         >
@@ -105,10 +105,10 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         <button
           type="button"
           onClick={() => onFilterSeverity(activeSeverityFilter === 'info' ? 'all' : 'info')}
-          className={`rounded-xl border p-2 text-center transition-all cursor-pointer ${
+          className={`rounded-lg border p-2 text-center transition-all cursor-pointer ${
             activeSeverityFilter === 'info'
               ? 'border-zinc-600 bg-zinc-800 ring-1 ring-zinc-500'
-              : 'border-zinc-800 bg-zinc-900/80 hover:border-zinc-700'
+              : 'border-zinc-800 bg-zinc-900 hover:border-zinc-700'
           }`}
           title="Filter by Info findings"
         >
@@ -146,7 +146,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
           return (
             <div
               key={catKey}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/70 p-2.5 space-y-1.5"
+              className="rounded-lg border border-zinc-800 bg-zinc-900 p-2.5 space-y-1.5"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-medium capitalize text-zinc-200">

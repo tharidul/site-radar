@@ -1,9 +1,9 @@
 /**
  * @file entrypoints/popup/App.tsx
- * @description Main extension popup coordinator implementing scan lifecycle controls,
- * state machine synchronization, and presentation components.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 12,
- * Features 40, 41, 42, 43, 44, 45, 46, 48, 49, 50.
+ * @description Master extension popup coordinator.
+ * Redesigned to match the exact Website Intelligence dashboard architecture:
+ * Deep crimson wave header, Target Site bar, Tab bar (Overview, Issues, Rules, Resources, Report),
+ * and the complete Overview Dashboard.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -16,13 +16,15 @@ import { validateScheme, type SchemeValidationResult } from '@/security/scheme-v
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
 
 import { Header } from './components/Header';
+import { TabBar, type DashboardTab } from './components/TabBar';
+import { OverviewDashboard } from './components/OverviewDashboard';
 import { ModeSelector } from './components/ModeSelector';
 import { LiveProgressBar } from './components/LiveProgressBar';
-import { Scorecard } from './components/Scorecard';
-import { ModuleAccordions } from './components/ModuleAccordions';
 import { FindingsExplorer } from './components/FindingsExplorer';
+import { ModuleAccordions } from './components/ModuleAccordions';
+import { ResourcesView } from './components/ResourcesView';
+import { ReportView } from './components/ReportView';
 import { FindingDetailInspector } from './components/FindingDetailInspector';
-import { ExportBar } from './components/ExportBar';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -33,11 +35,13 @@ export function App() {
   const [progress, setProgress] = useState<ScanProgressEvent | null>(null);
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null);
   const [schemeValidation, setSchemeValidation] = useState<SchemeValidationResult>({ valid: true });
+  const [activeDashboardTab, setActiveDashboardTab] = useState<DashboardTab>('overview');
   const [activeSeverityFilter, setActiveSeverityFilter] = useState<Severity | 'all'>('all');
+  const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [selectedFinding, setSelectedFinding] = useState<AuditFinding | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [theme, setTheme] = useState<AppTheme>('dark');
+  const [theme, setTheme] = useState<AppTheme>('light');
 
   // Initial load: Fetch theme, active tab info and sync inspection state with background
   useEffect(() => {
@@ -187,6 +191,8 @@ export function App() {
       setSelectedFinding(null);
       setErrorMessage(null);
       setActiveSeverityFilter('all');
+      setActiveCategoryFilter('all');
+      setActiveDashboardTab('overview');
     }
   };
 
@@ -212,12 +218,35 @@ export function App() {
     saveTheme(nextTheme);
   };
 
+  const handleClose = () => {
+    try {
+      window.close();
+    } catch {
+      // ignore
+    }
+  };
+
+  // Navigation from Overview cards to Issues
+  const handleNavigateToIssues = (filter?: { severity?: Severity | 'all'; category?: string }) => {
+    if (filter?.severity !== undefined) {
+      setActiveSeverityFilter(filter.severity);
+    }
+    if (filter?.category !== undefined) {
+      setActiveCategoryFilter(filter.category);
+    }
+    setActiveDashboardTab('issues');
+  };
+
+  const issuesCount = inspection
+    ? inspection.findings.filter((f) => f.status === 'failed' || f.status === 'warning').length
+    : 0;
+
   return (
     <div
       data-theme={theme}
-      className={`flex flex-col min-h-[540px] max-h-[600px] w-[520px] bg-zinc-950 text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
+      className={`flex flex-col min-h-[580px] max-h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
     >
-      {/* Header & Site Identity */}
+      {/* 1. Header with Dark Crimson Wave and URL strip */}
       <Header
         tabUrl={activeTab?.url}
         tabHostname={activeTab?.origin || activeTab?.url}
@@ -228,9 +257,19 @@ export function App() {
         onOptionsClick={handleOpenOptions}
         theme={theme}
         onToggleTheme={handleToggleTheme}
+        onClose={handleClose}
       />
 
-      {/* Main Content Area with Internal Scrolling */}
+      {/* 2. Navigation Tab Bar (Shown when inspection data exists) */}
+      {inspection && scanStatus === 'completed' && (
+        <TabBar
+          activeTab={activeDashboardTab}
+          onSelectTab={setActiveDashboardTab}
+          issuesCount={issuesCount}
+        />
+      )}
+
+      {/* 3. Main Content Scrollable Area */}
       <main className="flex-1 overflow-y-auto">
         {/* Live Progress Bar when running */}
         {scanStatus === 'running' && (
@@ -243,12 +282,14 @@ export function App() {
 
         {/* Cancelled Banner */}
         {scanStatus === 'cancelled' && (
-          <div className="border-b border-orange-500/30 bg-orange-500/10 p-3 text-xs flex items-center justify-between text-zinc-300">
-            <span className="text-orange-400 font-medium">Inspection was cancelled by user.</span>
+          <div className="border-b border-orange-200 dark:border-orange-500/30 bg-orange-50 dark:bg-orange-500/10 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
+            <span className="text-orange-700 dark:text-orange-400 font-semibold">
+              Inspection was cancelled by user.
+            </span>
             <button
               type="button"
               onClick={() => setScanStatus('idle')}
-              className="text-xs font-medium text-zinc-300 hover:text-zinc-100 underline cursor-pointer"
+              className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
             >
               Back to Launcher
             </button>
@@ -257,21 +298,21 @@ export function App() {
 
         {/* Failed Banner */}
         {scanStatus === 'failed' && (
-          <div className="border-b border-rose-500/30 bg-rose-500/10 p-3 text-xs text-zinc-300 space-y-1">
-            <div className="font-semibold text-rose-400">Inspection Failed</div>
-            <p className="text-xs text-zinc-300">{errorMessage || 'An unknown error occurred.'}</p>
+          <div className="border-b border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
+            <div className="font-bold text-rose-700 dark:text-rose-400">Inspection Failed</div>
+            <p className="text-xs text-zinc-600 dark:text-zinc-300">{errorMessage || 'An unknown error occurred.'}</p>
             <button
               type="button"
               onClick={() => setScanStatus('idle')}
-              className="mt-1 text-xs font-medium text-zinc-300 hover:text-zinc-100 underline cursor-pointer"
+              className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
             >
               Try Again
             </button>
           </div>
         )}
 
-        {/* Mode Selector & Launcher (Visible in idle, cancelled, or failed state) */}
-        {(scanStatus === 'idle' || scanStatus === 'cancelled' || scanStatus === 'failed') && (
+        {/* Mode Selector & Launcher (Visible when idle/no inspection) */}
+        {(scanStatus === 'idle' || scanStatus === 'cancelled' || scanStatus === 'failed') && !inspection && (
           <ModeSelector
             selectedMode={selectedMode}
             onSelectMode={setSelectedMode}
@@ -282,34 +323,47 @@ export function App() {
         )}
 
         {/* Completed Findings Presentation Suite */}
-        {scanStatus === 'completed' && inspection && (
-          <div className="space-y-0">
-            {/* Export Controls Bar */}
-            <ExportBar inspection={inspection} />
+        {inspection && scanStatus === 'completed' && (
+          <div>
+            {/* Tab 1: Overview Dashboard (Matching Screenshot) */}
+            {activeDashboardTab === 'overview' && (
+              <OverviewDashboard
+                inspection={inspection}
+                onNavigateToIssues={handleNavigateToIssues}
+              />
+            )}
 
-            {/* Scorecard Summary (Feature 43) */}
-            <Scorecard
-              scores={inspection.scores}
-              findings={inspection.findings}
-              activeSeverityFilter={activeSeverityFilter}
-              onFilterSeverity={setActiveSeverityFilter}
-            />
+            {/* Tab 2: Issues Explorer */}
+            {activeDashboardTab === 'issues' && (
+              <FindingsExplorer
+                findings={inspection.findings}
+                activeSeverityFilter={activeSeverityFilter}
+                activeCategoryFilter={activeCategoryFilter}
+                onSelectSeverityFilter={setActiveSeverityFilter}
+                onSelectCategoryFilter={setActiveCategoryFilter}
+                onSelectFinding={setSelectedFinding}
+              />
+            )}
 
-            {/* 10 Module Result Accordions (Feature 44) */}
-            <ModuleAccordions modules={inspection.modules as any} />
+            {/* Tab 3: Rules & Modules Accordions */}
+            {activeDashboardTab === 'rules' && (
+              <ModuleAccordions modules={inspection.modules as any} />
+            )}
 
-            {/* Findings Explorer (Feature 45) */}
-            <FindingsExplorer
-              findings={inspection.findings}
-              activeSeverityFilter={activeSeverityFilter}
-              onSelectSeverityFilter={setActiveSeverityFilter}
-              onSelectFinding={setSelectedFinding}
-            />
+            {/* Tab 4: Resources View */}
+            {activeDashboardTab === 'resources' && (
+              <ResourcesView inspection={inspection} />
+            )}
+
+            {/* Tab 5: Executive Report View */}
+            {activeDashboardTab === 'report' && (
+              <ReportView inspection={inspection} />
+            )}
           </div>
         )}
       </main>
 
-      {/* Finding Detail Inspector Modal (Feature 46) */}
+      {/* Finding Detail Inspector Modal */}
       {selectedFinding && (
         <FindingDetailInspector
           finding={selectedFinding}
