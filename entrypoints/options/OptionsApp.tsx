@@ -343,7 +343,7 @@ export function OptionsApp() {
                   <button
                     type="button"
                     onClick={() => handleToggleProviderConsent(provider.id)}
-                    className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors cursor-pointer shrink-0 ${
+                    className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
                       isGranted
                         ? 'border-orange-500 bg-orange-950/80 text-orange-400'
                         : 'border-zinc-800 bg-zinc-900 text-zinc-400 hover:border-zinc-700'
@@ -437,7 +437,7 @@ export function OptionsApp() {
                     className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200"
                   >
                     <span className="capitalize">{provider}</span>
-                    <span className="text-[10px] font-medium text-zinc-100 bg-zinc-800 border border-zinc-700 rounded-full px-2 py-0.5">
+                    <span className="text-[10px] font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 rounded-md px-2 py-0.5">
                       Active
                     </span>
                     <button
@@ -571,7 +571,7 @@ export function OptionsApp() {
                 <button
                   type="button"
                   onClick={() => setActiveDisclosure(null)}
-                  className="rounded-full p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors cursor-pointer"
+                  className="rounded-md p-1 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-900 transition-colors cursor-pointer"
                 >
                   ✕
                 </button>

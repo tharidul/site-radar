@@ -238,8 +238,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
           <div className="flex items-center justify-between text-xs">
             <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
-              <span className="font-semibold text-emerald-700 dark:text-emerald-400 tabular-nums">
+              <CheckCircle2 className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
+              <span className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
                 {passedCount}
               </span>
               <span>Passed</span>
@@ -310,7 +310,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 </span>
               </div>
               {/* Solid Orange Underline Indicator matching screenshot */}
-              <div className="w-10 h-1 bg-[#e88438] rounded-full mt-2.5" />
+              <div className="w-10 h-1 bg-[#e88438] rounded-sm mt-2.5" />
             </button>
           );
         })}
@@ -442,7 +442,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     cy="40"
                     r={donutRadius}
                     fill="transparent"
-                    stroke="#10b981"
+                    stroke="#e88438"
                     strokeWidth="11"
                   />
                 )}

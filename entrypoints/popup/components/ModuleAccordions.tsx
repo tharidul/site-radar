@@ -51,7 +51,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
     switch (status) {
       case 'completed':
         return (
-          <span className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-md px-2 py-0.5">
+          <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-0.5">
             Completed
           </span>
         );

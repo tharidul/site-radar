@@ -40,9 +40,9 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
       </div>
 
       {/* Progress Bar Container */}
-      <div className="h-2 w-full rounded-full bg-zinc-800 overflow-hidden">
+      <div className="h-2 w-full rounded-sm bg-zinc-800 overflow-hidden">
         <div
-          className="h-full bg-orange-500 transition-all duration-200 ease-out rounded-full"
+          className="h-full bg-orange-500 transition-all duration-200 ease-out rounded-sm"
           style={{ width: `${percent}%` }}
         />
       </div>

@@ -95,11 +95,17 @@
     --color-cyan-800: color-mix(in srgb, var(--color-4) 30%, var(--color-5));
     --color-cyan-950: color-mix(in srgb, var(--color-4) 12%, var(--color-5));
 
-    /* Pass / Completed: High-contrast crisp --color-4 (#f3f1f1) */
+    /* Pass / Completed: High-contrast crisp --color-4 (#f3f1f1) and --color-5 (#161616) */
+    --color-emerald-50:  color-mix(in srgb, var(--color-4) 95%, var(--color-5));
+    --color-emerald-100: color-mix(in srgb, var(--color-4) 90%, var(--color-5));
+    --color-emerald-200: color-mix(in srgb, var(--color-4) 80%, var(--color-5));
+    --color-emerald-300: color-mix(in srgb, var(--color-4) 70%, var(--color-5));
     --color-emerald-400: var(--color-4);
     --color-emerald-500: var(--color-4);
     --color-emerald-600: color-mix(in srgb, var(--color-4) 80%, var(--color-5));
+    --color-emerald-700: color-mix(in srgb, var(--color-4) 60%, var(--color-5));
     --color-emerald-800: color-mix(in srgb, var(--color-4) 40%, var(--color-5));
+    --color-emerald-900: color-mix(in srgb, var(--color-4) 25%, var(--color-5));
     --color-emerald-950: color-mix(in srgb, var(--color-4) 15%, var(--color-5));
 
     --scrollbar-track: var(--color-5);
@@ -168,9 +174,16 @@
     --color-cyan-800: var(--color-5);
     --color-cyan-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
 
+    --color-emerald-50:  #ffffff;
+    --color-emerald-100: var(--color-4);
+    --color-emerald-200: color-mix(in srgb, var(--color-4) 88%, var(--color-5));
+    --color-emerald-300: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
     --color-emerald-400: var(--color-5);
     --color-emerald-500: var(--color-5);
+    --color-emerald-600: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
+    --color-emerald-700: color-mix(in srgb, var(--color-5) 85%, var(--color-4));
     --color-emerald-800: var(--color-5);
+    --color-emerald-900: var(--color-5);
     --color-emerald-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
 
     --scrollbar-track: var(--color-4);

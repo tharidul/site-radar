@@ -127,13 +127,13 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="shrink-0">
           {schemeValid ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-200 dark:border-emerald-800 rounded-full px-2.5 py-0.5">
-              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[2.5]" />
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-0.5">
+              <Check className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 stroke-[2.5]" />
               <span>Inspectable</span>
             </span>
           ) : (
             <span
-              className="flex items-center gap-1.5 text-xs font-semibold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-full px-2.5 py-0.5"
+              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900 rounded-md px-2 py-0.5"
               title={schemeReason || 'Unsupported browser scheme'}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />

@@ -61,7 +61,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 <span>{tab.label}</span>
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span
-                    className={`ml-0.5 px-1.5 py-0.2 text-[10px] font-bold rounded-full tabular-nums ${
+                    className={`ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-md tabular-nums ${
                       isActive
                         ? 'bg-white/20 text-white'
                         : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
@@ -73,7 +73,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               </button>
               {/* Active Tab Underline Indicator matching screenshot */}
               {isActive && (
-                <div className="h-0.5 bg-orange-500 rounded-full w-full mt-1.5" />
+                <div className="h-0.5 bg-orange-500 rounded-sm w-full mt-1.5" />
               )}
               {!isActive && (
                 <div className="h-0.5 bg-transparent w-full mt-1.5" />

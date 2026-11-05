@@ -157,9 +157,9 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 </span>
               </div>
 
-              <div className="h-1.5 w-full rounded-full bg-zinc-800 overflow-hidden">
+              <div className="h-1.5 w-full rounded-sm bg-zinc-800 overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${barColor}`}
+                  className={`h-full rounded-sm ${barColor}`}
                   style={{ width: `${hasScore ? rawScore : 0}%` }}
                 />
               </div>
