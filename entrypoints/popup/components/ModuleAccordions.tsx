@@ -110,7 +110,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
         </button>
       </div>
 
-      <div className="space-y-2 max-h-[350px] overflow-y-auto pr-1">
+      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-2xs">
         {MODULE_DEFINITIONS.map((def) => {
           const mod = modules[def.key];
           const isExpanded = expandedKeys.has(def.key);
@@ -122,7 +122,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
           return (
             <div
               key={def.key}
-              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 shadow-2xs overflow-hidden"
+              className="transition-colors"
             >
               <button
                 type="button"
@@ -146,7 +146,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
               </button>
 
               {isExpanded && (
-                <div className="px-3.5 pb-3.5 pt-1.5 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 space-y-2.5 text-xs">
+                <div className="px-3.5 pb-3.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 space-y-3 text-xs">
                   <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     {def.description}
                   </p>
@@ -174,12 +174,12 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {limitations.length > 0 && (
-                    <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-2.5 space-y-1">
+                    <div className="border-l-2 border-orange-500 pl-3 py-0.5 space-y-1">
                       <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
                         <AlertCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                        <span>Operational Limitations:</span>
+                        <span>Operational Limitations</span>
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-600 dark:text-zinc-400 text-xs">
                         {Array.from(new Set(limitations)).map((lim, i) => (
                           <li key={i}>{lim}</li>
                         ))}
@@ -188,12 +188,12 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {errors.length > 0 && (
-                    <div className="rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950/60 p-2.5 space-y-1">
+                    <div className="border-l-2 border-rose-500 pl-3 py-0.5 space-y-1">
                       <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
                         <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
-                        <span>Execution Errors:</span>
+                        <span>Execution Errors</span>
                       </div>
-                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-700 dark:text-zinc-300 text-[11px]">
+                      <ul className="list-disc pl-4 space-y-0.5 text-zinc-600 dark:text-zinc-400 text-xs">
                         {Array.from(new Set(errors)).map((err, i) => (
                           <li key={i}>{err}</li>
                         ))}

@@ -7,6 +7,12 @@
       "skillPath": "SKILL.md",
       "computedHash": "a2f47b0c689a74127c775be6601470c141be6b0095bcbb54a200efa85935bfa2"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "89496d5dd00f4810205f351759594fc2742bf8eea85a2f2b2d1de59f4bd91576"
+    },
     "kill-ai-slop": {
       "source": "yetone/kill-ai-slop",
       "sourceType": "github",
