@@ -175,11 +175,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* 1. Hero Overall Score Card */}
-      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 sm:p-5 shadow-xs flex flex-col md:flex-row items-center justify-between gap-4">
-        {/* Left: Overall Circular Gauge */}
-        <div className="flex items-center gap-4 min-w-[210px]">
-          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-            <svg className="w-24 h-24 -rotate-90 transform" viewBox="0 0 100 100">
+      <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
+        {/* Left: Overall Circular Gauge + Text */}
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="relative w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center">
+            <svg className="w-20 h-20 sm:w-22 sm:h-22 -rotate-90 transform" viewBox="0 0 100 100">
               {/* Background ring */}
               <circle
                 cx="50"
@@ -205,34 +205,34 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
+              <span className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
                 {overallScore}
               </span>
-              <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 mt-0.5">
+              <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mt-0.5">
                 /100
               </span>
             </div>
           </div>
 
           {/* Overall Score text & Grade Badge */}
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+              <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
                 Overall Score
               </h2>
-              <span className="inline-flex items-center justify-center bg-[#e88438] text-white font-extrabold text-xs px-2.5 py-0.5 rounded-md shadow-xs">
+              <span className="inline-flex items-center justify-center bg-[#e88438] text-white font-extrabold text-xs px-2 py-0.5 rounded-md shadow-xs">
                 {grade}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed max-w-[210px]">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-snug line-clamp-2 max-w-[200px]">
               {gradeDescription}
             </p>
           </div>
         </div>
 
         {/* Right: Evaluated Rules Breakdown Mini-Card */}
-        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-950/60 p-3 min-w-[190px] w-full md:w-auto space-y-1.5 shadow-2xs">
-          <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-2">
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
+          <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-1.5">
             {totalRules} rules evaluated
           </div>
 
@@ -317,7 +317,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       </div>
 
       {/* 3. Bottom Two Cards: Audit Scorecard & Severity Distribution */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-3">
         {/* Left: Audit Scorecard */}
         <div className="rounded-2xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
@@ -533,3 +533,4 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     </div>
   );
 };
+

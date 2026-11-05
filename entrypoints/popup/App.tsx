@@ -244,33 +244,37 @@ export function App() {
   return (
     <div
       data-theme={theme}
-      className={`flex flex-col min-h-[580px] max-h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
+      className={`flex flex-col h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
     >
-      {/* 1. Header with Dark Crimson Wave and URL strip */}
-      <Header
-        tabUrl={activeTab?.url}
-        tabHostname={activeTab?.origin || activeTab?.url}
-        schemeValid={schemeValidation.valid}
-        schemeReason={schemeValidation.reason}
-        hasInspectionData={inspection !== null || scanStatus === 'completed'}
-        onClearResults={handleClearResults}
-        onOptionsClick={handleOpenOptions}
-        theme={theme}
-        onToggleTheme={handleToggleTheme}
-        onClose={handleClose}
-      />
-
-      {/* 2. Navigation Tab Bar (Shown when inspection data exists) */}
-      {inspection && scanStatus === 'completed' && (
-        <TabBar
-          activeTab={activeDashboardTab}
-          onSelectTab={setActiveDashboardTab}
-          issuesCount={issuesCount}
+      {/* 1. Header with Dark Crimson Wave and URL strip (shrink-0 prevents flex crushing) */}
+      <div className="shrink-0">
+        <Header
+          tabUrl={activeTab?.url}
+          tabHostname={activeTab?.origin || activeTab?.url}
+          schemeValid={schemeValidation.valid}
+          schemeReason={schemeValidation.reason}
+          hasInspectionData={inspection !== null || scanStatus === 'completed'}
+          onClearResults={handleClearResults}
+          onOptionsClick={handleOpenOptions}
+          theme={theme}
+          onToggleTheme={handleToggleTheme}
+          onClose={handleClose}
         />
+      </div>
+
+      {/* 2. Navigation Tab Bar (shrink-0 prevents flex crushing) */}
+      {inspection && scanStatus === 'completed' && (
+        <div className="shrink-0">
+          <TabBar
+            activeTab={activeDashboardTab}
+            onSelectTab={setActiveDashboardTab}
+            issuesCount={issuesCount}
+          />
+        </div>
       )}
 
-      {/* 3. Main Content Scrollable Area */}
-      <main className="flex-1 overflow-y-auto">
+      {/* 3. Main Content Scrollable Area (min-h-0 allows main to scroll properly) */}
+      <main className="flex-1 min-h-0 overflow-y-auto">
         {/* Live Progress Bar when running */}
         {scanStatus === 'running' && (
           <LiveProgressBar

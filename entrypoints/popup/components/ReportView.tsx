@@ -121,3 +121,4 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
     </div>
   );
 };
+

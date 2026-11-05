@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onClose,
 }) => {
   return (
-    <header className="relative bg-[#161616] px-4 pt-3 pb-3.5 select-none overflow-hidden border-b border-zinc-800">
+    <header className="relative bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-800 shrink-0">
       {/* Subtle deep red crimson background wave accent matching screenshot */}
       <div
         className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-80"
@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Embedded Target Site URL Strip matching screenshot */}
-      <div className="relative z-10 mt-3 flex items-center justify-between rounded-xl border border-zinc-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3.5 py-2 text-xs shadow-xs">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl border border-zinc-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
           <span
