@@ -92,7 +92,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   }
 
   // Circular gauge parameters
-  const gaugeRadius = 38;
+  const gaugeRadius = 40;
   const gaugeCircumference = 2 * Math.PI * gaugeRadius;
   const gaugeDashOffset = gaugeCircumference * (1 - Math.min(100, Math.max(0, overallScore)) / 100);
 
@@ -177,11 +177,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* 1. Hero Overall Score Card */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
+      <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-row items-center justify-between gap-4">
         {/* Left: Overall Circular Gauge + Text */}
-        <div className="flex items-center gap-3.5 min-w-0">
-          <div className="relative w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center">
-            <svg className="w-20 h-20 sm:w-22 sm:h-22 -rotate-90 transform" viewBox="0 0 100 100">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
+            <svg className="w-24 h-24 -rotate-90 transform" viewBox="0 0 100 100">
               {/* Background ring */}
               <circle
                 cx="50"
@@ -207,26 +207,26 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-2xl sm:text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
+              <span className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
                 {overallScore}
               </span>
-              <span className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500 mt-0.5">
+              <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 mt-1">
                 /100
               </span>
             </div>
           </div>
 
           {/* Overall Score text & Grade Badge */}
-          <div className="min-w-0">
+          <div className="min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              <h2 className="text-base sm:text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight truncate">
+              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
                 Overall Score
               </h2>
-              <span className="inline-flex items-center justify-center bg-[#e88438] text-white font-extrabold text-xs px-2 py-0.5 rounded-md shadow-xs">
+              <span className="inline-flex items-center justify-center bg-[#e88438] text-white font-black text-xs w-6 h-6 rounded-md shadow-xs shrink-0">
                 {grade}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-snug line-clamp-2 max-w-[200px]">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[220px]">
               {gradeDescription}
             </p>
           </div>
