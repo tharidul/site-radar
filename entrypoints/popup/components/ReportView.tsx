@@ -34,10 +34,10 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Executive Audit Report
+            Export Audit Report
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Self-contained, verifiable client-side audit artifact. Zero external analytics or tracking.
+            Download your full audit as a standalone HTML page or structured JSON file.
           </p>
         </div>
       </div>

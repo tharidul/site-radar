@@ -29,21 +29,21 @@ const MODES: ModeOption[] = [
   {
     id: 'quick',
     title: 'Quick Scan',
-    scope: 'Passive DOM, SEO metadata, security headers, and Core Web Vitals (8 modules).',
+    scope: 'Headers, scripts, meta tags, and web vitals.',
     duration: '~1-2s',
     icon: Zap,
   },
   {
     id: 'full',
     title: 'Full Page Audit',
-    scope: 'Complete page inspection with axe-core WCAG 2.1 AA accessibility & structured data.',
+    scope: 'Complete audit with WCAG accessibility and structured data.',
     duration: '~3-5s',
     icon: Layers,
   },
   {
     id: 'deep',
     title: 'Deep Inspection',
-    scope: 'Full Page Audit + bounded same-origin crawl (robots, sitemaps) & external intel.',
+    scope: 'Full audit plus linked pages, sitemaps, and DNS lookups.',
     duration: '~10-20s',
     icon: Compass,
   },
@@ -61,10 +61,10 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 block">
-            Select Inspection Mode
+            Choose Audit Depth
           </span>
           <span className="text-xs text-zinc-500 dark:text-zinc-400">
-            Choose depth of passive security, performance, and accessibility checks.
+            Pick how deep you want the security, speed, and accessibility checks to go.
           </span>
         </div>
       </div>

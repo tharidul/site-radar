@@ -4,7 +4,7 @@
  */
 
 import React, { useMemo, useState } from 'react';
-import { FileCode, FileSpreadsheet, Image as ImageIcon, Globe, Database, Cpu, Search, Check, AlertTriangle } from 'lucide-react';
+import { FileCode, FileSpreadsheet, Image as ImageIcon, Globe, Database, Cpu, Search, Check, AlertTriangle, ExternalLink } from 'lucide-react';
 import type {
   WebsiteInspection,
   TechnologyData,
@@ -95,7 +95,16 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
     }
     if (linksData?.externalLinks) {
       linksData.externalLinks.forEach((l) => {
-        if (l.domain) originSet.add(l.domain);
+        try {
+          if (l.url) {
+            const u = new URL(l.url, 'http://localhost');
+            if (u.hostname && !u.hostname.includes('localhost')) {
+              originSet.add(u.hostname);
+            }
+          }
+        } catch {
+          // ignore
+        }
       });
     }
     return Array.from(originSet).sort();
@@ -134,10 +143,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Resources &amp; Assets Inventory
+            Page Resources
           </h3>
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Select any category below to inspect loaded scripts, styles, images, and external origins.
+            Inspect scripts, styles, images, and third-party domains loaded by this page.
           </p>
         </div>
       </div>
@@ -294,7 +303,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           {activeTab === 'scripts' &&
             (filteredScripts.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                {scripts.length === 0 ? 'No script tags captured.' : 'No scripts matching filter.'}
+                {scripts.length === 0 ? 'No scripts found on this page.' : 'No scripts matching filter.'}
               </p>
             ) : (
               filteredScripts.map((s, idx) => (
@@ -360,7 +369,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           {activeTab === 'stylesheets' &&
             (filteredStylesheets.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                {stylesheets.length === 0 ? 'No external stylesheets captured.' : 'No stylesheets matching filter.'}
+                {stylesheets.length === 0 ? 'No stylesheets found on this page.' : 'No stylesheets matching filter.'}
               </p>
             ) : (
               filteredStylesheets.map((sheet, idx) => (
@@ -416,7 +425,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           {activeTab === 'images' &&
             (filteredImages.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
-                {images.length === 0 ? 'No image elements captured.' : 'No images matching filter.'}
+                {images.length === 0 ? 'No images found on this page.' : 'No images matching filter.'}
               </p>
             ) : (
               filteredImages.map((img, idx) => (

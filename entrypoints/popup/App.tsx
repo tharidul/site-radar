@@ -27,6 +27,55 @@ import { ReportView } from './components/ReportView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+  fallbackTab?: () => void;
+}
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error?: Error;
+}
+
+class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { hasError: false };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    console.error('Tab rendering failed:', error, errorInfo);
+  }
+
+  override render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-8 text-center space-y-3">
+          <div className="text-rose-500 font-bold text-sm">Failed to render this view</div>
+          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto font-mono">
+            {this.state.error?.message || 'An unexpected rendering error occurred.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              this.setState({ hasError: false, error: undefined });
+              this.props.fallbackTab?.();
+            }}
+            className="px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors cursor-pointer"
+          >
+            Back to Overview
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export function App() {
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle');
   const [selectedMode, setSelectedMode] = useState<InspectionMode>('quick');
@@ -329,7 +378,7 @@ export function App() {
 
         {/* Completed Findings Presentation Suite */}
         {inspection && scanStatus === 'completed' && (
-          <div>
+          <TabErrorBoundary fallbackTab={() => setActiveDashboardTab('overview')}>
             {/* Tab 1: Overview Dashboard (Matching Screenshot) */}
             {activeDashboardTab === 'overview' && (
               <OverviewDashboard
@@ -364,7 +413,7 @@ export function App() {
             {activeDashboardTab === 'report' && (
               <ReportView inspection={inspection} />
             )}
-          </div>
+          </TabErrorBoundary>
         )}
       </main>
     </div>

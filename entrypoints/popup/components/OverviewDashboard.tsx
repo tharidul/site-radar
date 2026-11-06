@@ -106,22 +106,22 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   // Letter Grade & Subtitle
   let grade = 'A';
-  let gradeDescription = 'Well-optimized and generally secure.';
+  let gradeDescription = 'Well-optimized. No major issues found.';
   if (overallScore >= 90) {
     grade = 'A';
-    gradeDescription = 'Well-optimized and generally secure.';
+    gradeDescription = 'Well-optimized. No major issues found.';
   } else if (overallScore >= 80) {
     grade = 'B';
-    gradeDescription = 'Good overall posture with minor optimizations recommended.';
+    gradeDescription = 'Good shape overall, with a few minor items to clean up.';
   } else if (overallScore >= 70) {
     grade = 'C';
-    gradeDescription = 'Moderate security posture; multiple improvements advised.';
+    gradeDescription = 'Several security, speed, or SEO issues need attention.';
   } else if (overallScore >= 60) {
     grade = 'D';
-    gradeDescription = 'Noticeable security or performance degradation detected.';
+    gradeDescription = 'Notable problems detected across security or performance.';
   } else {
     grade = 'F';
-    gradeDescription = 'High operational risks or critical security weaknesses found.';
+    gradeDescription = 'Critical security or configuration issues found.';
   }
 
   // Circular gauge parameters
@@ -265,7 +265,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         {/* Right: Evaluated Rules Breakdown (Clean borderless column, no card-in-card) */}
         <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-4 min-w-[150px] shrink-0 space-y-1">
           <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
-            {totalRules} Rules Checked
+            {totalRules} Checks Run
           </div>
 
           <div className="flex items-center justify-between text-xs py-0.5">

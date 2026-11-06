@@ -9,42 +9,34 @@
 **Extension Name**
 Website Intelligence & Security Auditor
 
-**Short Description** (117 characters)
-Inspect any website's security, performance, SEO, and accessibility. Evidence-based findings, scores, and downloadable reports.
+**Short Description** (114 characters)
+Audit any website for security, speed, SEO, and accessibility. Local-first checks, scores, and downloadable reports.
 
 **Detailed Description**
-Website Intelligence & Security Auditor gives you a full technical inspection of any website you visit — without leaving your browser and without sending your data to any server.
+Website Intelligence audits the security, performance, SEO, and accessibility of any web page directly inside your browser. No website data ever leaves your device.
 
-Point the extension at any website, choose your inspection depth, and get a structured audit covering:
+Open the extension on any tab, pick an audit depth, and get concrete findings with actionable steps to fix each issue.
 
-Security — detects missing HTTPS, absent Content-Security-Policy headers, missing HSTS, absent X-Frame-Options, Subresource Integrity gaps, mixed content, and more. Each finding explains what was observed, why it matters, and how to fix it.
+Key Features:
 
-Performance — evaluates resource loading patterns, render-blocking assets, image optimization signals, caching hints, and Core Web Vitals indicators visible in the DOM.
+• Security Checks: Detects missing HTTPS, absent CSP headers, missing HSTS, frame protection gaps, mixed content, and unverified CDN scripts without Subresource Integrity (SRI) hashes.
 
-SEO — inspects title tags, meta descriptions, Open Graph metadata, structured data markup, canonical links, hreflang, robots directives, and sitemap presence.
+• Speed & Web Vitals: Surfaces render-blocking scripts, unoptimized images, caching headers, and visible Core Web Vitals (LCP, CLS, TTFB) from the active document.
 
-Accessibility — runs a full accessibility evaluation against WCAG standards, identifying missing ARIA labels, insufficient color-contrast signals, keyboard navigation issues, and form accessibility problems.
+• SEO & Social Metadata: Reviews title and description lengths, Open Graph tags, Twitter cards, canonical URLs, robots directives, and sitemap availability.
 
-Best Practices — checks for deprecated APIs, insecure external resources, outdated or vulnerable framework signals, and web platform best practices.
+• Accessibility (WCAG 2.1): Runs automated checks for color contrast, image alt attributes, ARIA landmarks, keyboard accessibility, and form labels using axe-core.
 
-Deep Crawl Mode — audits up to 50 pages of the same website in one run, discovers the site structure, checks robots.txt compliance, and identifies sitewide issues.
+• Tech Stack Detection: Identifies frameworks and libraries (Next.js, React, Tailwind CSS, Vue, WordPress, etc.) and versions directly from DOM and runtime globals.
 
-Security Intelligence (optional, requires explicit consent) — look up DNS records, server ASN and hosting provider, and certificate transparency history for any domain.
+• Asset Inventory: Browse all scripts, stylesheets, images, and external origins loaded by the page, with inline previews and direct links to inspect each asset.
 
-Scorecards — each category gets a scored summary (0-100) showing passed, warning, and failed checks at a glance.
+• Deep Crawl Mode: Crawls linked same-origin pages to catch site-wide broken links, missing meta tags, and robots.txt issues across up to 50 pages.
 
-Downloadable Reports — export your full audit as a self-contained HTML report or a structured JSON file for further analysis or sharing with your team.
+• Offline Reports: Export the complete audit as a self-contained HTML file or a structured JSON report to share with clients or your team.
 
-HOW TO USE:
-1. Navigate to the website you want to audit.
-2. Click the extension icon in your toolbar.
-3. Choose Quick, Full, or Deep inspection mode.
-4. Click "Start Inspection" and watch the audit run in real time.
-5. Browse findings by category, severity, and rule ID.
-6. Export the report to HTML or JSON when done.
-
-PRIVACY:
-All inspection work happens in your browser — no website content is sent to any server. The extension does not collect your browsing history, does not use analytics or tracking, and does not store audit results after you clear them. Optional external lookups (DNS, IP intelligence, certificate history) require your explicit consent in Settings and are disabled by default.
+Local and Private:
+All audits run locally in your browser session. The extension collects no browsing history, runs no analytics, and does not upload your page content. Optional network lookups (DNS, IP intelligence, and certificate logs) require your explicit consent in Settings and remain off by default.
 
 **Category**
 Developer Tools

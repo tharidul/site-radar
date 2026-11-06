@@ -453,7 +453,16 @@ export class InspectionOrchestrator {
       }
       if (linksData?.externalLinks) {
         linksData.externalLinks.forEach((l: any) => {
-          if (l.domain) originsSet.add(l.domain);
+          try {
+            if (l.url) {
+              const u = new URL(l.url, 'http://localhost');
+              if (u.hostname && !u.hostname.includes('localhost')) {
+                originsSet.add(u.hostname);
+              }
+            }
+          } catch {
+            // ignore
+          }
         });
       }
 
