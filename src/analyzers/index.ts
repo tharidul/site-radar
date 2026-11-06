@@ -47,56 +47,52 @@ export const CATEGORY_PRIORITY: Record<string, number> = {
 
 /**
  * Priority rank calculation:
- * - Failed issues on TOP: Critical (10) -> High (20) -> Medium (30) -> Low (40)
- * - Warnings next: Critical (50) -> High (60) -> Medium (70) -> Low (80)
- * - Info (100)
- * - N/A & Not Available (110)
- * - Passed items at the BOTTOM: Critical (210) -> High (220) -> Medium (230) -> Low (240) -> Info (250)
+ * - Non-passed findings (issues requiring attention) appear FIRST, ordered by severity:
+ *   Critical (10-40) -> High (110-140) -> Medium (210-240) -> Low (310-340) -> Info (410-440)
+ *   Within each severity: Failed (10) -> Warning (20) -> Not-Available/N/A (30) -> Info (40)
+ * - ALL PASSED items appear at the VERY BOTTOM (1010-1050), ordered by severity:
+ *   Critical Passed (1010) -> High Passed (1020) -> Medium Passed (1030) -> Low Passed (1040) -> Info Passed (1050)
  */
 export function getFindingSortRank(finding: AuditFinding): number {
-  const isFailed = finding.status === 'failed';
-  const isWarning = finding.status === 'warning';
   const isPassed = finding.status === 'passed';
 
-  if (isFailed) {
-    switch (finding.severity) {
-      case 'critical': return 10;
-      case 'high': return 20;
-      case 'medium': return 30;
-      case 'low': return 40;
-      default: return 45;
-    }
-  }
-
-  if (isWarning) {
-    switch (finding.severity) {
-      case 'critical': return 50;
-      case 'high': return 60;
-      case 'medium': return 70;
-      case 'low': return 80;
-      default: return 85;
-    }
-  }
-
-  if (finding.status === 'info' || finding.severity === 'info') {
-    return 100;
-  }
-
-  if (finding.status === 'not-applicable' || finding.status === 'not-available' || finding.status === 'error') {
-    return 110;
-  }
-
+  // 1. ALL PASSED items MUST be at the bottom, regardless of severity!
   if (isPassed) {
     switch (finding.severity) {
-      case 'critical': return 210;
-      case 'high': return 220;
-      case 'medium': return 230;
-      case 'low': return 240;
-      default: return 250;
+      case 'critical': return 1010;
+      case 'high':     return 1020;
+      case 'medium':   return 1030;
+      case 'low':      return 1040;
+      case 'info':
+      default:         return 1050;
     }
   }
 
-  return 300;
+  // 2. All NON-PASSED items (issues, warnings, missing data):
+  // Group primarily by severity: Critical (0) -> High (100) -> Medium (200) -> Low (300) -> Info (400)
+  let severityScore = 400;
+  switch (finding.severity) {
+    case 'critical': severityScore = 0; break;
+    case 'high':     severityScore = 100; break;
+    case 'medium':   severityScore = 200; break;
+    case 'low':      severityScore = 300; break;
+    case 'info':
+    default:         severityScore = 400; break;
+  }
+
+  // Sub-rank by status within severity: Failed is worst, then Warning, then Not-Available / N/A / Info
+  let statusScore = 30;
+  if (finding.status === 'failed') {
+    statusScore = 10;
+  } else if (finding.status === 'warning') {
+    statusScore = 20;
+  } else if (finding.status === 'not-available' || finding.status === 'not-applicable' || finding.status === 'error') {
+    statusScore = 30;
+  } else if (finding.status === 'info') {
+    statusScore = 40;
+  }
+
+  return severityScore + statusScore;
 }
 
 export function sortFindingsByPriority(findings: AuditFinding[]): AuditFinding[] {

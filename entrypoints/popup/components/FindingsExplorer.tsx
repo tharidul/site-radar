@@ -172,6 +172,8 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           <option value="all">All Statuses</option>
           <option value="failed">Failed</option>
           <option value="warning">Warning</option>
+          <option value="info">Info</option>
+          <option value="not-available">Not Available</option>
           <option value="passed">Passed</option>
         </select>
       </div>
