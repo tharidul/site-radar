@@ -425,6 +425,62 @@ export class InspectionOrchestrator {
         });
       }
 
+      // Synthesize unified 'resources' module combining scripts, styles, media, and third-party origins
+      const scriptsMod = inspection.modules['scripts'];
+      const stylesMod = inspection.modules['styles'];
+      const mediaMod = inspection.modules['media'];
+      const linksMod = inspection.modules['links'];
+
+      const scriptsData = scriptsMod?.data as any;
+      const stylesData = stylesMod?.data as any;
+      const mediaData = mediaMod?.data as any;
+      const linksData = linksMod?.data as any;
+
+      const scriptsList = scriptsData?.scripts || [];
+      const stylesheetsList = stylesData?.stylesheets || [];
+      const imagesList = mediaData?.images || [];
+
+      const originsSet = new Set<string>();
+      if (scriptsData?.externalDomains) {
+        scriptsData.externalDomains.forEach((d: string) => {
+          if (d && !d.includes('localhost')) originsSet.add(d);
+        });
+      }
+      if (stylesheetsList) {
+        stylesheetsList.forEach((s: any) => {
+          if (s.isExternal && s.domain) originsSet.add(s.domain);
+        });
+      }
+      if (linksData?.externalLinks) {
+        linksData.externalLinks.forEach((l: any) => {
+          if (l.domain) originsSet.add(l.domain);
+        });
+      }
+
+      inspection.modules['resources'] = {
+        module: 'resources',
+        status: (scriptsMod?.status === 'completed' || mediaMod?.status === 'completed' || stylesMod?.status === 'completed') ? 'completed' : 'partial',
+        collectedAt: Date.now(),
+        data: {
+          scripts: scriptsList,
+          scriptCount: scriptsData?.scriptCount ?? scriptsList.length,
+          stylesheets: stylesheetsList,
+          stylesheetCount: stylesData?.stylesheetCount ?? stylesheetsList.length,
+          images: imagesList,
+          imageCount: mediaData?.totalImages ?? imagesList.length,
+          thirdPartyOrigins: Array.from(originsSet).sort(),
+        },
+        coverage: {
+          expected: 4,
+          collected: (scriptsMod ? 1 : 0) + (stylesMod ? 1 : 0) + (mediaMod ? 1 : 0) + (linksMod ? 1 : 0),
+          unavailable: 0,
+          supported: true,
+        },
+        limitations: [],
+        errors: [],
+        sources: ['DOM:script', 'DOM:link[rel="stylesheet"]', 'DOM:img', 'DOM:a'],
+      };
+
       // Check if scan was cancelled during collection
       if (signal.aborted) {
         throw signal.reason || new ScanCancelledError(scanId);

@@ -340,8 +340,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* 2.5 Detected Frameworks & Tech Stack */}
       {techData.length > 0 && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs border border-zinc-200/50 dark:border-zinc-800/60">
+          <div className="flex items-center justify-between mb-2.5">
             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-orange-500" />
               <span>Detected Technologies &amp; Frameworks</span>
@@ -350,22 +350,35 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               {techData.length} identified
             </span>
           </div>
-          <div className="flex flex-wrap gap-1.5">
+          <div
+            className={`grid gap-2 ${
+              techData.length === 1
+                ? 'grid-cols-1'
+                : techData.length === 2 || techData.length === 4
+                  ? 'grid-cols-2'
+                  : 'grid-cols-3'
+            }`}
+          >
             {techData.map((tech, idx) => (
-              <span
+              <div
                 key={idx}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200"
-                title={`${tech.category}: ${tech.evidence}`}
+                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
-                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
-                <span className="font-bold text-zinc-900 dark:text-zinc-100">{tech.name}</span>
-                {tech.version && (
-                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">v{tech.version}</span>
-                )}
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
-                  ({tech.category})
-                </span>
-              </span>
+                <div className="flex items-center justify-between gap-1.5 min-w-0">
+                  <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 truncate">
+                    {tech.name}
+                  </span>
+                  {tech.version && (
+                    <span className="shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300">
+                      v{tech.version}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 truncate">
+                  {tech.category}
+                </div>
+              </div>
             ))}
           </div>
         </div>
