@@ -60,7 +60,9 @@ export const Button: React.FC<ButtonProps> = ({
       } ${SIZE_STYLES[size]} ${className}`}
     >
       {isLoading ? (
-        <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+        <span className="inline-flex animate-spin shrink-0">
+          <Loader2 className="w-3.5 h-3.5" />
+        </span>
       ) : (
         leftIcon && <span className="shrink-0">{leftIcon}</span>
       )}

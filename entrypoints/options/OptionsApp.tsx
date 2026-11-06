@@ -85,57 +85,47 @@ export function OptionsApp() {
     let mounted = true;
 
     async function loadSettings() {
-      // 0. Load saved theme
-      try {
-        const savedTheme = await loadSavedTheme();
-        if (mounted) {
-          setTheme(savedTheme);
-          applyThemeToDom(savedTheme);
-        }
-      } catch {
-        // Fallback
-      }
-
-      // 1. Load consent states from background
-      const consents: Record<string, boolean> = {};
-      for (const p of PROVIDER_LIST) {
-        try {
-          const res = await messageBus.sendToBackground(
-            MESSAGE_CHANNELS.CHECK_EXTERNAL_CONSENT,
-            { provider: p.id },
-          );
-          consents[p.id] = Boolean(res.granted);
-        } catch {
-          consents[p.id] = false;
-        }
-      }
-      if (mounted) {
-        setProviderConsents(consents);
-        setGlobalConsent(Object.values(consents).some(Boolean));
-      }
-
-      // 2. Load configured API key providers
-      try {
-        const keyRes = await messageBus.sendToBackground(
-          MESSAGE_CHANNELS.GET_CONFIGURED_PROVIDERS,
-          undefined,
-        );
-        if (mounted && keyRes?.configuredProviders) {
-          setConfiguredProviders(keyRes.configuredProviders);
-        }
-      } catch (err) {
-        console.warn('Could not fetch configured providers:', err);
-      }
-
-      // 3. Load saved crawl limits from storage
       try {
         const adapter = getBrowserAdapter();
-        const stored = await adapter.getStorage<CrawlConfig>(['crawlLimits']);
-        if (mounted && stored?.crawlLimits) {
-          setCrawlConfig(stored.crawlLimits);
+        const [savedTheme, consentResults, keyRes, stored] = await Promise.all([
+          loadSavedTheme().catch(() => 'dark' as AppTheme),
+          Promise.all(
+            PROVIDER_LIST.map(async (p) => {
+              try {
+                const res = await messageBus.sendToBackground(
+                  MESSAGE_CHANNELS.CHECK_EXTERNAL_CONSENT,
+                  { provider: p.id },
+                );
+                return [p.id, Boolean(res.granted)] as const;
+              } catch {
+                return [p.id, false] as const;
+              }
+            }),
+          ),
+          messageBus
+            .sendToBackground(MESSAGE_CHANNELS.GET_CONFIGURED_PROVIDERS, undefined)
+            .catch(() => null),
+          adapter.getStorage<CrawlConfig>(['crawlLimits']).catch(() => null),
+        ]);
+
+        if (mounted) {
+          if (savedTheme) {
+            setTheme(savedTheme);
+            applyThemeToDom(savedTheme);
+          }
+          const consents: Record<string, boolean> = Object.fromEntries(consentResults);
+          setProviderConsents(consents);
+          setGlobalConsent(Object.values(consents).some(Boolean));
+
+          if (keyRes?.configuredProviders) {
+            setConfiguredProviders(keyRes.configuredProviders);
+          }
+          if (stored?.crawlLimits) {
+            setCrawlConfig(stored.crawlLimits);
+          }
         }
       } catch (err) {
-        console.warn('Could not fetch stored crawl limits:', err);
+        console.warn('Error loading settings concurrently:', err);
       }
     }
 
@@ -338,7 +328,7 @@ export function OptionsApp() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => setExpandedDisclosureProviderId(isDisclosureOpen ? null : provider.id)}
+                          onClick={() => setExpandedDisclosureProviderId((prev) => prev === provider.id ? null : provider.id)}
                           className="text-xs font-medium text-orange-400 hover:text-orange-300 underline cursor-pointer"
                         >
                           {isDisclosureOpen ? 'Hide Disclosure' : 'View Disclosure'}
@@ -443,7 +433,7 @@ export function OptionsApp() {
                 />
                 <button
                   type="button"
-                  onClick={() => setShowApiKey(!showApiKey)}
+                  onClick={() => setShowApiKey((prev) => !prev)}
                   className="absolute right-2 top-2.5 text-zinc-400 hover:text-zinc-200 cursor-pointer"
                   title={showApiKey ? 'Hide key' : 'Show key'}
                 >

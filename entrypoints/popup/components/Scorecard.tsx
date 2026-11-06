@@ -4,9 +4,12 @@
  * Adheres strictly to anti-slop guidelines: functional typography, high contrast, zero generic cards.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { CategoryScore, AuditFinding, Severity } from '@/types/inspection';
 import { AlertCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+
+// Hoisted stable default non-primitive (rerender-memo-with-default-value)
+const EMPTY_SCORES: Record<string, CategoryScore> = {};
 
 interface ScorecardProps {
   scores?: Record<string, CategoryScore>;
@@ -16,18 +19,29 @@ interface ScorecardProps {
 }
 
 export const Scorecard: React.FC<ScorecardProps> = ({
-  scores = {},
+  scores = EMPTY_SCORES,
   findings,
   activeSeverityFilter = 'all',
   onFilterSeverity,
 }) => {
-  const counts = {
-    critical: findings.filter((f) => f.severity === 'critical').length,
-    high: findings.filter((f) => f.severity === 'high').length,
-    medium: findings.filter((f) => f.severity === 'medium').length,
-    low: findings.filter((f) => f.severity === 'low').length,
-    info: findings.filter((f) => f.severity === 'info').length,
-  };
+  // Single-pass severity aggregation (js-combine-iterations, rerender-memo)
+  const counts = useMemo(() => {
+    let critical = 0;
+    let high = 0;
+    let medium = 0;
+    let low = 0;
+    let info = 0;
+
+    for (const f of findings) {
+      if (f.severity === 'critical') critical++;
+      else if (f.severity === 'high') high++;
+      else if (f.severity === 'medium') medium++;
+      else if (f.severity === 'low') low++;
+      else if (f.severity === 'info') info++;
+    }
+
+    return { critical, high, medium, low, info };
+  }, [findings]);
 
   const categories = Object.keys(scores).length > 0
     ? Object.keys(scores)

@@ -5,7 +5,7 @@
  * Audit Scorecard list, Severity Distribution donut chart, and action footer.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import {
   Shield,
   Zap,
@@ -26,6 +26,7 @@ import {
 import type { WebsiteInspection, AuditFinding, Severity, CategoryScore, TechnologyData } from '@/types/inspection';
 import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
 import { Button } from './Button';
+import { Card } from './Card';
 
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
@@ -42,28 +43,59 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const scores = inspection.scores || {};
   const techData = (inspection.modules?.technology?.data as TechnologyData | undefined)?.technologies || [];
 
-  // Status counts across all evaluated rules
-  const passedCount = findings.filter((f) => f.status === 'passed').length;
-  const failedCount = findings.filter((f) => f.status === 'failed').length;
-  const warningCount = findings.filter((f) => f.status === 'warning').length;
-  const infoStatusCount = findings.filter((f) => f.status === 'info').length;
-  const naCount = findings.filter((f) => f.status === 'not-applicable' || f.status === 'not-available' || f.status === 'error').length;
-  const totalRules = findings.length;
+  // Single-pass count aggregation across all findings (js-combine-iterations, rerender-memo)
+  const { statusCounts, severityCounts, totalIssues, totalRules } = useMemo(() => {
+    let passed = 0;
+    let failed = 0;
+    let warning = 0;
+    let info = 0;
+    let na = 0;
 
-  // Severity counts (Issues = failed + warning)
-  const severityCounts = {
-    critical: findings.filter((f) => f.severity === 'critical' && f.status === 'failed').length,
-    high: findings.filter((f) => f.severity === 'high' && (f.status === 'failed' || f.status === 'warning')).length,
-    medium: findings.filter((f) => f.severity === 'medium' && (f.status === 'failed' || f.status === 'warning')).length,
-    low: findings.filter((f) => f.severity === 'low' && (f.status === 'failed' || f.status === 'warning')).length,
-    info: findings.filter((f) => f.severity === 'info' || f.status === 'info').length,
-  };
+    let crit = 0;
+    let high = 0;
+    let med = 0;
+    let low = 0;
+    let infoSev = 0;
 
-  const totalIssues =
-    severityCounts.critical +
-    severityCounts.high +
-    severityCounts.medium +
-    severityCounts.low;
+    for (const f of findings) {
+      if (f.status === 'passed') passed++;
+      else if (f.status === 'failed') failed++;
+      else if (f.status === 'warning') warning++;
+      else if (f.status === 'info') info++;
+      else na++;
+
+      if (f.severity === 'critical' && f.status === 'failed') crit++;
+      else if (f.severity === 'high' && (f.status === 'failed' || f.status === 'warning')) high++;
+      else if (f.severity === 'medium' && (f.status === 'failed' || f.status === 'warning')) med++;
+      else if (f.severity === 'low' && (f.status === 'failed' || f.status === 'warning')) low++;
+      if (f.severity === 'info' || f.status === 'info') infoSev++;
+    }
+
+    return {
+      statusCounts: {
+        passed,
+        failed,
+        warning,
+        info,
+        na,
+      },
+      severityCounts: {
+        critical: crit,
+        high,
+        medium: med,
+        low,
+        info: infoSev,
+      },
+      totalIssues: crit + high + med + low,
+      totalRules: findings.length,
+    };
+  }, [findings]);
+
+  const passedCount = statusCounts.passed;
+  const failedCount = statusCounts.failed;
+  const warningCount = statusCounts.warning;
+  const infoStatusCount = statusCounts.info;
+  const naCount = statusCounts.na;
 
   // Overall Score Calculation (average of category scores or engine overall)
   const categoryKeys = ['security', 'performance', 'seo', 'accessibility', 'best-practices'];
@@ -97,13 +129,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const gaugeCircumference = 2 * Math.PI * gaugeRadius;
   const gaugeDashOffset = gaugeCircumference * (1 - Math.min(100, Math.max(0, overallScore)) / 100);
 
-  // Category Score Definitions
-  const categoriesConfig: Array<{
-    key: string;
-    label: string;
-    icon: React.ComponentType<{ className?: string }>;
-    score: number;
-  }> = [
+  // Category Score Definitions (rerender-memo)
+  const categoriesConfig = useMemo(() => [
     {
       key: 'security',
       label: 'Security',
@@ -134,51 +161,53 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       icon: Layers,
       score: scores['best-practices'] ? Math.round(scores['best-practices'].score) : 95,
     },
-  ];
+  ], [scores]);
 
-  // Severity Donut Chart Segments
+  // Severity Donut Chart Segments (rerender-memo)
   const donutRadius = 32;
   const donutCircumference = 2 * Math.PI * donutRadius;
   const issueDistributionTotal = totalIssues > 0 ? totalIssues : 1;
 
-  const donutSlices = [
-    { key: 'critical', count: severityCounts.critical, color: '#6a0e13' }, // Wine red
-    { key: 'high', count: severityCounts.high, color: '#c8301e' }, // Crimson red
-    { key: 'medium', count: severityCounts.medium, color: '#e88438' }, // Orange
-    { key: 'low', count: severityCounts.low, color: '#f59e0b' }, // Amber
-    { key: 'info', count: severityCounts.info, color: '#d4d4d8' }, // Zinc gray
-  ];
+  const donutSegments = useMemo(() => {
+    const donutSlices = [
+      { key: 'critical', count: severityCounts.critical, color: '#6a0e13' }, // Wine red
+      { key: 'high', count: severityCounts.high, color: '#c8301e' }, // Crimson red
+      { key: 'medium', count: severityCounts.medium, color: '#e88438' }, // Orange
+      { key: 'low', count: severityCounts.low, color: '#f59e0b' }, // Amber
+      { key: 'info', count: severityCounts.info, color: '#d4d4d8' }, // Zinc gray
+    ];
 
-  let cumulativePercent = 0;
-  const donutSegments = donutSlices.map((slice) => {
-    const slicePercent = slice.count / issueDistributionTotal;
-    const strokeDasharray = `${slicePercent * donutCircumference} ${donutCircumference}`;
-    const strokeDashoffset = -cumulativePercent * donutCircumference;
-    cumulativePercent += slicePercent;
-    return {
-      ...slice,
-      strokeDasharray,
-      strokeDashoffset,
-    };
-  });
+    let cumulativePercent = 0;
+    return donutSlices.map((slice) => {
+      const slicePercent = slice.count / issueDistributionTotal;
+      const strokeDasharray = `${slicePercent * donutCircumference} ${donutCircumference}`;
+      const strokeDashoffset = -cumulativePercent * donutCircumference;
+      cumulativePercent += slicePercent;
+      return {
+        ...slice,
+        strokeDasharray,
+        strokeDashoffset,
+      };
+    });
+  }, [severityCounts, issueDistributionTotal, donutCircumference]);
 
-  // Handlers for exporting
-  const handleExportJson = () => {
+  // Handlers for exporting (useCallback)
+  const handleExportJson = useCallback(() => {
     downloadJsonReport(inspection, { includeRawModules: false, pretty: true });
     setDownloadedType('json');
     setTimeout(() => setDownloadedType(null), 2000);
-  };
+  }, [inspection]);
 
-  const handleExportHtml = () => {
+  const handleExportHtml = useCallback(() => {
     downloadHtmlReport(inspection);
     setDownloadedType('html');
     setTimeout(() => setDownloadedType(null), 2000);
-  };
+  }, [inspection]);
 
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* 1. Hero Overall Score Card */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-row items-center justify-between gap-4">
+      <Card padding="md" className="flex flex-row items-center justify-between gap-4">
         {/* Left: Overall Circular Gauge + Text */}
         <div className="flex items-center gap-4 min-w-0">
           <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
@@ -279,7 +308,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             </span>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* 2. 5 Category Cards */}
       <div className="grid grid-cols-5 gap-2">

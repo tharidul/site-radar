@@ -5,7 +5,7 @@
  * Eliminates "too much card" visual clutter (Feature 45).
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useDeferredValue } from 'react';
 import {
   Search,
   X,
@@ -46,6 +46,16 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'best-practices': Layers,
 };
 
+// Static status filter options hoisted to module level (rendering-hoist-jsx)
+const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Statuses' },
+  { value: 'failed', label: 'Failed' },
+  { value: 'warning', label: 'Warning' },
+  { value: 'info', label: 'Info' },
+  { value: 'not-available', label: 'Not Available' },
+  { value: 'passed', label: 'Passed' },
+];
+
 export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   findings,
   activeSeverityFilter,
@@ -57,7 +67,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   scores,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>(activeCategoryFilter);
+  const deferredQuery = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<FindingStatus | 'all'>('all');
   const [expandedFindingId, setExpandedFindingId] = useState<string | null>(initialExpandedFindingId || null);
 
@@ -74,16 +84,10 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return Array.from(set).sort();
   }, [findings]);
 
-  // Sync internal category filter when prop changes
-  React.useEffect(() => {
-    if (activeCategoryFilter) {
-      setCategoryFilter(activeCategoryFilter);
-    }
-  }, [activeCategoryFilter]);
-
-  // Filter and sort findings: Issues (critical, high, medium, low) on TOP, passed on BOTTOM
+  // Filter and sort findings: Issues on TOP, passed on BOTTOM.
+  // Uses deferredQuery for responsive 60 FPS input typing (rerender-use-deferred-value)
   const filteredFindings = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+    const q = deferredQuery.toLowerCase().trim();
 
     const matches = findings.filter((f) => {
       // Severity filter
@@ -91,8 +95,8 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         return false;
       }
 
-      // Category filter
-      if (categoryFilter !== 'all' && f.category?.toLowerCase() !== categoryFilter.toLowerCase()) {
+      // Category filter (derived from activeCategoryFilter prop: rerender-derived-state-no-effect)
+      if (activeCategoryFilter !== 'all' && f.category?.toLowerCase() !== activeCategoryFilter.toLowerCase()) {
         return false;
       }
 
@@ -116,7 +120,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     });
 
     return sortFindingsByPriority(matches);
-  }, [findings, activeSeverityFilter, categoryFilter, statusFilter, searchQuery]);
+  }, [findings, activeSeverityFilter, activeCategoryFilter, statusFilter, deferredQuery]);
 
   // Count actual issues (failed + warning)
   const actualIssuesInFiltered = useMemo(
@@ -126,19 +130,18 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
   const hasActiveFilters =
     activeSeverityFilter !== 'all' ||
-    categoryFilter !== 'all' ||
+    activeCategoryFilter !== 'all' ||
     statusFilter !== 'all' ||
     Boolean(searchQuery.trim());
 
   const resetFilters = () => {
     setSearchQuery('');
-    setCategoryFilter('all');
     if (onSelectCategoryFilter) onSelectCategoryFilter('all');
     setStatusFilter('all');
     onSelectSeverityFilter('all');
   };
 
-  // Category and Status Dropdown Options
+  // Category Dropdown Options
   const categoryOptions = useMemo(() => {
     return [
       { value: 'all', label: 'All Categories' },
@@ -150,23 +153,11 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     ];
   }, [categories]);
 
-  const statusOptions = useMemo(
-    () => [
-      { value: 'all', label: 'All Statuses' },
-      { value: 'failed', label: 'Failed' },
-      { value: 'warning', label: 'Warning' },
-      { value: 'info', label: 'Info' },
-      { value: 'not-available', label: 'Not Available' },
-      { value: 'passed', label: 'Passed' },
-    ],
-    [],
-  );
-
-  // Category Score Data for Banner
+  // Category Score Data for Banner (derived during render: rerender-derived-state-no-effect)
   const currentCategoryScore =
-    categoryFilter !== 'all' && scores ? scores[categoryFilter.toLowerCase()] : undefined;
+    activeCategoryFilter !== 'all' && scores ? scores[activeCategoryFilter.toLowerCase()] : undefined;
   const CategoryIcon =
-    (categoryFilter !== 'all' && CATEGORY_ICONS[categoryFilter.toLowerCase()]) || Layers;
+    (activeCategoryFilter !== 'all' && CATEGORY_ICONS[activeCategoryFilter.toLowerCase()]) || Layers;
 
   // First non-issue index to render clean section header
   const firstNonIssueIndex = useMemo(() => {
@@ -187,7 +178,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             placeholder="Search issues, rules..."
             className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs"
           />
-          {searchQuery && (
+          {searchQuery.length > 0 ? (
             <button
               type="button"
               onClick={() => setSearchQuery('')}
@@ -195,24 +186,23 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             >
               <X className="w-3.5 h-3.5" />
             </button>
-          )}
+          ) : null}
         </div>
 
         {/* Custom Category Dropdown */}
         <CustomSelect
-          value={categoryFilter}
+          value={activeCategoryFilter}
           options={categoryOptions}
           onChange={(val) => {
-            setCategoryFilter(val);
             if (onSelectCategoryFilter) onSelectCategoryFilter(val);
           }}
           className="min-w-[125px]"
         />
 
-        {/* Custom Status Dropdown */}
+        {/* Custom Status Dropdown (Hoisted static options: rendering-hoist-jsx) */}
         <CustomSelect
           value={statusFilter}
-          options={statusOptions}
+          options={STATUS_OPTIONS}
           onChange={(val) => setStatusFilter(val as any)}
           className="min-w-[105px]"
         />
@@ -228,7 +218,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               </div>
               <div>
                 <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                  {categoryFilter} Audit
+                  {activeCategoryFilter} Audit
                 </h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                   {currentCategoryScore.totalChecks} checks evaluated · {currentCategoryScore.coveragePercent ?? 100}% coverage
@@ -332,7 +322,10 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                     Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
                   </div>
                 )}
-                <div className="transition-colors">
+                <div
+                  className="transition-colors"
+                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 56px' }}
+                >
                   {/* Unified Row Item */}
                   <div
                     onClick={() => {

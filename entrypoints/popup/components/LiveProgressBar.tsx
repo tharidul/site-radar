@@ -30,7 +30,9 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
     <div className="border-b border-zinc-800 bg-zinc-950 p-4 space-y-2.5">
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 min-w-0">
-          <Loader2 className="w-3.5 h-3.5 animate-spin text-orange-400 shrink-0" />
+          <span className="inline-flex animate-spin text-orange-400 shrink-0">
+            <Loader2 className="w-3.5 h-3.5" />
+          </span>
           <span className="text-zinc-200 truncate font-medium">
             {step}
           </span>

@@ -6,7 +6,7 @@
  * and the complete Overview Dashboard.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { WebsiteInspection, InspectionMode, AuditFinding, Severity } from '@/types/inspection';
 import type { TabInfo } from '@/types/browser';
 import { MESSAGE_CHANNELS, type ScanProgressEvent } from '@/types/messaging';
@@ -39,46 +39,41 @@ export function App() {
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [theme, setTheme] = useState<AppTheme>('light');
+  const [theme, setTheme] = useState<AppTheme>('dark');
 
-  // Initial load: Fetch theme, active tab info and sync inspection state with background
+  // Initial load: Fetch theme, active tab info and sync inspection state concurrently (async-parallel)
   useEffect(() => {
     let mounted = true;
 
     async function initialize() {
       try {
-        const savedTheme = await loadSavedTheme();
-        if (mounted) {
-          setTheme(savedTheme);
-          applyThemeToDom(savedTheme);
-        }
-      } catch {
-        // Fallback
-      }
-
-      try {
         const adapter = getBrowserAdapter();
-        const tab = await adapter.getActiveTab();
+        const [savedTheme, tab, stateRes] = await Promise.all([
+          loadSavedTheme().catch(() => 'dark' as AppTheme),
+          adapter.getActiveTab().catch(() => null),
+          messageBus
+            .sendToBackground(MESSAGE_CHANNELS.GET_INSPECTION_STATE, {})
+            .catch(() => null),
+        ]);
 
-        if (mounted && tab) {
-          setActiveTab(tab);
-          const validation = validateScheme(tab.url || '');
-          setSchemeValidation(validation);
-        }
-
-        // Query background service worker for active scan session or completed results
-        const stateRes = await messageBus.sendToBackground(
-          MESSAGE_CHANNELS.GET_INSPECTION_STATE,
-          {},
-        );
-
-        if (mounted && stateRes) {
-          if (stateRes.state === 'running') {
-            setScanStatus('running');
-            if (stateRes.progress) setProgress(stateRes.progress);
-          } else if (stateRes.state === 'completed' && stateRes.inspection) {
-            setScanStatus('completed');
-            setInspection(stateRes.inspection);
+        if (mounted) {
+          if (savedTheme) {
+            setTheme(savedTheme);
+            applyThemeToDom(savedTheme);
+          }
+          if (tab) {
+            setActiveTab(tab);
+            const validation = validateScheme(tab.url || '');
+            setSchemeValidation(validation);
+          }
+          if (stateRes) {
+            if (stateRes.state === 'running') {
+              setScanStatus('running');
+              if (stateRes.progress) setProgress(stateRes.progress);
+            } else if (stateRes.state === 'completed' && stateRes.inspection) {
+              setScanStatus('completed');
+              setInspection(stateRes.inspection);
+            }
           }
         }
       } catch (err: any) {
@@ -126,8 +121,8 @@ export function App() {
     };
   }, []);
 
-  // Launch inspection
-  const handleStartInspection = async () => {
+  // Launch inspection (rerender-memo)
+  const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
 
     setScanStatus('running');
@@ -156,10 +151,10 @@ export function App() {
       setScanStatus('failed');
       setErrorMessage(err?.message || 'Error communicating with background service worker');
     }
-  };
+  }, [schemeValidation.valid, selectedMode, activeTab?.id]);
 
-  // Cancel in-flight inspection
-  const handleCancelInspection = async () => {
+  // Cancel in-flight inspection (rerender-memo)
+  const handleCancelInspection = useCallback(async () => {
     setIsCancelling(true);
     try {
       if (progress?.scanId) {
@@ -174,10 +169,10 @@ export function App() {
     } finally {
       setIsCancelling(false);
     }
-  };
+  }, [progress?.scanId]);
 
-  // In-memory results clear control (Feature 50): purges all transient audit data
-  const handleClearResults = async () => {
+  // In-memory results clear control (Feature 50): purges all transient audit data (rerender-memo)
+  const handleClearResults = useCallback(async () => {
     try {
       await messageBus.sendToBackground(MESSAGE_CHANNELS.CLEAR_IN_MEMORY_STATE, undefined);
     } catch (err) {
@@ -191,10 +186,10 @@ export function App() {
       setActiveCategoryFilter('all');
       setActiveDashboardTab('overview');
     }
-  };
+  }, []);
 
-  // Open options page
-  const handleOpenOptions = () => {
+  // Open options page (rerender-memo)
+  const handleOpenOptions = useCallback(() => {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
         chrome.runtime.openOptionsPage();
@@ -206,25 +201,28 @@ export function App() {
     } catch {
       window.open('options.html', '_blank');
     }
-  };
+  }, []);
 
-  const handleToggleTheme = () => {
-    const nextTheme: AppTheme = theme === 'dark' ? 'light' : 'dark';
-    setTheme(nextTheme);
-    applyThemeToDom(nextTheme);
-    saveTheme(nextTheme);
-  };
+  // Theme toggle with functional state updater (rerender-functional-setstate, rerender-memo)
+  const handleToggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const nextTheme: AppTheme = prev === 'dark' ? 'light' : 'dark';
+      applyThemeToDom(nextTheme);
+      saveTheme(nextTheme);
+      return nextTheme;
+    });
+  }, []);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     try {
       window.close();
     } catch {
       // ignore
     }
-  };
+  }, []);
 
-  // Navigation from Overview cards to Issues
-  const handleNavigateToIssues = (filter?: { severity?: Severity | 'all'; category?: string }) => {
+  // Navigation from Overview cards to Issues (rerender-memo)
+  const handleNavigateToIssues = useCallback((filter?: { severity?: Severity | 'all'; category?: string }) => {
     if (filter?.severity !== undefined) {
       setActiveSeverityFilter(filter.severity);
     }
@@ -232,11 +230,13 @@ export function App() {
       setActiveCategoryFilter(filter.category);
     }
     setActiveDashboardTab('issues');
-  };
+  }, []);
 
-  const issuesCount = inspection
-    ? inspection.findings.filter((f) => f.status === 'failed' || f.status === 'warning').length
-    : 0;
+  // Memoized count of active issues (rerender-memo)
+  const issuesCount = useMemo(() => {
+    if (!inspection?.findings) return 0;
+    return inspection.findings.filter((f) => f.status === 'failed' || f.status === 'warning').length;
+  }, [inspection?.findings]);
 
   return (
     <div
