@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
+import { CustomSelect } from './CustomSelect';
 import { sortFindingsByPriority } from '../../../src/analyzers';
 
 interface FindingsExplorerProps {
@@ -172,6 +173,30 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     }
   };
 
+  // Category and Status Dropdown Options
+  const categoryOptions = useMemo(() => {
+    return [
+      { value: 'all', label: 'All Categories' },
+      ...categories.map((cat) => ({
+        value: cat,
+        label: cat.charAt(0).toUpperCase() + cat.slice(1),
+        icon: CATEGORY_ICONS[cat.toLowerCase()] || Layers,
+      })),
+    ];
+  }, [categories]);
+
+  const statusOptions = useMemo(
+    () => [
+      { value: 'all', label: 'All Statuses' },
+      { value: 'failed', label: 'Failed' },
+      { value: 'warning', label: 'Warning' },
+      { value: 'info', label: 'Info' },
+      { value: 'not-available', label: 'Not Available' },
+      { value: 'passed', label: 'Passed' },
+    ],
+    [],
+  );
+
   // Category Score Data for Banner
   const currentCategoryScore =
     categoryFilter !== 'all' && scores ? scores[categoryFilter.toLowerCase()] : undefined;
@@ -208,36 +233,24 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           )}
         </div>
 
-        {/* Category Dropdown */}
-        <select
+        {/* Custom Category Dropdown */}
+        <CustomSelect
           value={categoryFilter}
-          onChange={(e) => {
-            setCategoryFilter(e.target.value);
-            if (onSelectCategoryFilter) onSelectCategoryFilter(e.target.value);
+          options={categoryOptions}
+          onChange={(val) => {
+            setCategoryFilter(val);
+            if (onSelectCategoryFilter) onSelectCategoryFilter(val);
           }}
-          className="h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 text-xs text-zinc-700 dark:text-zinc-300 focus:border-orange-500 focus:outline-none shadow-2xs cursor-pointer"
-        >
-          <option value="all">All Categories</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </option>
-          ))}
-        </select>
+          className="min-w-[125px]"
+        />
 
-        {/* Status Dropdown */}
-        <select
+        {/* Custom Status Dropdown */}
+        <CustomSelect
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value as any)}
-          className="h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2 text-xs text-zinc-700 dark:text-zinc-300 focus:border-orange-500 focus:outline-none shadow-2xs cursor-pointer"
-        >
-          <option value="all">All Statuses</option>
-          <option value="failed">Failed</option>
-          <option value="warning">Warning</option>
-          <option value="info">Info</option>
-          <option value="not-available">Not Available</option>
-          <option value="passed">Passed</option>
-        </select>
+          options={statusOptions}
+          onChange={(val) => setStatusFilter(val as any)}
+          className="min-w-[105px]"
+        />
       </div>
 
       {/* Category Overview Card (visible when filtered to a specific category) */}
