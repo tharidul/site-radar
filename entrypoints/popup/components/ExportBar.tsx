@@ -5,9 +5,10 @@
  */
 
 import React, { useState } from 'react';
-import { Download, FileCode, FileText, Check } from 'lucide-react';
+import { FileCode, FileText, Check } from 'lucide-react';
 import type { WebsiteInspection } from '@/types/inspection';
 import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
+import { Button } from './Button';
 
 interface ExportBarProps {
   inspection: WebsiteInspection;
@@ -40,33 +41,41 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
       </div>
 
       <div className="grid grid-cols-2 gap-2">
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="md"
           onClick={handleExportJson}
-          className="flex items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 py-2.5 px-3 text-sm font-semibold text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer"
+          className="w-full py-2.5"
           title="Export sanitized, schema-compliant JSON report"
+          leftIcon={
+            downloadedType === 'json' ? (
+              <Check className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <FileCode className="w-4 h-4 text-orange-400" />
+            )
+          }
         >
-          {downloadedType === 'json' ? (
-            <Check className="w-4 h-4 text-zinc-100" />
-          ) : (
-            <FileCode className="w-4 h-4 text-orange-400" />
-          )}
-          <span>{downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}</span>
-        </button>
+          {downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}
+        </Button>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="md"
           onClick={handleExportHtml}
-          className="flex items-center justify-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900 py-2.5 px-3 text-sm font-semibold text-zinc-200 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer"
+          className="w-full py-2.5"
           title="Export self-contained standalone HTML report with zero external CDN calls"
+          leftIcon={
+            downloadedType === 'html' ? (
+              <Check className="w-4 h-4 text-emerald-500" />
+            ) : (
+              <FileText className="w-4 h-4 text-orange-400" />
+            )
+          }
         >
-          {downloadedType === 'html' ? (
-            <Check className="w-4 h-4 text-zinc-100" />
-          ) : (
-            <FileText className="w-4 h-4 text-orange-400" />
-          )}
-          <span>{downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}</span>
-        </button>
+          {downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}
+        </Button>
       </div>
     </div>
   );

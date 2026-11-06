@@ -7,6 +7,7 @@
 import React from 'react';
 import { Zap, Layers, Compass, Play } from 'lucide-react';
 import type { InspectionMode } from '@/types/inspection';
+import { Button } from './Button';
 
 interface ModeSelectorProps {
   selectedMode: InspectionMode;
@@ -107,23 +108,19 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
       </div>
 
       <div className="pt-2">
-        <button
+        <Button
           type="button"
-          onClick={onStartInspection}
+          variant="primary"
+          size="lg"
           disabled={disabled}
-          className={`w-full flex items-center justify-center gap-2 rounded-lg px-4 py-3 text-sm font-bold transition-colors duration-150 select-none shadow-2xs ${
-            disabled
-              ? 'border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-900 text-zinc-400 cursor-not-allowed'
-              : 'bg-[#e88438] hover:bg-orange-600 text-white cursor-pointer hover:shadow-sm'
-          }`}
+          onClick={onStartInspection}
+          leftIcon={<Play className="w-4 h-4 fill-current" />}
+          className="w-full py-3"
         >
-          <Play className="w-4 h-4 fill-current" />
-          <span>
-            {disabled
-              ? disabledReason || 'Cannot start audit'
-              : `Start ${selectedMode === 'quick' ? 'Quick Scan' : selectedMode === 'full' ? 'Full Page Audit' : 'Deep Inspection'}`}
-          </span>
-        </button>
+          {disabled
+            ? disabledReason || 'Cannot start audit'
+            : `Start ${selectedMode === 'quick' ? 'Quick Scan' : selectedMode === 'full' ? 'Full Page Audit' : 'Deep Inspection'}`}
+        </Button>
       </div>
     </div>
   );

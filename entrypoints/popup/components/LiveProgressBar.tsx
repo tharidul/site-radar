@@ -7,6 +7,7 @@
 import React from 'react';
 import { X, Loader2 } from 'lucide-react';
 import type { ScanProgressEvent } from '@/types/messaging';
+import { Button } from './Button';
 
 interface LiveProgressBarProps {
   progress: ScanProgressEvent | null;
@@ -60,15 +61,17 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
           )}
         </div>
 
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="sm"
           onClick={onCancel}
           disabled={isCancelling}
-          className="flex items-center gap-1 rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-rose-400 transition-colors cursor-pointer disabled:opacity-50"
+          leftIcon={<X className="w-3 h-3 text-current" />}
+          className="text-xs text-zinc-300 hover:text-rose-400"
         >
-          <X className="w-3 h-3" />
-          <span>{isCancelling ? 'Cancelling...' : 'Cancel Scan'}</span>
-        </button>
+          {isCancelling ? 'Cancelling...' : 'Cancel Scan'}
+        </Button>
       </div>
     </div>
   );

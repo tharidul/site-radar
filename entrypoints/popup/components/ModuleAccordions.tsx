@@ -8,6 +8,8 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, AlertCircle, ShieldAlert } from 'lucide-react';
 import type { CollectionResult, CollectionStatus } from '@/types/inspection';
+import { Badge } from './Badge';
+import { Card } from './Card';
 
 interface ModuleAccordionsProps {
   modules?: Record<string, CollectionResult<unknown>>;
@@ -47,43 +49,6 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
     });
   };
 
-  const getStatusBadge = (status: CollectionStatus = 'skipped') => {
-    switch (status) {
-      case 'completed':
-        return (
-          <span className="text-[10px] font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-0.5">
-            Completed
-          </span>
-        );
-      case 'partial':
-        return (
-          <span className="text-[10px] font-semibold text-orange-800 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 border border-orange-200 dark:border-orange-800 rounded-md px-2 py-0.5">
-            Partial
-          </span>
-        );
-      case 'blocked':
-        return (
-          <span className="text-[10px] font-semibold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-md px-2 py-0.5">
-            Blocked
-          </span>
-        );
-      case 'failed':
-        return (
-          <span className="text-[10px] font-semibold text-rose-800 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-800 rounded-md px-2 py-0.5">
-            Failed
-          </span>
-        );
-      case 'unsupported':
-      case 'skipped':
-      default:
-        return (
-          <span className="text-[10px] font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5">
-            {status}
-          </span>
-        );
-    }
-  };
-
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       <div className="flex items-center justify-between">
@@ -110,7 +75,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
         </button>
       </div>
 
-      <div className="rounded-xl bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
+      <Card padding="none" className="divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden">
         {MODULE_DEFINITIONS.map((def) => {
           const mod = modules[def.key];
           const isExpanded = expandedKeys.has(def.key);
@@ -141,7 +106,9 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                 </div>
 
                 <div className="shrink-0 ml-2">
-                  {getStatusBadge(status)}
+                  <Badge variant="collection" collectionStatus={status}>
+                    {status}
+                  </Badge>
                 </div>
               </button>
 
@@ -229,7 +196,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
             </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 };

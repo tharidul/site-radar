@@ -23,6 +23,8 @@ import {
 import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
 import { CustomSelect } from './CustomSelect';
+import { Badge } from './Badge';
+import { Card } from './Card';
 import { sortFindingsByPriority } from '../../../src/analyzers';
 
 interface FindingsExplorerProps {
@@ -134,43 +136,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     if (onSelectCategoryFilter) onSelectCategoryFilter('all');
     setStatusFilter('all');
     onSelectSeverityFilter('all');
-  };
-
-  const getSeverityBadgeClass = (severity: Severity, status: FindingStatus) => {
-    // If the check passed or is not-applicable or not-available, do not color-code with alert red/orange!
-    if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
-      return 'text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800';
-    }
-    switch (severity) {
-      case 'critical':
-        return 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80';
-      case 'high':
-        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80';
-      case 'medium':
-        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80';
-      case 'low':
-        return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800';
-      case 'info':
-      default:
-        return 'text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900';
-    }
-  };
-
-  const getStatusBadgeClass = (status: FindingStatus) => {
-    switch (status) {
-      case 'passed':
-        return 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 font-bold';
-      case 'failed':
-        return 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 font-bold';
-      case 'warning':
-        return 'text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 font-bold';
-      case 'info':
-        return 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 font-semibold';
-      case 'not-applicable':
-      case 'not-available':
-      default:
-        return 'text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 font-medium';
-    }
   };
 
   // Category and Status Dropdown Options
@@ -341,7 +306,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       </div>
 
       {/* Unified Findings List (Single container, zero individual floating cards) */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-xs divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/60 dark:border-zinc-800">
+      <Card padding="none" className="overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
         {filteredFindings.length === 0 ? (
           <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-xs space-y-2">
             <p>No findings match the current search or filters.</p>
@@ -378,21 +343,12 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                        <span
-                          className={`text-[10px] uppercase font-bold rounded-md px-1.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
-                            finding.severity,
-                            finding.status,
-                          )}`}
-                        >
+                        <Badge variant="severity" severity={finding.severity} status={finding.status}>
                           {finding.severity}
-                        </span>
-                        <span
-                          className={`text-[10px] uppercase rounded-md px-1.5 py-0.5 shrink-0 ${getStatusBadgeClass(
-                            finding.status,
-                          )}`}
-                        >
+                        </Badge>
+                        <Badge variant="status" status={finding.status}>
                           {finding.status}
-                        </span>
+                        </Badge>
                         <span className="text-[11px] text-zinc-400 truncate">
                           {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
                         </span>
@@ -427,7 +383,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             );
           })
         )}
-      </div>
+      </Card>
     </div>
   );
 };

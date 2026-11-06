@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import type { WebsiteInspection, AuditFinding, Severity, CategoryScore, TechnologyData } from '@/types/inspection';
 import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
+import { Button } from './Button';
 
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
@@ -514,46 +515,54 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <div className="flex items-center justify-between pt-2 border-t border-zinc-200/90 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           {/* Export JSON Button */}
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="md"
             onClick={handleExportJson}
-            className="flex items-center gap-1.5 rounded-lg bg-[#e88438] hover:bg-orange-600 text-white px-4 py-2.5 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
             title="Download sanitized, schema-compliant JSON report"
+            leftIcon={
+              downloadedType === 'json' ? (
+                <Check className="w-4 h-4 text-white" />
+              ) : (
+                <FileCode className="w-4 h-4 text-white" />
+              )
+            }
           >
-            {downloadedType === 'json' ? (
-              <Check className="w-4 h-4 text-white" />
-            ) : (
-              <FileCode className="w-4 h-4 text-white" />
-            )}
-            <span>{downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}</span>
-          </button>
+            {downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}
+          </Button>
 
           {/* Export HTML Button */}
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={handleExportHtml}
-            className="flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
             title="Download standalone HTML report with zero external CDN calls"
+            leftIcon={
+              downloadedType === 'html' ? (
+                <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+              ) : (
+                <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              )
+            }
           >
-            {downloadedType === 'html' ? (
-              <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
-            ) : (
-              <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-            )}
-            <span>{downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}</span>
-          </button>
+            {downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}
+          </Button>
         </div>
 
         {/* View Details Button */}
-        <button
+        <Button
           type="button"
+          variant="outline"
+          size="md"
           onClick={() => onNavigateToIssues()}
-          className="flex items-center gap-1.5 rounded-lg bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#6a0e13] dark:text-orange-400 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-xs"
           title="Open complete Findings &amp; Issues list"
+          rightIcon={<ArrowRight className="w-3.5 h-3.5 text-current" />}
+          className="font-bold text-[#6a0e13] dark:text-orange-400"
         >
-          <span>View Details</span>
-          <ArrowRight className="w-3.5 h-3.5 text-current" />
-        </button>
+          View Details
+        </Button>
       </div>
     </div>
   );

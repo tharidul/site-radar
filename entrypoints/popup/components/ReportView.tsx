@@ -4,9 +4,11 @@
  */
 
 import React, { useState } from 'react';
-import { Download, FileCode, FileText, Check, ShieldCheck, Clock, Globe } from 'lucide-react';
+import { FileCode, FileText, Check, ShieldCheck, Clock, Globe } from 'lucide-react';
 import type { WebsiteInspection } from '@/types/inspection';
 import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
+import { Button } from './Button';
+import { Card } from './Card';
 
 interface ReportViewProps {
   inspection: WebsiteInspection;
@@ -41,7 +43,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
       </div>
 
       {/* Metadata Card */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2 text-xs">
+      <Card padding="md" className="space-y-2 text-xs">
         <div className="grid grid-cols-2 gap-3">
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
@@ -77,10 +79,10 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
             </div>
           </div>
         </div>
-      </div>
+      </Card>
 
       {/* Export Action Card */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-3">
+      <Card padding="md" className="space-y-3">
         <div>
           <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
             Download Audit Artifacts
@@ -91,33 +93,41 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
         </div>
 
         <div className="grid grid-cols-2 gap-2.5">
-          <button
+          <Button
             type="button"
+            variant="primary"
+            size="md"
             onClick={handleExportJson}
-            className="flex items-center justify-center gap-2 rounded-lg bg-[#e88438] hover:bg-orange-600 text-white py-2.5 px-3 text-xs font-semibold shadow-2xs transition-colors cursor-pointer"
+            className="w-full py-2.5"
+            leftIcon={
+              downloadedType === 'json' ? (
+                <Check className="w-4 h-4 text-white" />
+              ) : (
+                <FileCode className="w-4 h-4 text-white" />
+              )
+            }
           >
-            {downloadedType === 'json' ? (
-              <Check className="w-4 h-4 text-white" />
-            ) : (
-              <FileCode className="w-4 h-4 text-white" />
-            )}
-            <span>{downloadedType === 'json' ? 'JSON Downloaded' : 'Export JSON Report'}</span>
-          </button>
+            {downloadedType === 'json' ? 'JSON Downloaded' : 'Export JSON Report'}
+          </Button>
 
-          <button
+          <Button
             type="button"
+            variant="secondary"
+            size="md"
             onClick={handleExportHtml}
-            className="flex items-center justify-center gap-2 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 py-2.5 px-3 text-xs font-semibold transition-colors cursor-pointer shadow-xs"
+            className="w-full py-2.5"
+            leftIcon={
+              downloadedType === 'html' ? (
+                <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
+              ) : (
+                <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
+              )
+            }
           >
-            {downloadedType === 'html' ? (
-              <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
-            ) : (
-              <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-            )}
-            <span>{downloadedType === 'html' ? 'HTML Downloaded' : 'Export HTML Report'}</span>
-          </button>
+            {downloadedType === 'html' ? 'HTML Downloaded' : 'Export HTML Report'}
+          </Button>
         </div>
-      </div>
+      </Card>
     </div>
   );
 };

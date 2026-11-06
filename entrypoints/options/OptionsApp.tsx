@@ -29,6 +29,8 @@ import { consentManager } from '../../src/intelligence/consent-manager';
 import type { IntelligenceProviderType, ConsentDisclosure } from '@/types/intelligence';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
 import { CustomSelect } from '../popup/components/CustomSelect';
+import { Button } from '../popup/components/Button';
+import { Badge } from '../popup/components/Badge';
 
 interface CrawlConfig {
   maxPages: number;
@@ -278,19 +280,22 @@ export function OptionsApp() {
             </div>
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="sm"
             onClick={handleToggleTheme}
-            className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-900 px-3.5 py-1.5 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 hover:text-zinc-100 transition-colors cursor-pointer"
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+            leftIcon={
+              theme === 'light' ? (
+                <Moon className="w-4 h-4 text-zinc-700" />
+              ) : (
+                <Sun className="w-4 h-4 text-orange-400" />
+              )
+            }
           >
-            {theme === 'light' ? (
-              <Moon className="w-4 h-4 text-zinc-700" />
-            ) : (
-              <Sun className="w-4 h-4 text-orange-400" />
-            )}
-            <span>{theme === 'light' ? 'Light Mode' : 'Dark Mode'}</span>
-          </button>
+            {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
+          </Button>
         </header>
 
         {/* Section 1: External Intelligence Consent (Feature 47) */}
@@ -304,13 +309,14 @@ export function OptionsApp() {
                 Local-first inspection executes in-browser. External lookups require explicit user opt-in.
               </p>
             </div>
-            <button
+            <Button
               type="button"
+              variant="danger"
+              size="sm"
               onClick={handleRevokeAllConsent}
-              className="rounded-lg border border-zinc-800 bg-zinc-900 px-2.5 py-1 text-xs font-medium text-rose-400 hover:border-zinc-700 hover:bg-zinc-800 hover:text-rose-300 transition-colors cursor-pointer"
             >
               Revoke All
-            </button>
+            </Button>
           </div>
 
           <div className="space-y-3">
@@ -451,13 +457,14 @@ export function OptionsApp() {
             <span className="text-xs text-orange-400">
               {keyFeedback}
             </span>
-            <button
+            <Button
               type="button"
+              variant="primary"
+              size="sm"
               onClick={handleSaveApiKey}
-              className="rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
             >
               Save API Key
-            </button>
+            </Button>
           </div>
 
           {/* Configured Providers List */}
@@ -473,9 +480,9 @@ export function OptionsApp() {
                     className="flex items-center gap-2 rounded-md border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200"
                   >
                     <span className="capitalize">{provider}</span>
-                    <span className="text-[10px] font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 rounded-md px-2 py-0.5">
+                    <Badge size="xs">
                       Active
-                    </span>
+                    </Badge>
                     <button
                       type="button"
                       onClick={() => handleRemoveApiKey(provider)}
@@ -567,22 +574,24 @@ export function OptionsApp() {
             </span>
 
             <div className="flex items-center gap-2">
-              <button
+              <Button
                 type="button"
+                variant="outline"
+                size="sm"
                 onClick={handleResetCrawlLimits}
-                className="flex items-center gap-1.5 rounded-md border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-300 hover:border-zinc-700 hover:bg-zinc-800 transition-colors cursor-pointer"
+                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Defaults</span>
-              </button>
+                Reset Defaults
+              </Button>
 
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="sm"
                 onClick={handleSaveCrawlLimits}
-                className="rounded-md border border-orange-600 bg-orange-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-orange-400 transition-colors cursor-pointer"
               >
                 Save Boundaries
-              </button>
+              </Button>
             </div>
           </div>
         </section>

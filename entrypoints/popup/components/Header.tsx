@@ -7,6 +7,7 @@
 
 import React from 'react';
 import { Shield, Settings, Trash2, AlertTriangle, Globe, Sun, Moon, Check, X } from 'lucide-react';
+import { Button } from './Button';
 
 interface HeaderProps {
   tabUrl?: string;
@@ -62,53 +63,61 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Action Controls */}
         <div className="flex items-center gap-1.5">
           {hasInspectionData && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="sm"
               onClick={onClearResults}
               title="Clear in-memory results"
-              className="flex items-center gap-1.5 rounded-lg border border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 hover:text-white px-2.5 py-1 text-xs font-medium text-zinc-300 transition-colors cursor-pointer"
+              leftIcon={<Trash2 className="w-3.5 h-3.5 text-zinc-300" />}
+              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 hover:text-white text-zinc-300"
             >
-              <Trash2 className="w-3.5 h-3.5 text-zinc-300" />
-              <span>Clear</span>
-            </button>
+              Clear
+            </Button>
           )}
 
           {onToggleTheme && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={onToggleTheme}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-              className="flex items-center justify-center rounded-lg border border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
               aria-label="Toggle theme"
+              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
             >
               {theme === 'light' ? (
                 <Moon className="w-4 h-4 text-zinc-300" />
               ) : (
                 <Sun className="w-4 h-4 text-orange-400" />
               )}
-            </button>
+            </Button>
           )}
 
-          <button
+          <Button
             type="button"
+            variant="outline"
+            size="icon"
             onClick={onOptionsClick}
             title="Options &amp; Settings"
-            className="flex items-center justify-center rounded-lg border border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
             aria-label="Settings"
+            className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
           >
             <Settings className="w-4 h-4 text-zinc-300" />
-          </button>
+          </Button>
 
           {onClose && (
-            <button
+            <Button
               type="button"
+              variant="outline"
+              size="icon"
               onClick={onClose}
               title="Close popup"
-              className="flex items-center justify-center rounded-lg border border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 p-1.5 text-zinc-300 hover:text-white transition-colors cursor-pointer"
               aria-label="Close"
+              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
             >
               <X className="w-4 h-4 text-zinc-300" />
-            </button>
+            </Button>
           )}
         </div>
       </div>
