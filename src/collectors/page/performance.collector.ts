@@ -77,9 +77,53 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
 
         // Web Vitals: Attempt buffered retrieval of LCP, CLS, and First Input
         try {
-          const lcpEntries = perf.getEntriesByType('largest-contentful-paint');
-          const clsEntries = perf.getEntriesByType('layout-shift');
-          const fidEntries = perf.getEntriesByType('first-input');
+          let lcpEntries: any[] = [];
+          try {
+            lcpEntries = perf.getEntriesByType('largest-contentful-paint');
+          } catch {}
+
+          let clsEntries: any[] = [];
+          try {
+            clsEntries = perf.getEntriesByType('layout-shift');
+          } catch {}
+
+          let fidEntries: any[] = [];
+          try {
+            fidEntries = perf.getEntriesByType('first-input');
+          } catch {}
+
+          // Use PerformanceObserver with buffered: true if supported (standard Chromium retrieval)
+          const PO = (win as any)?.PerformanceObserver;
+          if (PO && Array.isArray(PO.supportedEntryTypes)) {
+            if (lcpEntries.length === 0 && PO.supportedEntryTypes.includes('largest-contentful-paint')) {
+              try {
+                const po = new PO((list: any) => {
+                  const entries = list.getEntries();
+                  if (entries.length > 0) lcpEntries = entries;
+                });
+                po.observe({ type: 'largest-contentful-paint', buffered: true });
+                if (typeof po.takeRecords === 'function') {
+                  const records = po.takeRecords();
+                  if (records.length > 0) lcpEntries = records;
+                }
+                po.disconnect();
+              } catch {}
+            }
+            if (clsEntries.length === 0 && PO.supportedEntryTypes.includes('layout-shift')) {
+              try {
+                const po = new PO((list: any) => {
+                  const entries = list.getEntries();
+                  if (entries.length > 0) clsEntries = entries;
+                });
+                po.observe({ type: 'layout-shift', buffered: true });
+                if (typeof po.takeRecords === 'function') {
+                  const records = po.takeRecords();
+                  if (records.length > 0) clsEntries = records;
+                }
+                po.disconnect();
+              } catch {}
+            }
+          }
 
           let lcpMs: number | undefined;
           if (lcpEntries && lcpEntries.length > 0) {

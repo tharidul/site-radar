@@ -262,7 +262,7 @@ export function OptionsApp() {
             <Shield className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
             <div>
               <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
-                Website Intelligence Settings
+                SiteRadar Settings
               </h1>
               <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
                 Privacy controls, provider consent, session API keys, and crawl boundaries
@@ -586,19 +586,28 @@ export function OptionsApp() {
           </div>
         </section>
 
-        {/* Author Footer */}
+        {/* Author & Privacy Footer */}
         <footer className="pt-6 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
-          <a
-            href="https://tharidulakmal.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors"
-          >
-            <span className="font-semibold text-zinc-700 dark:text-zinc-200">Tharidu Lakmal</span>
+          <div className="inline-flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+            <a
+              href="https://tharidulakmal.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+            >
+              <span className="font-semibold text-zinc-700 dark:text-zinc-200">LKML</span>
+              <ExternalLink className="w-3 h-3 opacity-70" />
+            </a>
             <span className="text-zinc-400 dark:text-zinc-600">•</span>
-            <span className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2">tharidulakmal.com</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
-          </a>
+            <a
+              href="privacy-policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors hover:underline"
+            >
+              Privacy Policy
+            </a>
+          </div>
         </footer>
       </div>
     </div>

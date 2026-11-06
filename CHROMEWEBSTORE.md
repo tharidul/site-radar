@@ -1,19 +1,19 @@
-# Chrome Web Store Listing — Website Intelligence & Security Auditor
+# Chrome Web Store Listing — SiteRadar
 
-> Last Updated: 2026-11-06
+> Last Updated: 2026-11-07
 
 ---
 
 ## Store Listing
 
 **Extension Name**
-Website Intelligence & Security Auditor
+SiteRadar
 
 **Short Description** (114 characters)
 Audit any website for security, speed, SEO, and accessibility. Local-first checks, scores, and downloadable reports.
 
 **Detailed Description**
-Website Intelligence audits the security, performance, SEO, and accessibility of any web page directly inside your browser. No website data ever leaves your device.
+SiteRadar audits the security, performance, SEO, and accessibility of any web page directly inside your browser. No website data ever leaves your device.
 
 Open the extension on any tab, pick an audit depth, and get concrete findings with actionable steps to fix each issue.
 

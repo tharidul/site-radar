@@ -371,8 +371,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       const buttons = div.querySelectorAll('button');
       // Overview (active)
-      expect(buttons[0]?.className).toContain('bg-orange-500');
-      expect(buttons[0]?.className).toContain('text-white');
+      expect(buttons[0]?.className).toContain('text-orange-600');
+      expect(buttons[0]?.className).toContain('dark:text-orange-400');
       // Issues (inactive with badge)
       expect(buttons[1]?.className).toContain('text-zinc-600');
       expect(buttons[1]?.className).toContain('dark:text-zinc-400');
@@ -645,17 +645,16 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(buttons[1]?.className).toContain('bg-zinc-100');
     });
 
-    it('AboutView renders clean author card and links to tharidulakmal.com', () => {
+    it('AboutView renders clean author card and brand identity for LKML', () => {
       const div = renderComponent(<AboutView />);
 
       // Root container is theme aware
-      const rootEl = div.firstElementChild as HTMLElement;
+      const rootEl = (div.querySelector('.bg-\\[\\#f8f8fa\\]') || div.firstElementChild) as HTMLElement;
       expect(rootEl.className).toContain('bg-[#f8f8fa]');
       expect(rootEl.className).toContain('dark:bg-zinc-950');
 
-      // Name and website are rendered
-      expect(div.textContent).toContain('Tharidu Lakmal');
-      expect(div.textContent).toContain('tharidulakmal.com');
+      // Brand is rendered
+      expect(div.textContent).toContain('LKML');
       expect(div.textContent).not.toContain('developer');
       expect(div.textContent).not.toContain('Developer');
 
@@ -667,7 +666,7 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(card?.className).toContain('dark:bg-zinc-900');
     });
 
-    it('TabBar renders all 6 tabs including the About tab', () => {
+    it('TabBar renders all 5 tabs including the About tab', () => {
       const div = renderComponent(
         <TabBar
           activeTab="about"
@@ -676,12 +675,12 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
       const buttons = div.querySelectorAll('button');
-      expect(buttons.length).toBe(6);
+      expect(buttons.length).toBe(5);
 
-      // 6th tab is About and active
-      expect(buttons[5]?.textContent).toContain('About');
-      expect(buttons[5]?.className).toContain('bg-orange-500');
-      expect(buttons[5]?.className).toContain('text-white');
+      // 5th tab is About and active
+      expect(buttons[4]?.textContent).toContain('About');
+      expect(buttons[4]?.className).toContain('text-orange-600');
+      expect(buttons[4]?.className).toContain('dark:text-orange-400');
     });
   });
 });

@@ -49,6 +49,18 @@ const MODES: ModeOption[] = [
   },
 ];
 
+function openPrivacyPolicy() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('privacy-policy.html'), active: true });
+    } else {
+      window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
+    }
+  } catch {
+    window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
+  }
+}
+
 export const ModeSelector: React.FC<ModeSelectorProps> = ({
   selectedMode,
   onSelectMode,
@@ -123,8 +135,8 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         </Button>
       </div>
 
-      {/* Author & Portfolio Link */}
-      <div className="pt-2.5 pb-1 text-center border-t border-zinc-200/70 dark:border-zinc-800/80">
+      {/* Author & Privacy Policy Links */}
+      <div className="pt-2.5 pb-1 flex items-center justify-center gap-3 border-t border-zinc-200/70 dark:border-zinc-800/80 text-[11px] select-none">
         <button
           type="button"
           onClick={() => {
@@ -134,12 +146,20 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               window.open('https://tharidulakmal.com', '_blank');
             }
           }}
-          className="inline-flex items-center gap-1.5 text-[11px] text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors cursor-pointer select-none"
+          className="inline-flex items-center gap-1 text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors cursor-pointer"
         >
-          <span className="font-semibold text-zinc-700 dark:text-zinc-200">Tharidu Lakmal</span>
-          <span className="text-zinc-400 dark:text-zinc-600">•</span>
-          <span className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2">tharidulakmal.com</span>
+          <span className="font-semibold text-zinc-700 dark:text-zinc-200">LKML</span>
           <ExternalLink className="w-3 h-3 opacity-70" />
+        </button>
+
+        <span className="text-zinc-300 dark:text-zinc-700">•</span>
+
+        <button
+          type="button"
+          onClick={openPrivacyPolicy}
+          className="text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors cursor-pointer hover:underline"
+        >
+          Privacy Policy
         </button>
       </div>
     </div>

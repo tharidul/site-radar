@@ -23,7 +23,7 @@ export default defineConfig({
     },
   }),
   manifest: (env) => ({
-    name: 'Website Intelligence & Security Auditor',
+    name: 'SiteRadar',
     description: 'Evidence-based website technical inspection, security auditing, and accessibility analysis.',
     version: '0.1.0',
     permissions: [
@@ -37,7 +37,7 @@ export default defineConfig({
     ...(env.browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {
-          id: 'website-intelligence@local.audit',
+          id: 'siteradar@local.audit',
           strict_min_version: '109.0',
           data_collection_permissions: {
             required: ['none'],

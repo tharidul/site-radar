@@ -23,7 +23,6 @@ import { LiveProgressBar } from './components/LiveProgressBar';
 import { FindingsExplorer } from './components/FindingsExplorer';
 import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
-import { ReportView } from './components/ReportView';
 import { AboutView } from './components/AboutView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
@@ -410,12 +409,7 @@ export function App() {
               <ResourcesView inspection={inspection} />
             )}
 
-            {/* Tab 5: Executive Report View */}
-            {activeDashboardTab === 'report' && (
-              <ReportView inspection={inspection} />
-            )}
-
-            {/* Tab 6: About */}
+            {/* Tab 5: About */}
             {activeDashboardTab === 'about' && (
               <AboutView />
             )}

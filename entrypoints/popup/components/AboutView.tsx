@@ -1,11 +1,11 @@
 /**
  * @file entrypoints/popup/components/AboutView.tsx
- * @description Simple, clean About view with author details for Tharidu Lakmal (tharidulakmal.com).
+ * @description Simple, clean About view with author details for LKML.
  * Minimal, intentional, and does not use "developer" labeling.
  */
 
 import React from 'react';
-import { Globe, Mail, ExternalLink } from 'lucide-react';
+import { ExternalLink, ShieldCheck } from 'lucide-react';
 
 function openLink(url: string) {
   if (!url) return;
@@ -17,6 +17,18 @@ function openLink(url: string) {
     }
   } catch {
     window.open(url, '_blank', 'noopener,noreferrer');
+  }
+}
+
+function openPrivacyPolicy() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('privacy-policy.html'), active: true });
+    } else {
+      window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
+    }
+  } catch {
+    window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
   }
 }
 
@@ -39,45 +51,69 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5
 export const AboutView: React.FC = () => {
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3">
-        <div>
-          <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
-            Tharidu Lakmal
-          </h2>
+      {/* Author Card */}
+      <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+        <div className="flex items-center justify-between">
           <button
             type="button"
             onClick={() => openLink('https://tharidulakmal.com')}
-            className="inline-flex items-center gap-1.5 text-xs text-orange-600 dark:text-orange-400 hover:underline mt-0.5 font-medium cursor-pointer"
+            className="flex items-center gap-1.5 cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+            title="Visit tharidulakmal.com"
           >
-            <Globe className="w-3.5 h-3.5" />
-            <span>tharidulakmal.com</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
+            <img
+              src="/lkml.png"
+              alt="LKML"
+              className="h-5 w-auto object-contain invert dark:invert-0"
+            />
+            <span className="sr-only">LKML</span>
+            <ExternalLink className="w-3 h-3 text-zinc-400 dark:text-zinc-500 opacity-60" />
           </button>
-        </div>
 
-        <div className="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 flex items-center gap-4 text-xs">
           <button
             type="button"
             onClick={() => openLink('https://github.com/tharidul')}
-            className="inline-flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
           >
             <GithubIcon className="w-3.5 h-3.5" />
             <span>GitHub</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => openLink('mailto:tharindulakmal5050@gmail.com')}
-            className="inline-flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 cursor-pointer"
-          >
-            <Mail className="w-3.5 h-3.5" />
-            <span>Email</span>
+            <ExternalLink className="w-3 h-3 opacity-60" />
           </button>
         </div>
       </div>
 
-      <div className="text-[11px] text-zinc-500 dark:text-zinc-500 px-1">
-        Website Intelligence v0.1.0
+      {/* Privacy & Security Card */}
+      <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+              Privacy &amp; Security
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={openPrivacyPolicy}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
+          >
+            <span>Read Policy</span>
+            <ExternalLink className="w-3 h-3 opacity-70" />
+          </button>
+        </div>
+        <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          SiteRadar operates 100% locally in your browser. No browsing history, cookies, or page content are ever collected, tracked, or transmitted off-device.
+        </p>
+      </div>
+
+      {/* Version & Direct Link Footer */}
+      <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-500 px-1">
+        <span>SiteRadar v0.1.0</span>
+        <button
+          type="button"
+          onClick={openPrivacyPolicy}
+          className="hover:text-zinc-800 dark:hover:text-zinc-300 hover:underline cursor-pointer"
+        >
+          Privacy Policy
+        </button>
       </div>
     </div>
   );

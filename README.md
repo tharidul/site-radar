@@ -1,4 +1,4 @@
-# Website Intelligence & Security Auditor
+# SiteRadar — Website Security & Technical Auditor
 
 A cross-browser extension (Chrome & Firefox MV3) for evidence-based website auditing: security, accessibility, performance, SEO, and web best practices.
 

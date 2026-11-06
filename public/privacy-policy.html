@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none';">
+  <title>Privacy Policy — SiteRadar</title>
+  <style>
+    :root {
+      --bg: #09090b;
+      --surface: #18181b;
+      --border: #27272a;
+      --border-muted: #3f3f46;
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --text-dim: #71717a;
+      --accent: #e88438;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 15px;
+      line-height: 1.65;
+      padding: 48px 24px;
+    }
+    .container {
+      max-width: 760px;
+      margin: 0 auto;
+    }
+    header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 32px;
+      margin-bottom: 40px;
+    }
+    .badge {
+      display: inline-block;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 12px;
+      border: 1px solid var(--border-muted);
+      border-radius: 9999px;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      margin-bottom: 10px;
+    }
+    .meta {
+      font-size: 13px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+    }
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin: 36px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    h3 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin: 24px 0 8px;
+    }
+    p {
+      color: var(--text-muted);
+      margin-bottom: 14px;
+    }
+    ul {
+      list-style: none;
+      padding: 0;
+      margin-bottom: 14px;
+    }
+    ul li {
+      color: var(--text-muted);
+      padding: 3px 0 3px 18px;
+      position: relative;
+      font-size: 14px;
+    }
+    ul li::before {
+      content: "–";
+      position: absolute;
+      left: 0;
+      color: var(--text-dim);
+    }
+    strong { color: var(--text); font-weight: 600; }
+    code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 5px;
+      color: var(--accent);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px;
+      font-size: 13px;
+    }
+    th {
+      text-align: left;
+      padding: 8px 12px;
+      background: var(--surface);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+    }
+    td {
+      padding: 8px 12px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    td:first-child { color: var(--text); font-weight: 500; }
+    tr:last-child td { border-bottom: none; }
+    .table-wrap {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      overflow-x: auto;
+    }
+    .notice {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent);
+      border-radius: 8px;
+      padding: 14px 16px;
+      margin: 20px 0;
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+    .notice strong { color: var(--accent); }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-dim);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">Privacy Policy</div>
+      <h1>SiteRadar</h1>
+      <p class="meta">
+        Effective Date: [PUBLISHER TO INSERT DATE] &nbsp;&bull;&nbsp; Last Updated: 2026-11-07 &nbsp;&bull;&nbsp; Version: 0.1.0
+      </p>
+    </header>
+
+    <h2>1. Introduction</h2>
+    <p>This Privacy Policy describes how <strong>SiteRadar</strong> (the "Extension") handles information during its operation. This policy is written to accurately reflect the Extension's actual implemented behavior — not aspirational practices.</p>
+
+    <h2>2. Extension Description</h2>
+    <p>SiteRadar is a browser extension that inspects the currently active website at your explicit request. It evaluates the site's security posture, performance characteristics, SEO metadata, accessibility compliance, and web development best practices. It generates evidence-based findings, severity-classified issue reports, category scores, and downloadable audit reports.</p>
+
+    <h2>3. Information We Collect</h2>
+
+    <h3>3.1 Information We Do NOT Collect</h3>
+    <p>The Extension does <strong>not</strong> collect:</p>
+    <ul>
+      <li>Your browsing history</li>
+      <li>Cookies from any website</li>
+      <li>Authentication credentials or passwords</li>
+      <li>Form field values or user-submitted data</li>
+      <li>Personally identifiable information about website visitors</li>
+      <li>Financial information</li>
+      <li>Local storage or session storage contents of inspected websites</li>
+      <li>Analytics or telemetry about how you use the Extension</li>
+      <li>Error logs transmitted to any server</li>
+      <li>Any information from websites you visit that you do not explicitly inspect</li>
+    </ul>
+
+    <h3>3.2 Information Processed During Inspection</h3>
+    <p>When you explicitly start an inspection, the Extension accesses the following from the tab you are currently viewing:</p>
+    <p><strong>Always accessed (local processing only, never transmitted):</strong></p>
+    <ul>
+      <li>The URL of the active tab you chose to inspect</li>
+      <li>The page title</li>
+      <li>HTML document structure and DOM elements (meta tags, headings, links, images, scripts, stylesheets, form elements)</li>
+      <li>Structural metadata about forms — field types, autocomplete attributes, whether fields have values (<strong>not the values themselves</strong>)</li>
+      <li>External resource URLs referenced by the page</li>
+      <li>HTTP response headers returned by the server</li>
+    </ul>
+    <p><strong>Optionally accessed (only when you enable consent for specific providers):</strong></p>
+    <ul>
+      <li>The resolved IP address of the inspected domain (sent to ipapi.co for ASN/geolocation lookup)</li>
+      <li>The hostname of the inspected domain (sent to a DNS-over-HTTPS provider)</li>
+      <li>The domain name of the inspected site (sent to crt.sh for Certificate Transparency query)</li>
+    </ul>
+
+    <h2>4. How Website Information Is Processed</h2>
+
+    <h3>4.1 Local Processing</h3>
+    <p>The vast majority of inspection work happens entirely within your browser. DOM analysis, accessibility testing (using the bundled axe-core library), performance analysis, SEO analysis, best-practice checks, and score calculation all run locally. No page content is transmitted to any server during local analysis.</p>
+    <p>The Extension makes a background HTTP HEAD request to the target URL to retrieve response headers for security analysis. This is a direct request from your browser to the target website — no third-party server is involved.</p>
+
+    <h3>4.2 Deep Crawl Mode</h3>
+    <p>In "Deep" mode, the Extension fetches additional pages from the <strong>same domain</strong> you are inspecting (maximum 50 pages by default). These are direct requests from your browser to the target website. The crawled content is processed in memory only. The Extension identifies itself with the User-Agent string <code>WebsiteIntelligenceBot/1.0</code> during crawl fetches.</p>
+
+    <h2>5. Information Transmitted to External Servers</h2>
+
+    <div class="notice">
+      <strong>Default state: All external lookups are disabled.</strong> No information is transmitted to external services unless you individually enable each provider in Settings &gt; External Intelligence Consent.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Data Transmitted</th><th>Purpose</th><th>Their Privacy Policy</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Cloudflare DNS-over-HTTPS<br><code>cloudflare-dns.com</code></td>
+            <td>Hostname of inspected site, DNS record type</td>
+            <td>Look up DNS records (A, AAAA, MX, TXT, NS, CAA)</td>
+            <td><a href="https://www.cloudflare.com/privacypolicy/" target="_blank" rel="noopener">cloudflare.com/privacypolicy</a></td>
+          </tr>
+          <tr>
+            <td>ipapi.co</td>
+            <td>Public IP address of inspected server</td>
+            <td>Identify hosting provider, ASN, geographic region</td>
+            <td><a href="https://ipapi.co/privacy/" target="_blank" rel="noopener">ipapi.co/privacy</a></td>
+          </tr>
+          <tr>
+            <td>crt.sh (Sectigo)</td>
+            <td>Domain name of inspected site</td>
+            <td>Query public Certificate Transparency logs</td>
+            <td><a href="https://crt.sh/" target="_blank" rel="noopener">crt.sh</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The Extension enforces a strict private-network guard. It will <strong>never</strong> transmit a private, loopback, or link-local IP address to any external service.</p>
+
+    <h2>6. Local Storage</h2>
+    <p>The Extension writes only the following minimal configuration to your browser's local storage:</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Value</th><th>Purpose</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>theme</code></td>
+            <td><code>"dark"</code> or <code>"light"</code></td>
+            <td>Remembers your preferred color theme</td>
+          </tr>
+          <tr>
+            <td><code>crawlLimits</code></td>
+            <td>max pages, depth, concurrency, timeout</td>
+            <td>Remembers your deep crawl configuration</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p><strong>Audit results, findings, scores, inspection reports, URLs, and website content are never written to storage.</strong> They exist only in service worker memory during your active session and are cleared when you click "Clear" or when your browser session ends.</p>
+
+    <h2>7. Third-Party Services and Integrations</h2>
+    <p>The Extension bundles the <strong>axe-core</strong> accessibility testing library (by Deque Systems). This library runs entirely within your browser and makes no network requests. No other analytics platforms, advertising networks, or tracking services are included or integrated.</p>
+
+    <h2>8. Data Sharing Practices</h2>
+    <p>We do <strong>not</strong>:</p>
+    <ul>
+      <li>Sell any information to third parties</li>
+      <li>Share inspection results with any party</li>
+      <li>Use inspection data for advertising purposes</li>
+      <li>Use inspection data for user profiling</li>
+      <li>Share data for any purpose unrelated to the Extension's audit function</li>
+    </ul>
+    <p>The only information that leaves your device is the information transmitted to the optional external intelligence providers listed in Section 5, and only when you have explicitly enabled each provider.</p>
+
+    <h2>9. Data Retention</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Information</th><th>Retention</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Inspection results, findings, scores</td><td>Until you click "Clear" or close the popup; never persisted to storage</td></tr>
+          <tr><td>Active tab URL (during inspection)</td><td>In memory during inspection only</td></tr>
+          <tr><td>Session API keys (if entered)</td><td>Service worker memory only; cleared on SW restart or manual removal</td></tr>
+          <tr><td>Theme preference</td><td>chrome.storage.local until changed or Extension uninstalled</td></tr>
+          <tr><td>Crawl limit configuration</td><td>chrome.storage.local until changed or Extension uninstalled</td></tr>
+          <tr><td>Exported JSON / HTML reports</td><td>On your device only; controlled entirely by you</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h2>10. Data Deletion</h2>
+    <ul>
+      <li><strong>Clear inspection results:</strong> Click the "Clear" button (trash icon) in the Extension popup header.</li>
+      <li><strong>Reset crawl configuration:</strong> Click "Reset Defaults" in Extension Settings.</li>
+      <li><strong>Revoke all external consent:</strong> Click "Revoke All" in Settings &gt; External Intelligence Consent.</li>
+      <li><strong>Remove an API key:</strong> Click the trash icon next to the provider name in Settings &gt; Third-Party API Keys.</li>
+      <li><strong>Remove all Extension data:</strong> Uninstall the Extension. This removes all <code>chrome.storage.local</code> data.</li>
+    </ul>
+
+    <h2>11. Data Security</h2>
+    <p>The Extension implements the following security measures:</p>
+    <ul>
+      <li><strong>Secret redaction:</strong> Before any page data is processed or included in a report, the Extension automatically redacts API keys, JWT tokens, AWS keys, GitHub tokens, Stripe keys, Bearer/Basic authentication headers, credit card numbers (Luhn-validated), and passwords in URLs.</li>
+      <li><strong>Private network guard:</strong> The Extension will not make requests to private IP addresses, loopback addresses, or reserved network ranges.</li>
+      <li><strong>DNS rebinding protection:</strong> DNS responses resolving to private IP addresses are blocked before any request is made.</li>
+      <li><strong>Scheme validation:</strong> The Extension will not inspect <code>chrome://</code>, <code>about:</code>, <code>file://</code>, or other internal browser pages.</li>
+      <li><strong>Consent gating:</strong> External network lookups cannot be triggered without your explicit opt-in for each provider.</li>
+    </ul>
+
+    <h2>12. Permissions and Their Purposes</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Permission</th><th>Why It Is Required</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>activeTab</code></td>
+            <td>To identify the tab you are inspecting and to run inspection scripts in that tab when you click "Start Inspection."</td>
+          </tr>
+          <tr>
+            <td><code>scripting</code></td>
+            <td>To run inspection code in the tab's main JavaScript context, necessary for framework detection (React, Vue, Angular, etc.) from window-level globals.</td>
+          </tr>
+          <tr>
+            <td><code>storage</code></td>
+            <td>To remember your theme preference and crawl configuration between sessions. No audit data is ever written to storage.</td>
+          </tr>
+          <tr>
+            <td><code>optional_host_permissions: *://*/*</code></td>
+            <td>Requested only when needed. Enables fetching HTTP response headers from the target website and crawling additional pages in deep inspection mode.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>The content script is registered to run on all URLs so it can respond when you audit any website you choose. The script is <strong>passive</strong> — it performs no actions until you explicitly start an inspection from the popup.</p>
+
+    <h2>13. User Rights and Privacy Choices</h2>
+    <ul>
+      <li>The Extension only inspects the site you explicitly choose to audit.</li>
+      <li>Each external intelligence provider can be individually disabled in Settings at any time.</li>
+      <li>Click "Clear" at any time to remove all inspection data from memory.</li>
+      <li>Exported reports go to your device only — you control when and whether to export.</li>
+      <li>Uninstalling the Extension removes all stored configuration data.</li>
+    </ul>
+
+    <h2>14. Children's Privacy</h2>
+    <p>The Extension is intended for web developers and security professionals. It is not directed at children under 13 and does not knowingly collect information from children.</p>
+
+    <h2>15. Limited Use Compliance</h2>
+    <p>The Extension's access to and use of information obtained through inspecting websites is limited to providing the website audit features visible to the user. The Extension does not use website content for unrelated purposes, does not transfer data to third parties except as described in Section 5 (optional, consent-gated), does not use data for creditworthiness determination, and does not sell user data.</p>
+    <p>This complies with the Chrome Web Store User Data Policy Limited Use requirements.</p>
+
+    <h2>16. Changes to This Privacy Policy</h2>
+    <p>If the Extension's data handling practices change materially, this policy will be updated. The "Last Updated" date at the top reflects the most recent change. We encourage you to review this policy periodically.</p>
+
+    <h2>17. Contact Information</h2>
+    <p>For privacy questions or concerns about this Extension:</p>
+    <ul>
+      <li><strong>Publisher:</strong> [PUBLISHER NAME — REQUIRED BEFORE PUBLISHING]</li>
+      <li><strong>Contact Email:</strong> [PUBLISHER EMAIL — REQUIRED BEFORE PUBLISHING]</li>
+      <li><strong>Support:</strong> [SUPPORT URL OR EMAIL — REQUIRED BEFORE PUBLISHING]</li>
+    </ul>
+
+    <h2>18. Effective Date</h2>
+    <p>This Privacy Policy is effective as of [PUBLISHER TO INSERT DATE].</p>
+
+    <footer>
+      <span>SiteRadar — Privacy Policy</span>
+      <span>Reflects actual implemented behavior as of version 0.1.0</span>
+    </footer>
+  </div>
+</body>
+</html>
+

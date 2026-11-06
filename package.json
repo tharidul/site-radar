@@ -1,6 +1,6 @@
 {
-  "name": "website-intelligence-security-auditor",
-  "description": "Website Intelligence & Security Auditor cross-browser extension for Chrome and Firefox.",
+  "name": "siteradar",
+  "description": "SiteRadar — Website Security & Technical Auditor cross-browser extension for Chrome and Firefox.",
   "private": true,
   "version": "0.1.0",
   "type": "module",
