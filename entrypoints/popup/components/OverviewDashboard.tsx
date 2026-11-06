@@ -402,7 +402,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <XCircle className="w-3.5 h-3.5 text-rose-600" />
                 <span>Critical</span>
               </span>
-              <span className={`font-bold tabular-nums ${severityCounts.critical > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500'}`}>
+              <span className={`font-bold tabular-nums ${severityCounts.critical > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                 {severityCounts.critical}
               </span>
             </div>
@@ -416,7 +416,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>High</span>
               </span>
-              <span className={`font-bold tabular-nums ${severityCounts.high > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500'}`}>
+              <span className={`font-bold tabular-nums ${severityCounts.high > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                 {severityCounts.high}
               </span>
             </div>
@@ -430,7 +430,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>Medium</span>
               </span>
-              <span className={`font-bold tabular-nums ${severityCounts.medium > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500'}`}>
+              <span className={`font-bold tabular-nums ${severityCounts.medium > 0 ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500 dark:text-zinc-400'}`}>
                 {severityCounts.medium}
               </span>
             </div>
@@ -441,7 +441,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
               <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
-                <Info className="w-3.5 h-3.5 text-zinc-500" />
+                <Info className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
                 <span>Low</span>
               </span>
               <span className="font-bold text-zinc-800 dark:text-zinc-300 tabular-nums">
@@ -545,7 +545,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <span className="text-zinc-800 dark:text-zinc-300">Low ({severityCounts.low})</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-xs shrink-0 bg-zinc-400 dark:bg-zinc-600" />
+                <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: 'var(--color-zinc-400)' }} />
                 <span className="text-zinc-600 dark:text-zinc-400">Info ({severityCounts.info})</span>
               </div>
             </div>
