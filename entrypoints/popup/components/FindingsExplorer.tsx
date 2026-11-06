@@ -1,13 +1,26 @@
 /**
  * @file entrypoints/popup/components/FindingsExplorer.tsx
  * @description Clean, editorial findings explorer with unified list layout,
- * inline accordion inspection, and compact filter controls.
+ * inline accordion inspection, compact filter controls, and category context banners.
  * Eliminates "too much card" visual clutter (Feature 45).
  */
 
 import React, { useState, useMemo } from 'react';
-import { Search, X, ChevronRight, ChevronDown } from 'lucide-react';
-import type { AuditFinding, Severity, FindingStatus } from '@/types/inspection';
+import {
+  Search,
+  X,
+  ChevronRight,
+  ChevronDown,
+  CheckCircle2,
+  AlertTriangle,
+  Shield,
+  Zap,
+  UserCheck,
+  Layers,
+  Info,
+  HelpCircle,
+} from 'lucide-react';
+import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
 import { sortFindingsByPriority } from '../../../src/analyzers';
 
@@ -19,7 +32,16 @@ interface FindingsExplorerProps {
   onSelectCategoryFilter?: (category: string) => void;
   onSelectFinding?: (finding: AuditFinding) => void;
   initialExpandedFindingId?: string | null;
+  scores?: Record<string, CategoryScore>;
 }
+
+const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>> = {
+  security: Shield,
+  performance: Zap,
+  seo: Search,
+  accessibility: UserCheck,
+  'best-practices': Layers,
+};
 
 export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   findings,
@@ -29,6 +51,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   onSelectCategoryFilter,
   onSelectFinding,
   initialExpandedFindingId,
+  scores,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>(activeCategoryFilter);
@@ -92,6 +115,12 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return sortFindingsByPriority(matches);
   }, [findings, activeSeverityFilter, categoryFilter, statusFilter, searchQuery]);
 
+  // Count actual issues (failed + warning)
+  const actualIssuesInFiltered = useMemo(
+    () => filteredFindings.filter((f) => f.status === 'failed' || f.status === 'warning'),
+    [filteredFindings],
+  );
+
   const hasActiveFilters =
     activeSeverityFilter !== 'all' ||
     categoryFilter !== 'all' ||
@@ -107,7 +136,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   };
 
   const getSeverityBadgeClass = (severity: Severity, status: FindingStatus) => {
-    // If the check passed or is not-applicable, do not color-code it with alert red/orange!
+    // If the check passed or is not-applicable or not-available, do not color-code with alert red/orange!
     if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
       return 'text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800';
     }
@@ -142,6 +171,18 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         return 'text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 font-medium';
     }
   };
+
+  // Category Score Data for Banner
+  const currentCategoryScore =
+    categoryFilter !== 'all' && scores ? scores[categoryFilter.toLowerCase()] : undefined;
+  const CategoryIcon =
+    (categoryFilter !== 'all' && CATEGORY_ICONS[categoryFilter.toLowerCase()]) || Layers;
+
+  // First non-issue index to render clean section header
+  const firstNonIssueIndex = useMemo(() => {
+    if (actualIssuesInFiltered.length === 0) return -1;
+    return filteredFindings.findIndex((f) => f.status !== 'failed' && f.status !== 'warning');
+  }, [filteredFindings, actualIssuesInFiltered]);
 
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
@@ -199,11 +240,109 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         </select>
       </div>
 
+      {/* Category Overview Card (visible when filtered to a specific category) */}
+      {currentCategoryScore && (
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs space-y-2.5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
+                <CategoryIcon className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
+                  {categoryFilter} Audit Overview
+                </h3>
+                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                  Evaluation Coverage:{' '}
+                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">
+                    {currentCategoryScore.coveragePercent ?? 100}%
+                  </span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-baseline gap-1">
+              <span className="text-xl font-black text-zinc-900 dark:text-zinc-100 tabular-nums">
+                {Math.round(currentCategoryScore.score)}
+              </span>
+              <span className="text-[11px] font-semibold text-zinc-400">/100</span>
+            </div>
+          </div>
+
+          {/* Quick Metrics Strip */}
+          <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>{currentCategoryScore.passed} Passed</span>
+            </span>
+
+            {currentCategoryScore.failed > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold">
+                <X className="w-3 h-3" />
+                <span>{currentCategoryScore.failed} Failed</span>
+              </span>
+            )}
+
+            {currentCategoryScore.warnings > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 font-semibold">
+                <AlertTriangle className="w-3 h-3" />
+                <span>{currentCategoryScore.warnings} Warnings</span>
+              </span>
+            )}
+
+            {(currentCategoryScore.unavailable ?? 0) > 0 && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+                <HelpCircle className="w-3 h-3" />
+                <span>{currentCategoryScore.unavailable} Unobservable</span>
+              </span>
+            )}
+          </div>
+
+          {/* Deductions & Coverage Explanation Banner */}
+          {currentCategoryScore.deductionsExplanation &&
+            currentCategoryScore.deductionsExplanation.length > 0 && (
+              <div className="rounded-lg bg-zinc-50 dark:bg-zinc-850 p-2.5 text-xs border-l-2 border-orange-500 space-y-1">
+                <div className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
+                  <Info className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                  <span>Score Calculation &amp; Coverage Context:</span>
+                </div>
+                <ul className="text-[11px] text-zinc-600 dark:text-zinc-400 space-y-0.5 pl-5 list-disc">
+                  {currentCategoryScore.deductionsExplanation.map((expl, idx) => (
+                    <li key={idx} className="leading-relaxed">
+                      {expl}
+                    </li>
+                  ))}
+                </ul>
+                {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium pt-0.5">
+                    ✓ All evaluated checks passed with zero detected vulnerabilities. Unobservable items (e.g. HTTP response headers) require network interception to verify.
+                  </p>
+                )}
+              </div>
+            )}
+        </div>
+      )}
+
+      {/* Reassuring Banner when Category Has No Failures or Warnings */}
+      {actualIssuesInFiltered.length === 0 && filteredFindings.length > 0 && categoryFilter !== 'all' && (
+        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-200">
+          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+          <div>
+            <span className="font-bold">No actionable failures or warnings in {categoryFilter}.</span>{' '}
+            <span className="text-emerald-700 dark:text-emerald-300">
+              All evaluated rules passed cleanly. Verified and unobservable checks are listed below.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Header bar: Count & Active filter reset */}
       <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 px-0.5">
         <span>
-          Showing <span className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{filteredFindings.length}</span> of{' '}
-          <span className="tabular-nums">{findings.length}</span> issues
+          Showing <span className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{filteredFindings.length}</span> checks{' '}
+          <span className="text-zinc-400 dark:text-zinc-500">
+            ({actualIssuesInFiltered.length} {actualIssuesInFiltered.length === 1 ? 'issue' : 'issues'})
+          </span>
         </span>
 
         {hasActiveFilters && (
@@ -233,66 +372,74 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             )}
           </div>
         ) : (
-          filteredFindings.map((finding) => {
+          filteredFindings.map((finding, idx) => {
             const isExpanded = expandedFindingId === finding.id;
+            const isFirstNonIssue = idx === firstNonIssueIndex;
 
             return (
-              <div key={finding.id} className="transition-colors">
-                {/* Unified Row Item */}
-                <div
-                  onClick={() => {
-                    toggleFinding(finding.id);
-                    if (onSelectFinding) onSelectFinding(finding);
-                  }}
-                  className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150 cursor-pointer select-none"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                      <span
-                        className={`text-[10px] uppercase font-bold rounded-md px-1.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
-                          finding.severity,
-                          finding.status,
-                        )}`}
-                      >
-                        {finding.severity}
-                      </span>
-                      <span
-                        className={`text-[10px] uppercase rounded-md px-1.5 py-0.5 shrink-0 ${getStatusBadgeClass(
-                          finding.status,
-                        )}`}
-                      >
-                        {finding.status}
-                      </span>
-                      <span className="text-[11px] text-zinc-400 truncate">
-                        {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
-                      </span>
-                    </div>
-
-                    {isExpanded ? (
-                      <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
-                    ) : (
-                      <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
-                    )}
-                  </div>
-
-                  <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 line-clamp-1">
-                    {finding.title}
-                  </h4>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1 leading-relaxed">
-                    {finding.description}
-                  </p>
-                </div>
-
-                {/* Inline Clean Expanded Detail Panel (No sub-cards) */}
-                {isExpanded && (
-                  <div className="border-t border-zinc-100 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50">
-                    <FindingDetailInspector
-                      finding={finding}
-                      onCollapse={() => toggleFinding(finding.id)}
-                    />
+              <React.Fragment key={finding.id}>
+                {isFirstNonIssue && (
+                  <div className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-850/60 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                    Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
                   </div>
                 )}
-              </div>
+                <div className="transition-colors">
+                  {/* Unified Row Item */}
+                  <div
+                    onClick={() => {
+                      toggleFinding(finding.id);
+                      if (onSelectFinding) onSelectFinding(finding);
+                    }}
+                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150 cursor-pointer select-none"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                        <span
+                          className={`text-[10px] uppercase font-bold rounded-md px-1.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
+                            finding.severity,
+                            finding.status,
+                          )}`}
+                        >
+                          {finding.severity}
+                        </span>
+                        <span
+                          className={`text-[10px] uppercase rounded-md px-1.5 py-0.5 shrink-0 ${getStatusBadgeClass(
+                            finding.status,
+                          )}`}
+                        >
+                          {finding.status}
+                        </span>
+                        <span className="text-[11px] text-zinc-400 truncate">
+                          {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
+                        </span>
+                      </div>
+
+                      {isExpanded ? (
+                        <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                      )}
+                    </div>
+
+                    <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 line-clamp-1">
+                      {finding.title}
+                    </h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1 leading-relaxed">
+                      {finding.description}
+                    </p>
+                  </div>
+
+                  {/* Inline Clean Expanded Detail Panel (No sub-cards) */}
+                  {isExpanded && (
+                    <div className="border-t border-zinc-100 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50">
+                      <FindingDetailInspector
+                        finding={finding}
+                        onCollapse={() => toggleFinding(finding.id)}
+                      />
+                    </div>
+                  )}
+                </div>
+              </React.Fragment>
             );
           })
         )}

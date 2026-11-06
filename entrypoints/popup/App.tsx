@@ -346,6 +346,7 @@ export function App() {
                 activeCategoryFilter={activeCategoryFilter}
                 onSelectSeverityFilter={setActiveSeverityFilter}
                 onSelectCategoryFilter={setActiveCategoryFilter}
+                scores={inspection.scores}
               />
             )}
 

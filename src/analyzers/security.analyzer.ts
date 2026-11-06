@@ -124,6 +124,8 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-csp')
             .setStatus('not-available')
+            .setTitle('Content Security Policy (Unobservable)')
+            .setDescription('No meta CSP tag detected in DOM; HTTP response headers require network inspection to evaluate.')
             .setConfidence(0.5)
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
@@ -166,6 +168,12 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-hsts')
             .setStatus(isHttps ? 'not-available' : 'not-applicable')
+            .setTitle(isHttps ? 'Strict-Transport-Security (Unobservable)' : 'Strict-Transport-Security')
+            .setDescription(
+              isHttps
+                ? 'HSTS HTTP response header is not directly accessible in passive content script mode.'
+                : 'HSTS only applies to HTTPS origins.',
+            )
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
         );
@@ -198,6 +206,8 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-x-content-type-options')
             .setStatus('not-available')
+            .setTitle('MIME-Sniffing Protection (Unobservable)')
+            .setDescription('X-Content-Type-Options header is not directly accessible in passive content script mode.')
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
         );
@@ -231,6 +241,8 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-x-frame-options')
             .setStatus('not-available')
+            .setTitle('Clickjacking Protection (Unobservable)')
+            .setDescription('Neither X-Frame-Options header nor CSP frame-ancestors could be observed in passive content script mode.')
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
         );
@@ -276,6 +288,8 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-referrer-policy')
             .setStatus('not-available')
+            .setTitle('Referrer Policy (Unobservable)')
+            .setDescription('No meta referrer tag detected in DOM; HTTP response header requires network inspection.')
             .addEvidence('Observation Context', 'HTTP response headers and meta referrer tag not directly accessible')
             .build(),
         );
@@ -308,6 +322,8 @@ export class SecurityAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('sec-missing-permissions-policy')
             .setStatus('not-available')
+            .setTitle('Permissions Policy (Unobservable)')
+            .setDescription('Permissions-Policy header is not directly accessible in passive content script mode.')
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
         );

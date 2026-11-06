@@ -217,6 +217,18 @@ export interface CategoryScore {
   weight: number;
   /** Whether the score contains heuristic detections */
   isHeuristic?: boolean;
+  /** Number of unobservable or unavailable checks */
+  unavailable?: number;
+  /** Number of checks not applicable to target context */
+  notApplicableCount?: number;
+  /** Evaluation coverage percentage (0-100) */
+  coveragePercent?: number;
+  /** Whether a confirmed critical failure exists */
+  hasCriticalFailure?: boolean;
+  /** Step-by-step point deductions or ceiling cap explanations */
+  deductionsExplanation?: string[];
+  /** Scoring formula description */
+  scoringFormula?: string;
 }
 
 /**

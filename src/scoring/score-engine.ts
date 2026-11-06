@@ -135,13 +135,16 @@ export function calculateCategoryScore(
     deductionsExplanation.push('Critical failure override applied: score capped at 49');
   }
 
-  // Guardrail 2: Coverage ceiling (Do not give high score when substantial checks unavailable <= 25%)
+  // Guardrail 2: Coverage ceiling (Do not give a perfect 100 score when substantial checks unavailable < 70%)
+  // Capping ceiling prevents false 100% certification while never unfairly penalizing clean sites with a failing grade.
   let finalScore = rawScore;
-  if (coverageRate <= 0.25 && totalApplicable > 0) {
-    const coverageCeiling = Math.round(50 + 50 * coverageRate);
+  if (coverageRate < 0.70 && totalApplicable > 0) {
+    const coverageCeiling = Math.round(75 + 25 * coverageRate);
     if (finalScore > coverageCeiling) {
       finalScore = coverageCeiling;
-      deductionsExplanation.push(`Low evaluation coverage (${coveragePercent}%): score capped at ${coverageCeiling}`);
+      deductionsExplanation.push(
+        `Limited scan coverage (${coveragePercent}% evaluated): score capped at ${coverageCeiling} (unobservable properties require network inspection)`,
+      );
     }
   }
 

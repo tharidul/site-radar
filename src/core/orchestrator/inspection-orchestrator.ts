@@ -377,6 +377,29 @@ export class InspectionOrchestrator {
       const moduleResults = await scheduler.executeAll(tasks);
       inspection.modules = { ...moduleResults };
 
+      // Attempt lightweight background header retrieval to enrich security header checks if accessible
+      try {
+        if (typeof fetch === 'function' && inspection.target.url.startsWith('http')) {
+          const resp = await fetch(inspection.target.url, {
+            method: 'HEAD',
+            credentials: 'omit',
+            cache: 'no-cache',
+          });
+          const headersMap: Record<string, string> = {};
+          resp.headers.forEach((val, key) => {
+            headersMap[key.toLowerCase()] = val;
+          });
+          if (Object.keys(headersMap).length > 0) {
+            const secModule = inspection.modules['security'] || inspection.modules['securitySignals'];
+            if (secModule && secModule.data) {
+              (secModule.data as any).securityHeaders = headersMap;
+            }
+          }
+        }
+      } catch {
+        // Cross-origin fetch without host permission is gracefully ignored
+      }
+
       if (inspection.modules['security']) {
         Object.defineProperty(inspection.modules, 'securitySignals', {
           value: inspection.modules['security'],
