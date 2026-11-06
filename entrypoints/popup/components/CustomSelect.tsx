@@ -20,6 +20,7 @@ interface CustomSelectProps {
   placeholder?: string;
   className?: string;
   menuClassName?: string;
+  fullWidth?: boolean;
 }
 
 export const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -29,6 +30,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   placeholder,
   className = '',
   menuClassName = '',
+  fullWidth = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -67,14 +69,19 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
   }, [isOpen]);
 
   return (
-    <div ref={containerRef} className="relative inline-block text-left select-none">
+    <div
+      ref={containerRef}
+      className={`relative inline-block text-left select-none ${fullWidth ? 'w-full' : ''}`}
+    >
       {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer min-w-[110px] ${className}`}
+        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer ${
+          fullWidth ? 'w-full' : 'min-w-[110px]'
+        } ${className}`}
       >
         <span className="truncate font-medium">
           {selectedOption ? selectedOption.label : placeholder || 'Select'}

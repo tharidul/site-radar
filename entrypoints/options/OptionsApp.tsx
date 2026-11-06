@@ -28,6 +28,7 @@ import { getBrowserAdapter } from '@/browser/adapters';
 import { consentManager } from '../../src/intelligence/consent-manager';
 import type { IntelligenceProviderType, ConsentDisclosure } from '@/types/intelligence';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
+import { CustomSelect } from '../popup/components/CustomSelect';
 
 interface CrawlConfig {
   maxPages: number;
@@ -408,17 +409,18 @@ export function OptionsApp() {
               <label className="text-xs font-medium text-zinc-400 block mb-1">
                 Intelligence Provider
               </label>
-              <select
+              <CustomSelect
                 value={selectedProvider}
-                onChange={(e) => setSelectedProvider(e.target.value)}
-                className="w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-200 focus:border-zinc-600 focus:outline-none"
-              >
-                <option value="shodan">Shodan</option>
-                <option value="virustotal">VirusTotal</option>
-                <option value="securitytrails">SecurityTrails</option>
-                <option value="censys">Censys</option>
-                <option value="custom">Custom Provider</option>
-              </select>
+                options={[
+                  { value: 'shodan', label: 'Shodan' },
+                  { value: 'virustotal', label: 'VirusTotal' },
+                  { value: 'securitytrails', label: 'SecurityTrails' },
+                  { value: 'censys', label: 'Censys' },
+                  { value: 'custom', label: 'Custom Provider' },
+                ]}
+                onChange={setSelectedProvider}
+                fullWidth
+              />
             </div>
 
             <div className="md:col-span-2">
