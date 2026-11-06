@@ -47,52 +47,63 @@ export const CATEGORY_PRIORITY: Record<string, number> = {
 
 /**
  * Priority rank calculation:
- * - Non-passed findings (issues requiring attention) appear FIRST, ordered by severity:
- *   Critical (10-40) -> High (110-140) -> Medium (210-240) -> Low (310-340) -> Info (410-440)
- *   Within each severity: Failed (10) -> Warning (20) -> Not-Available/N/A (30) -> Info (40)
- * - ALL PASSED items appear at the VERY BOTTOM (1010-1050), ordered by severity:
- *   Critical Passed (1010) -> High Passed (1020) -> Medium Passed (1030) -> Low Passed (1040) -> Info Passed (1050)
+ * - TIER 1: ACTIVE ISSUES (failed, warning) appear FIRST, ordered strictly by severity:
+ *   Critical Failed (0) -> Critical Warning (5) -> High Failed (10) -> High Warning (15) ->
+ *   Medium Failed (20) -> Medium Warning (25) -> Low Failed (30) -> Low Warning (35) -> Info (40-45)
+ * - TIER 2: NON-ISSUES (passed, not-applicable, not-available, info) appear at the BOTTOM (1000+),
+ *   also ordered strictly by severity so Critical/High are NEVER below Low/Info:
+ *   Critical Passed/NA (1000-1004) -> High Passed/NA (1100-1104) -> Medium Passed/NA (1200-1204) ->
+ *   Low Passed/NA (1300-1304) -> Info Passed/NA (1400-1404)
  */
 export function getFindingSortRank(finding: AuditFinding): number {
-  const isPassed = finding.status === 'passed';
+  const isFailed = finding.status === 'failed';
+  const isWarning = finding.status === 'warning';
+  const isIssue = isFailed || isWarning;
 
-  // 1. ALL PASSED items MUST be at the bottom, regardless of severity!
-  if (isPassed) {
-    switch (finding.severity) {
-      case 'critical': return 1010;
-      case 'high':     return 1020;
-      case 'medium':   return 1030;
-      case 'low':      return 1040;
-      case 'info':
-      default:         return 1050;
-    }
-  }
-
-  // 2. All NON-PASSED items (issues, warnings, missing data):
-  // Group primarily by severity: Critical (0) -> High (100) -> Medium (200) -> Low (300) -> Info (400)
-  let severityScore = 400;
+  // Severity base rank: Critical = 0, High = 10, Medium = 20, Low = 30, Info = 40
+  let severityRank = 40;
   switch (finding.severity) {
-    case 'critical': severityScore = 0; break;
-    case 'high':     severityScore = 100; break;
-    case 'medium':   severityScore = 200; break;
-    case 'low':      severityScore = 300; break;
+    case 'critical':
+      severityRank = 0;
+      break;
+    case 'high':
+      severityRank = 10;
+      break;
+    case 'medium':
+      severityRank = 20;
+      break;
+    case 'low':
+      severityRank = 30;
+      break;
     case 'info':
-    default:         severityScore = 400; break;
+    default:
+      severityRank = 40;
+      break;
   }
 
-  // Sub-rank by status within severity: Failed is worst, then Warning, then Not-Available / N/A / Info
-  let statusScore = 30;
-  if (finding.status === 'failed') {
-    statusScore = 10;
-  } else if (finding.status === 'warning') {
-    statusScore = 20;
-  } else if (finding.status === 'not-available' || finding.status === 'not-applicable' || finding.status === 'error') {
-    statusScore = 30;
+  // TIER 1: ACTIVE ISSUES (failed and warning)
+  // These ALWAYS appear at the very top of the list!
+  if (isIssue) {
+    // Within the same severity: failed (0) comes before warning (5)
+    const statusOffset = isFailed ? 0 : 5;
+    return severityRank + statusOffset; // Range: 0 to 45
+  }
+
+  // TIER 2: NON-ISSUES (passed, not-applicable, not-available, info)
+  // These ALWAYS appear below active issues (starting at 1000).
+  // Strictly ordered by severity: Critical (1000) -> High (1100) -> Medium (1200) -> Low (1300) -> Info (1400)
+  // Within the same severity: Passed (0) -> Info (2) -> Not-Applicable / Not-Available (4)
+  let nonIssueStatusOffset = 4;
+  if (finding.status === 'passed') {
+    nonIssueStatusOffset = 0;
   } else if (finding.status === 'info') {
-    statusScore = 40;
+    nonIssueStatusOffset = 2;
+  } else {
+    // 'not-applicable', 'not-available', 'error', etc.
+    nonIssueStatusOffset = 4;
   }
 
-  return severityScore + statusScore;
+  return 1000 + (severityRank * 10) + nonIssueStatusOffset;
 }
 
 export function sortFindingsByPriority(findings: AuditFinding[]): AuditFinding[] {
