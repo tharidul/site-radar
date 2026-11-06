@@ -80,7 +80,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               className={`rounded-xl p-3.5 transition-all duration-150 cursor-pointer select-none shadow-xs ${
                 isSelected
                   ? 'bg-white dark:bg-zinc-900 ring-2 ring-orange-500'
-                  : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-850'
+                  : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800'
               }`}
             >
               <div className="flex items-start justify-between gap-2">

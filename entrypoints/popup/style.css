@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
 /* deslop-ignore-file 03 */
 
 :root {
@@ -42,7 +43,7 @@
     --color-zinc-300: color-mix(in srgb, var(--color-4) 78%, var(--color-5));
     --color-zinc-200: color-mix(in srgb, var(--color-4) 90%, var(--color-5));
     --color-zinc-100: var(--color-4);
-    --color-zinc-50:  #ffffff;
+    --color-zinc-50:  color-mix(in srgb, var(--color-5) 92%, var(--color-4));
 
     /* Status and alert tokens derived strictly from the 5-color palette */
     /* Critical / Failed / Blocked: --color-2 (#c8301e) and --color-3 (#6a0e13) */
@@ -126,9 +127,9 @@
     --color-zinc-500: color-mix(in srgb, var(--color-5) 60%, var(--color-4));
     --color-zinc-400: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
     --color-zinc-300: color-mix(in srgb, var(--color-5) 85%, var(--color-4));
-    --color-zinc-200: color-mix(in srgb, var(--color-5) 92%, var(--color-4));
-    --color-zinc-100: var(--color-5);
-    --color-zinc-50:  var(--color-5);
+    --color-zinc-200: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
+    --color-zinc-100: color-mix(in srgb, var(--color-4) 90%, var(--color-5));
+    --color-zinc-50:  #ffffff;
 
     --color-rose-50:  color-mix(in srgb, var(--color-2) 8%, #ffffff);
     --color-rose-100: color-mix(in srgb, var(--color-2) 14%, #ffffff);

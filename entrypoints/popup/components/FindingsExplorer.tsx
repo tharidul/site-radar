@@ -242,7 +242,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
       {/* Category Overview Card (visible when filtered to a specific category) */}
       {currentCategoryScore && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs space-y-2.5">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2 border border-zinc-200/60 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
@@ -250,13 +250,10 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               </div>
               <div>
                 <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                  {categoryFilter} Audit Overview
+                  {categoryFilter} Audit
                 </h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Evaluation Coverage:{' '}
-                  <span className="font-semibold text-zinc-700 dark:text-zinc-300">
-                    {currentCategoryScore.coveragePercent ?? 100}%
-                  </span>
+                  {currentCategoryScore.totalChecks} checks evaluated · {currentCategoryScore.coveragePercent ?? 100}% coverage
                 </p>
               </div>
             </div>
@@ -271,68 +268,42 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
           {/* Quick Metrics Strip */}
           <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-semibold">
-              <CheckCircle2 className="w-3 h-3" />
-              <span>{currentCategoryScore.passed} Passed</span>
-            </span>
-
             {currentCategoryScore.failed > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
                 <X className="w-3 h-3" />
                 <span>{currentCategoryScore.failed} Failed</span>
               </span>
             )}
 
             {currentCategoryScore.warnings > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-50 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300 font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold">
                 <AlertTriangle className="w-3 h-3" />
                 <span>{currentCategoryScore.warnings} Warnings</span>
               </span>
             )}
 
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
+              <CheckCircle2 className="w-3 h-3" />
+              <span>{currentCategoryScore.passed} Passed</span>
+            </span>
+
             {(currentCategoryScore.unavailable ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
                 <HelpCircle className="w-3 h-3" />
                 <span>{currentCategoryScore.unavailable} Unobservable</span>
               </span>
             )}
           </div>
 
-          {/* Deductions & Coverage Explanation Banner */}
-          {currentCategoryScore.deductionsExplanation &&
-            currentCategoryScore.deductionsExplanation.length > 0 && (
-              <div className="rounded-lg bg-zinc-50 dark:bg-zinc-850 p-2.5 text-xs border-l-2 border-orange-500 space-y-1">
-                <div className="font-semibold text-zinc-800 dark:text-zinc-200 flex items-center gap-1.5">
-                  <Info className="w-3.5 h-3.5 text-orange-500 shrink-0" />
-                  <span>Score Calculation &amp; Coverage Context:</span>
-                </div>
-                <ul className="text-[11px] text-zinc-600 dark:text-zinc-400 space-y-0.5 pl-5 list-disc">
-                  {currentCategoryScore.deductionsExplanation.map((expl, idx) => (
-                    <li key={idx} className="leading-relaxed">
-                      {expl}
-                    </li>
-                  ))}
-                </ul>
-                {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
-                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 font-medium pt-0.5">
-                    ✓ All evaluated checks passed with zero detected vulnerabilities. Unobservable items (e.g. HTTP response headers) require network interception to verify.
-                  </p>
-                )}
-              </div>
-            )}
-        </div>
-      )}
-
-      {/* Reassuring Banner when Category Has No Failures or Warnings */}
-      {actualIssuesInFiltered.length === 0 && filteredFindings.length > 0 && categoryFilter !== 'all' && (
-        <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/40 p-3 flex items-center gap-2.5 text-xs text-emerald-800 dark:text-emerald-200">
-          <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <div>
-            <span className="font-bold">No actionable failures or warnings in {categoryFilter}.</span>{' '}
-            <span className="text-emerald-700 dark:text-emerald-300">
-              All evaluated rules passed cleanly. Verified and unobservable checks are listed below.
-            </span>
-          </div>
+          {/* Context note: Shown when all evaluated checks passed cleanly */}
+          {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
+            <div className="text-[11px] rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
+              <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+              <span>
+                All evaluated checks passed cleanly.{(currentCategoryScore.unavailable ?? 0) > 0 ? ' Network headers require background inspection.' : ''}
+              </span>
+            </div>
+          )}
         </div>
       )}
 
@@ -357,7 +328,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       </div>
 
       {/* Unified Findings List (Single container, zero individual floating cards) */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-xs divide-y divide-zinc-100 dark:divide-zinc-800/80">
+      <div className="rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-xs divide-y divide-zinc-100 dark:divide-zinc-800/80 border border-zinc-200/60 dark:border-zinc-800">
         {filteredFindings.length === 0 ? (
           <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-xs space-y-2">
             <p>No findings match the current search or filters.</p>
@@ -379,7 +350,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             return (
               <React.Fragment key={finding.id}>
                 {isFirstNonIssue && (
-                  <div className="px-3 py-1.5 bg-zinc-50 dark:bg-zinc-850/60 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                  <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                     Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
                   </div>
                 )}

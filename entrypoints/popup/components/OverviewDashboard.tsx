@@ -289,7 +289,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-lg bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors duration-150 cursor-pointer"
+              className="rounded-lg bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer"
               title={`View ${cat.label} findings (${cat.score}/100)`}
             >
               <div className="flex flex-col items-center pt-1">
