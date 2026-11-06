@@ -20,7 +20,7 @@ import { FindingsExplorer } from '../entrypoints/popup/components/FindingsExplor
 import { FindingDetailInspector } from '../entrypoints/popup/components/FindingDetailInspector';
 import { ResourcesView } from '../entrypoints/popup/components/ResourcesView';
 import { ReportView } from '../entrypoints/popup/components/ReportView';
-import { DeveloperView } from '../entrypoints/popup/components/DeveloperView';
+import { AboutView } from '../entrypoints/popup/components/AboutView';
 import { OptionsApp } from '../entrypoints/options/OptionsApp';
 import type { WebsiteInspection } from '../src/types/inspection';
 
@@ -645,31 +645,32 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(buttons[1]?.className).toContain('bg-zinc-100');
     });
 
-    it('DeveloperView renders crisp developer profile cards and links to tharidulakmal.com', () => {
-      const div = renderComponent(<DeveloperView />);
+    it('AboutView renders clean author card and links to tharidulakmal.com', () => {
+      const div = renderComponent(<AboutView />);
 
       // Root container is theme aware
       const rootEl = div.firstElementChild as HTMLElement;
       expect(rootEl.className).toContain('bg-[#f8f8fa]');
       expect(rootEl.className).toContain('dark:bg-zinc-950');
 
-      // Developer name and website are rendered
+      // Name and website are rendered
       expect(div.textContent).toContain('Tharidu Lakmal');
       expect(div.textContent).toContain('tharidulakmal.com');
-      expect(div.textContent).toContain('100% Client-Side & Private');
+      expect(div.textContent).not.toContain('developer');
+      expect(div.textContent).not.toContain('Developer');
 
-      // Profile cards have crisp light borders
-      const profileCard = div.querySelector('.rounded-xl.p-4');
-      expect(profileCard?.className).toContain('border-zinc-200/80');
-      expect(profileCard?.className).toContain('dark:border-zinc-800');
-      expect(profileCard?.className).toContain('bg-white');
-      expect(profileCard?.className).toContain('dark:bg-zinc-900');
+      // Card has crisp borders in light and dark modes
+      const card = div.querySelector('.rounded-xl.p-4');
+      expect(card?.className).toContain('border-zinc-200/80');
+      expect(card?.className).toContain('dark:border-zinc-800');
+      expect(card?.className).toContain('bg-white');
+      expect(card?.className).toContain('dark:bg-zinc-900');
     });
 
-    it('TabBar renders all 6 tabs including the Developer tab', () => {
+    it('TabBar renders all 6 tabs including the About tab', () => {
       const div = renderComponent(
         <TabBar
-          activeTab="developer"
+          activeTab="about"
           onSelectTab={() => {}}
           issuesCount={2}
         />,
@@ -677,8 +678,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
       const buttons = div.querySelectorAll('button');
       expect(buttons.length).toBe(6);
 
-      // 6th tab is Developer and active
-      expect(buttons[5]?.textContent).toContain('Developer');
+      // 6th tab is About and active
+      expect(buttons[5]?.textContent).toContain('About');
       expect(buttons[5]?.className).toContain('bg-orange-500');
       expect(buttons[5]?.className).toContain('text-white');
     });

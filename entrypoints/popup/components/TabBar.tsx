@@ -11,10 +11,10 @@ import {
   Layers,
   FileText,
   Download,
-  User,
+  Info,
 } from 'lucide-react';
 
-export type DashboardTab = 'overview' | 'issues' | 'rules' | 'resources' | 'report' | 'developer';
+export type DashboardTab = 'overview' | 'issues' | 'rules' | 'resources' | 'report' | 'about';
 
 interface TabBarProps {
   activeTab: DashboardTab;
@@ -33,7 +33,7 @@ const STATIC_TABS: Array<{
   { id: 'rules', label: 'Rules', icon: Layers },
   { id: 'resources', label: 'Resources', icon: FileText },
   { id: 'report', label: 'Report', icon: Download },
-  { id: 'developer', label: 'Developer', icon: User },
+  { id: 'about', label: 'About', icon: Info },
 ];
 
 export const TabBar: React.FC<TabBarProps> = ({

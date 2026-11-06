@@ -24,7 +24,7 @@ import { FindingsExplorer } from './components/FindingsExplorer';
 import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
 import { ReportView } from './components/ReportView';
-import { DeveloperView } from './components/DeveloperView';
+import { AboutView } from './components/AboutView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -415,9 +415,9 @@ export function App() {
               <ReportView inspection={inspection} />
             )}
 
-            {/* Tab 6: Developer Details */}
-            {activeDashboardTab === 'developer' && (
-              <DeveloperView onBackToOverview={() => setActiveDashboardTab('overview')} />
+            {/* Tab 6: About */}
+            {activeDashboardTab === 'about' && (
+              <AboutView />
             )}
           </TabErrorBoundary>
         )}
