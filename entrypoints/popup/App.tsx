@@ -24,6 +24,7 @@ import { FindingsExplorer } from './components/FindingsExplorer';
 import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
 import { ReportView } from './components/ReportView';
+import { DeveloperView } from './components/DeveloperView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -412,6 +413,11 @@ export function App() {
             {/* Tab 5: Executive Report View */}
             {activeDashboardTab === 'report' && (
               <ReportView inspection={inspection} />
+            )}
+
+            {/* Tab 6: Developer Details */}
+            {activeDashboardTab === 'developer' && (
+              <DeveloperView onBackToOverview={() => setActiveDashboardTab('overview')} />
             )}
           </TabErrorBoundary>
         )}

@@ -585,6 +585,22 @@ export function OptionsApp() {
             </div>
           </div>
         </section>
+
+        {/* Developer Attribution Footer */}
+        <footer className="pt-6 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
+          <a
+            href="https://tharidulakmal.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors"
+          >
+            <span>Developed by</span>
+            <span className="font-semibold text-zinc-700 dark:text-zinc-200">Tharidu Lakmal</span>
+            <span className="text-zinc-400 dark:text-zinc-600">•</span>
+            <span className="underline decoration-zinc-300 dark:decoration-zinc-700 underline-offset-2">tharidulakmal.com</span>
+            <ExternalLink className="w-3 h-3 opacity-70" />
+          </a>
+        </footer>
       </div>
     </div>
   );
