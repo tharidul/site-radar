@@ -27,36 +27,36 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
   const total = progress?.totalModules ?? 10;
 
   return (
-    <div className="border-b border-zinc-800 bg-zinc-950 p-4 space-y-2.5">
+    <div className="border-b border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 space-y-2.5 shadow-xs">
       <div className="flex items-center justify-between text-xs">
         <div className="flex items-center gap-1.5 min-w-0">
-          <span className="inline-flex animate-spin text-orange-400 shrink-0">
+          <span className="inline-flex animate-spin text-orange-500 dark:text-orange-400 shrink-0">
             <Loader2 className="w-3.5 h-3.5" />
           </span>
-          <span className="text-zinc-200 truncate font-medium">
+          <span className="text-zinc-800 dark:text-zinc-200 truncate font-medium">
             {step}
           </span>
         </div>
-        <span className="text-zinc-100 font-semibold tabular-nums shrink-0 ml-2">
+        <span className="text-zinc-900 dark:text-zinc-100 font-bold tabular-nums shrink-0 ml-2">
           {percent}%
         </span>
       </div>
 
       {/* Progress Bar Container */}
-      <div className="h-2 w-full rounded-sm bg-zinc-800 overflow-hidden">
+      <div className="h-2 w-full rounded-sm bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
         <div
           className="h-full bg-orange-500 transition-[width] duration-200 ease-out rounded-sm"
           style={{ width: `${percent}%` }}
         />
       </div>
 
-      <div className="flex items-center justify-between text-xs text-zinc-400 pt-0.5">
+      <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400 pt-0.5">
         <div>
           <span>Modules: </span>
-          <span className="text-zinc-200 font-semibold tabular-nums">{completed}</span>
+          <span className="text-zinc-800 dark:text-zinc-200 font-semibold tabular-nums">{completed}</span>
           <span> / {total}</span>
           {moduleName && (
-            <span className="ml-2 text-zinc-400">
+            <span className="ml-2 text-zinc-500 dark:text-zinc-400">
               {/* deslop-ignore-next-line 34 */}
               (<code className="font-mono text-[11px]">{moduleName}</code>)
             </span>
@@ -70,7 +70,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
           onClick={onCancel}
           disabled={isCancelling}
           leftIcon={<X className="w-3 h-3 text-current" />}
-          className="text-xs text-zinc-300 hover:text-rose-400"
+          className="text-xs text-zinc-700 dark:text-zinc-300 hover:text-rose-600 dark:hover:text-rose-400"
         >
           {isCancelling ? 'Cancelling...' : 'Cancel Scan'}
         </Button>

@@ -22,13 +22,13 @@ const VARIANT_STYLES: Record<ButtonVariant, string> = {
   primary:
     'bg-orange-500 hover:bg-orange-600 active:bg-orange-700 text-white font-semibold shadow-xs border-transparent',
   secondary:
-    'bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:active:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-medium border-transparent',
+    'bg-zinc-100 hover:bg-zinc-200 active:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-750 dark:active:bg-zinc-700 text-zinc-800 dark:text-zinc-200 font-medium border border-zinc-200/80 dark:border-transparent',
   outline:
-    'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:bg-zinc-100 dark:active:bg-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium shadow-2xs',
+    'border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:bg-zinc-100 dark:active:bg-zinc-700 text-zinc-800 dark:text-zinc-300 font-medium shadow-2xs',
   ghost:
-    'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 active:bg-zinc-200 dark:active:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-transparent',
+    'bg-transparent hover:bg-zinc-100 dark:hover:bg-zinc-800/60 active:bg-zinc-200 dark:active:bg-zinc-800 text-zinc-700 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 border-transparent',
   danger:
-    'bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-700 dark:text-rose-300 font-semibold border-transparent',
+    'bg-rose-500/15 hover:bg-rose-500/25 active:bg-rose-500/35 text-rose-800 dark:text-rose-300 font-semibold border border-rose-500/30',
 };
 
 const SIZE_STYLES: Record<ButtonSize, string> = {

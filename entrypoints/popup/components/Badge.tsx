@@ -25,27 +25,27 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   ...props
 }) => {
-  let colorClasses = 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium';
+  let colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium';
   let animationClass = '';
 
   if (variant === 'status' && status) {
     switch (status) {
       case 'passed':
-        colorClasses = 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-bold';
+        colorClasses = 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 font-bold';
         break;
       case 'failed':
-        colorClasses = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 font-bold';
+        colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-bold';
         break;
       case 'warning':
-        colorClasses = 'bg-orange-500/15 text-orange-700 dark:text-orange-300 font-bold';
+        colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-bold';
         break;
       case 'info':
-        colorClasses = 'bg-sky-500/15 text-sky-700 dark:text-sky-300 font-semibold';
+        colorClasses = 'bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30 font-semibold';
         break;
       case 'not-applicable':
       case 'not-available':
       default:
-        colorClasses = 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium';
+        colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
         break;
     }
   } else if (variant === 'collection' && collectionStatus) {
@@ -54,37 +54,37 @@ export const Badge: React.FC<BadgeProps> = ({
         colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-semibold';
         break;
       case 'partial':
-        colorClasses = 'bg-orange-500/15 text-orange-700 dark:text-orange-300 border border-orange-500/30 font-semibold';
+        colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-semibold';
         break;
       case 'blocked':
       case 'failed':
-        colorClasses = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 font-semibold';
+        colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-semibold';
         break;
       case 'unsupported':
       case 'skipped':
       default:
-        colorClasses = 'bg-zinc-100/60 dark:bg-zinc-800/50 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 font-medium';
+        colorClasses = 'bg-zinc-100/80 dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 font-medium';
         break;
     }
   } else if (variant === 'severity' && severity) {
     // If the check passed or is not-applicable/not-available, keep severity badge neutral
     if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
-      colorClasses = 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium';
+      colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
     } else {
       switch (severity) {
         case 'critical':
-          colorClasses = 'bg-rose-500/15 text-rose-700 dark:text-rose-300 font-bold';
+          colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-bold';
           break;
         case 'high':
         case 'medium':
-          colorClasses = 'bg-orange-500/15 text-orange-700 dark:text-orange-300 font-bold';
+          colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-bold';
           break;
         case 'low':
-          colorClasses = 'bg-zinc-200/60 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-medium';
+          colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium';
           break;
         case 'info':
         default:
-          colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 font-medium';
+          colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
           break;
       }
     }

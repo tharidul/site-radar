@@ -78,22 +78,22 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             <div
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className={`rounded-xl p-3.5 transition-all duration-150 cursor-pointer select-none shadow-xs ${
+              className={`rounded-xl p-3.5 transition-all duration-150 cursor-pointer select-none shadow-xs border ${
                 isSelected
-                  ? 'bg-white dark:bg-zinc-900 ring-2 ring-orange-500'
-                  : 'bg-white dark:bg-zinc-900 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-900 border-orange-500 ring-2 ring-orange-500/20'
+                  : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-orange-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'}`}>
+                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-orange-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
                     <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 block">
                       {mode.title}
                     </span>
-                    <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                    <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">
                       Duration: {mode.duration}
                     </span>
                   </div>

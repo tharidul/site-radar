@@ -174,7 +174,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       { key: 'high', count: severityCounts.high, color: '#c8301e' }, // Crimson red
       { key: 'medium', count: severityCounts.medium, color: '#e88438' }, // Orange
       { key: 'low', count: severityCounts.low, color: '#f59e0b' }, // Amber
-      { key: 'info', count: severityCounts.info, color: '#d4d4d8' }, // Zinc gray
+      { key: 'info', count: severityCounts.info, color: 'var(--color-zinc-400)' }, // Zinc neutral (contrast-adaptive)
     ];
 
     let cumulativePercent = 0;
@@ -219,7 +219,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 r={gaugeRadius}
                 fill="transparent"
                 stroke="currentColor"
-                className="text-zinc-100 dark:text-zinc-800"
+                className="text-zinc-200 dark:text-zinc-800"
                 strokeWidth="8"
               />
               {/* Progress ring */}
@@ -240,7 +240,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <span className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
                 {overallScore}
               </span>
-              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
+              <span className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mt-1">
                 /100
               </span>
             </div>
@@ -256,7 +256,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 Grade {grade}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[210px]">
+            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[210px]">
               {gradeDescription}
             </p>
           </div>
@@ -264,7 +264,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
         {/* Right: Evaluated Rules Breakdown (Clean borderless column, no card-in-card) */}
         <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-4 min-w-[150px] shrink-0 space-y-1">
-          <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+          <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1">
             {totalRules} Checks Run
           </div>
 
@@ -300,7 +300,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
           <div className="flex items-center justify-between text-xs py-0.5">
             <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
-              <Info className="w-3.5 h-3.5 text-zinc-400" />
+              <Info className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
               <span>Info / N/A</span>
             </span>
             <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
@@ -319,7 +319,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-lg bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors duration-150 cursor-pointer"
+              className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors duration-150 cursor-pointer"
               title={`View ${cat.label} findings (${cat.score}/100)`}
             >
               <div className="flex flex-col items-center pt-1">
@@ -340,13 +340,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* 2.5 Detected Frameworks & Tech Stack */}
       {techData.length > 0 && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs border border-zinc-200/50 dark:border-zinc-800/60">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs border border-zinc-200/80 dark:border-zinc-800/60">
           <div className="flex items-center justify-between mb-2.5">
             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-orange-500" />
               <span>Detected Technologies &amp; Frameworks</span>
             </span>
-            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
+            <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
               {techData.length} identified
             </span>
           </div>
@@ -362,7 +362,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {techData.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/60 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center justify-between gap-1.5 min-w-0">
@@ -370,12 +370,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     {tech.name}
                   </span>
                   {tech.version && (
-                    <span className="shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200/70 dark:bg-zinc-700/60 text-zinc-700 dark:text-zinc-300">
+                    <span className="shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
                       v{tech.version}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 truncate">
+                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 truncate">
                   {tech.category}
                 </div>
               </div>
@@ -387,7 +387,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* 3. Bottom Two Cards: Audit Scorecard & Severity Distribution */}
       <div className="grid grid-cols-2 gap-3">
         {/* Left: Audit Scorecard */}
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Audit Scorecard
           </div>
@@ -398,7 +398,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigateToIssues({ severity: 'critical' })}
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
-              <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
+              <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
                 <XCircle className="w-3.5 h-3.5 text-rose-600" />
                 <span>Critical</span>
               </span>
@@ -412,7 +412,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigateToIssues({ severity: 'high' })}
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
-              <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
+              <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
                 <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>High</span>
               </span>
@@ -426,7 +426,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigateToIssues({ severity: 'medium' })}
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
-              <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
+              <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
                 <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
                 <span>Medium</span>
               </span>
@@ -440,11 +440,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigateToIssues({ severity: 'low' })}
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
-              <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
+              <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
                 <Info className="w-3.5 h-3.5 text-zinc-500" />
                 <span>Low</span>
               </span>
-              <span className="font-bold text-zinc-700 dark:text-zinc-300 tabular-nums">
+              <span className="font-bold text-zinc-800 dark:text-zinc-300 tabular-nums">
                 {severityCounts.low}
               </span>
             </div>
@@ -454,11 +454,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               onClick={() => onNavigateToIssues({ severity: 'info' })}
               className="flex items-center justify-between py-1 px-1.5 rounded-md hover:bg-zinc-100 dark:hover:bg-zinc-800/60 cursor-pointer transition-colors"
             >
-              <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300 font-medium">
-                <Minus className="w-3.5 h-3.5 text-zinc-400" />
+              <span className="flex items-center gap-2 text-zinc-800 dark:text-zinc-300 font-medium">
+                <Minus className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
                 <span>Info</span>
               </span>
-              <span className="font-semibold text-zinc-400 dark:text-zinc-500 tabular-nums">
+              <span className="font-semibold text-zinc-600 dark:text-zinc-400 tabular-nums">
                 {severityCounts.info}
               </span>
             </div>
@@ -466,7 +466,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
         {/* Right: Severity Distribution Donut Chart & Legend */}
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Severity Distribution
           </div>
@@ -482,7 +482,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   r={donutRadius}
                   fill="transparent"
                   stroke="currentColor"
-                  className="text-zinc-100 dark:text-zinc-800"
+                  className="text-zinc-200 dark:text-zinc-800"
                   strokeWidth="11"
                 />
 
@@ -520,7 +520,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <span className="text-xl font-extrabold text-zinc-900 dark:text-zinc-100 leading-none">
                   {totalIssues}
                 </span>
-                <span className="text-[10px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5">
+                <span className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 mt-0.5">
                   Issues
                 </span>
               </div>
@@ -530,23 +530,23 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <div className="space-y-1 text-xs">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: '#6a0e13' }} />
-                <span className="text-zinc-700 dark:text-zinc-300">Critical ({severityCounts.critical})</span>
+                <span className="text-zinc-800 dark:text-zinc-300">Critical ({severityCounts.critical})</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: '#c8301e' }} />
-                <span className="text-zinc-700 dark:text-zinc-300">High ({severityCounts.high})</span>
+                <span className="text-zinc-800 dark:text-zinc-300">High ({severityCounts.high})</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: '#e88438' }} />
-                <span className="text-zinc-700 dark:text-zinc-300">Medium ({severityCounts.medium})</span>
+                <span className="text-zinc-800 dark:text-zinc-300">Medium ({severityCounts.medium})</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: '#f59e0b' }} />
-                <span className="text-zinc-700 dark:text-zinc-300">Low ({severityCounts.low})</span>
+                <span className="text-zinc-800 dark:text-zinc-300">Low ({severityCounts.low})</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-xs shrink-0" style={{ backgroundColor: '#d4d4d8' }} />
-                <span className="text-zinc-500 dark:text-zinc-400">Info ({severityCounts.info})</span>
+                <span className="w-2.5 h-2.5 rounded-xs shrink-0 bg-zinc-400 dark:bg-zinc-600" />
+                <span className="text-zinc-600 dark:text-zinc-400">Info ({severityCounts.info})</span>
               </div>
             </div>
           </div>
@@ -554,7 +554,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       </div>
 
       {/* 4. Bottom Action Footer Bar */}
-      <div className="flex items-center justify-between pt-2 border-t border-zinc-200/90 dark:border-zinc-800">
+      <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
         <div className="flex items-center gap-2">
           {/* Export JSON Button */}
           <Button

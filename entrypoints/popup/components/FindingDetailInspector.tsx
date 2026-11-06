@@ -93,7 +93,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
                   <th className="py-1.5 font-semibold">Source</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800/60">
+              <tbody className="divide-y divide-zinc-200/80 dark:divide-zinc-800/60">
                 {finding.evidence.map((ev, i) => (
                   <tr key={i}>
                     <td className="py-1.5 pr-3 font-medium text-zinc-800 dark:text-zinc-300 align-top whitespace-nowrap">
@@ -143,7 +143,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
           <button
             type="button"
             onClick={onCollapse}
-            className="text-xs font-semibold text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
+            className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 cursor-pointer"
           >
             Collapse details ↑
           </button>

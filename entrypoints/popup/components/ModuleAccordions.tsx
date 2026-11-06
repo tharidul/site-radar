@@ -145,7 +145,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs block">
                         Detected Technologies ({(mod?.data as any).technologies.length})
                       </span>
-                      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+                      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs border border-zinc-200/80 dark:border-zinc-800">
                         {((mod?.data as any).technologies as any[]).map((t: any, idx: number) => (
                           <div key={idx} className="p-2 flex items-center justify-between text-xs">
                             <div className="min-w-0 pr-2">

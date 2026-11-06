@@ -35,10 +35,10 @@ export const Header: React.FC<HeaderProps> = ({
   onClose,
 }) => {
   return (
-    <header className="relative bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-800 shrink-0 rounded-t-2xl">
-      {/* Subtle deep red crimson background wave accent matching screenshot */}
+    <header className="relative bg-white dark:bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
+      {/* Subtle deep red crimson background wave accent matching screenshot (only visible in dark mode) */}
       <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-80"
+        className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-0 dark:opacity-80 transition-opacity"
         style={{
           background: 'radial-gradient(ellipse at 85% 15%, rgba(106, 14, 19, 0.75) 0%, rgba(200, 48, 30, 0.35) 45%, transparent 75%)', /* deslop-ignore 06 */
         }}
@@ -51,10 +51,10 @@ export const Header: React.FC<HeaderProps> = ({
             <Shield className="w-5 h-5 text-white fill-white/15" />
           </div>
           <div>
-            <h1 className="text-base font-bold tracking-tight text-white leading-tight">
+            <h1 className="text-base font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
               Website Intelligence
             </h1>
-            <span className="text-xs text-zinc-400 block font-normal">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 block font-normal">
               Security &amp; Audit Engine
             </span>
           </div>
@@ -69,8 +69,8 @@ export const Header: React.FC<HeaderProps> = ({
               size="sm"
               onClick={onClearResults}
               title="Clear in-memory results"
-              leftIcon={<Trash2 className="w-3.5 h-3.5 text-zinc-300" />}
-              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 hover:text-white text-zinc-300"
+              leftIcon={<Trash2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />}
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
             >
               Clear
             </Button>
@@ -84,12 +84,12 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onToggleTheme}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
               aria-label="Toggle theme"
-              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
             >
               {theme === 'light' ? (
-                <Moon className="w-4 h-4 text-zinc-300" />
+                <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
               ) : (
-                <Sun className="w-4 h-4 text-orange-400" />
+                <Sun className="w-4 h-4 text-orange-500 dark:text-orange-400" />
               )}
             </Button>
           )}
@@ -101,9 +101,9 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOptionsClick}
             title="Options &amp; Settings"
             aria-label="Settings"
-            className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
+            className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
           >
-            <Settings className="w-4 h-4 text-zinc-300" />
+            <Settings className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
           </Button>
 
           {onClose && (
@@ -114,20 +114,20 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onClose}
               title="Close popup"
               aria-label="Close"
-              className="border-zinc-700/60 bg-zinc-800/80 hover:bg-zinc-700 text-zinc-300 hover:text-white"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
             >
-              <X className="w-4 h-4 text-zinc-300" />
+              <X className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
             </Button>
           )}
         </div>
       </div>
 
       {/* Embedded Target Site URL Strip matching screenshot */}
-      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs shadow-xs">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
           <span
-            className="text-xs sm:text-sm font-medium text-zinc-800 dark:text-zinc-200 truncate select-all"
+            className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate select-all"
             title={tabUrl || 'No active tab'}
           >
             {tabUrl || tabHostname || 'https://www.google.com'}
@@ -136,13 +136,13 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="shrink-0">
           {schemeValid ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded-md px-2 py-0.5">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-2 py-0.5">
               <Check className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 stroke-[2.5]" />
               <span>Inspectable</span>
             </span>
           ) : (
             <span
-              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 rounded-md px-2 py-0.5"
+              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-900 rounded-md px-2 py-0.5"
               title={schemeReason || 'Unsupported browser scheme'}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />

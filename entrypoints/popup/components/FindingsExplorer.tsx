@@ -230,7 +230,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               <span className="text-xl font-black text-zinc-900 dark:text-zinc-100 tabular-nums">
                 {Math.round(currentCategoryScore.score)}
               </span>
-              <span className="text-[11px] font-semibold text-zinc-400">/100</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">/100</span>
             </div>
           </div>
 
@@ -296,7 +296,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       </div>
 
       {/* Unified Findings List (Single container, zero individual floating cards) */}
-      <Card padding="none" className="overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-800/80">
+      <Card padding="none" className="overflow-hidden divide-y divide-zinc-200/80 dark:divide-zinc-800/80">
         {filteredFindings.length === 0 ? (
           <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-xs space-y-2">
             <p>No findings match the current search or filters.</p>
@@ -342,15 +342,15 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                         <Badge variant="status" status={finding.status}>
                           {finding.status}
                         </Badge>
-                        <span className="text-[11px] text-zinc-400 truncate">
+                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                           {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
                         </span>
                       </div>
 
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                        <ChevronDown className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 mt-0.5" />
+                        <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5" />
                       )}
                     </div>
 
@@ -364,7 +364,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
                   {/* Inline Clean Expanded Detail Panel (No sub-cards) */}
                   {isExpanded && (
-                    <div className="border-t border-zinc-100 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50">
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50">
                       <FindingDetailInspector
                         finding={finding}
                         onCollapse={() => toggleFinding(finding.id)}

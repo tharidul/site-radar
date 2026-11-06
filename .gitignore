@@ -14,7 +14,6 @@ stats-*.json
 .wxt
 web-ext.config.ts
 .agents/
-tests/
 
 # Editor directories and files
 .vscode/*

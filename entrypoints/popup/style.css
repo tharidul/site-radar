@@ -31,6 +31,9 @@
     --color-4: #f3f1f1;
     --color-5: #161616;
 
+    --bg-page: var(--color-5);
+    --text-page: var(--color-4);
+
     /* Base neutral surfaces generated directly from --color-5 (#161616) and --color-4 (#f3f1f1) */
     --color-zinc-950: var(--color-5);
     --color-zinc-900: color-mix(in srgb, var(--color-5) 88%, var(--color-4));
@@ -118,22 +121,29 @@
 
   .light, [data-theme='light'] {
     color-scheme: light;
-    /* Clean high-contrast light mode with --color-4 (#f3f1f1) base and --color-5 (#161616) text */
-    --color-zinc-950: #ffffff;
-    --color-zinc-900: var(--color-4);
-    --color-zinc-800: color-mix(in srgb, var(--color-4) 88%, var(--color-5));
-    --color-zinc-700: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
-    --color-zinc-600: color-mix(in srgb, var(--color-4) 60%, var(--color-5));
-    --color-zinc-500: color-mix(in srgb, var(--color-5) 60%, var(--color-4));
-    --color-zinc-400: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
-    --color-zinc-300: color-mix(in srgb, var(--color-5) 85%, var(--color-4));
-    --color-zinc-200: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
-    --color-zinc-100: color-mix(in srgb, var(--color-4) 90%, var(--color-5));
-    --color-zinc-50:  #ffffff;
+    --bg-page: #f8f8fa;
+    --text-page: var(--color-5);
 
-    --color-rose-50:  color-mix(in srgb, var(--color-2) 8%, #ffffff);
-    --color-rose-100: color-mix(in srgb, var(--color-2) 14%, #ffffff);
-    --color-rose-200: color-mix(in srgb, var(--color-2) 22%, #ffffff);
+    /* Clean, high-contrast light mode neutrals:
+       zinc-950/900 are deepest dark charcoal/black for primary text and titles.
+       zinc-100/50 are light off-white neutrals for chips, hover states, and surface backgrounds. */
+    --color-zinc-950: #0d0d0e;
+    --color-zinc-900: var(--color-5); /* #161616 - 18.1:1 contrast on white */
+    --color-zinc-850: color-mix(in srgb, var(--color-5) 92%, #ffffff); /* 14.5:1 contrast on white (AAA) */
+    --color-zinc-800: color-mix(in srgb, var(--color-5) 88%, #ffffff); /* 12.8:1 contrast on white (AAA) */
+    --color-zinc-700: color-mix(in srgb, var(--color-5) 80%, #ffffff); /* 9.6:1 contrast on white (AAA) */
+    --color-zinc-600: color-mix(in srgb, var(--color-5) 70%, #ffffff); /* 6.7:1 contrast on white (AA) */
+    --color-zinc-500: color-mix(in srgb, var(--color-5) 62%, #ffffff); /* 5.0:1 contrast on white (AA >= 4.5:1) */
+    --color-zinc-400: color-mix(in srgb, var(--color-5) 48%, #ffffff); /* 3.2:1 contrast on white (Non-text >= 3.0:1) */
+    --color-zinc-300: color-mix(in srgb, var(--color-5) 20%, #ffffff); /* clean distinct border */
+    --color-zinc-200: color-mix(in srgb, var(--color-5) 10%, #ffffff); /* subtle container border */
+    --color-zinc-100: var(--color-4); /* #f3f1f1 - chip/secondary button background */
+    --color-zinc-50:  #f8f8fa; /* card hover / light background */
+
+    /* Critical / Failed / Blocked: Rich crimson red for sharp contrast */
+    --color-rose-50:  color-mix(in srgb, var(--color-2) 6%, #ffffff);
+    --color-rose-100: color-mix(in srgb, var(--color-2) 12%, #ffffff);
+    --color-rose-200: color-mix(in srgb, var(--color-2) 24%, #ffffff);
     --color-rose-300: var(--color-2);
     --color-rose-400: var(--color-2);
     --color-rose-500: var(--color-2);
@@ -141,23 +151,25 @@
     --color-rose-700: var(--color-3);
     --color-rose-800: var(--color-3);
     --color-rose-900: var(--color-3);
-    --color-rose-950: color-mix(in srgb, var(--color-2) 10%, #ffffff);
+    --color-rose-950: color-mix(in srgb, var(--color-3) 90%, #ffffff);
 
+    /* High / Alert: Warm amber & orange with strong contrast */
     --color-orange-50:  color-mix(in srgb, var(--color-1) 8%, #ffffff);
-    --color-orange-100: color-mix(in srgb, var(--color-1) 14%, #ffffff);
-    --color-orange-200: color-mix(in srgb, var(--color-1) 22%, #ffffff);
+    --color-orange-100: color-mix(in srgb, var(--color-1) 15%, #ffffff);
+    --color-orange-200: color-mix(in srgb, var(--color-1) 28%, #ffffff);
     --color-orange-300: var(--color-1);
     --color-orange-400: var(--color-1);
     --color-orange-500: var(--color-1);
-    --color-orange-600: var(--color-1);
+    --color-orange-600: color-mix(in srgb, var(--color-1) 75%, var(--color-2));
     --color-orange-700: var(--color-2);
-    --color-orange-800: var(--color-2);
+    --color-orange-800: color-mix(in srgb, var(--color-2) 65%, var(--color-3));
     --color-orange-900: var(--color-3);
-    --color-orange-950: color-mix(in srgb, var(--color-1) 12%, #ffffff);
+    --color-orange-950: color-mix(in srgb, var(--color-3) 85%, #ffffff);
 
+    /* Medium / Warning */
     --color-amber-50:  color-mix(in srgb, var(--color-1) 8%, #ffffff);
-    --color-amber-100: color-mix(in srgb, var(--color-1) 14%, #ffffff);
-    --color-amber-200: color-mix(in srgb, var(--color-1) 22%, #ffffff);
+    --color-amber-100: color-mix(in srgb, var(--color-1) 15%, #ffffff);
+    --color-amber-200: color-mix(in srgb, var(--color-1) 28%, #ffffff);
     --color-amber-300: var(--color-1);
     --color-amber-400: var(--color-1);
     --color-amber-500: var(--color-1);
@@ -165,38 +177,47 @@
     --color-amber-700: var(--color-2);
     --color-amber-800: var(--color-2);
     --color-amber-900: var(--color-3);
-    --color-amber-950: color-mix(in srgb, var(--color-1) 12%, #ffffff);
+    --color-amber-950: color-mix(in srgb, var(--color-3) 85%, #ffffff);
 
-    --color-sky-400: var(--color-3);
-    --color-sky-500: var(--color-3);
-    --color-sky-800: var(--color-5);
-    --color-sky-950: color-mix(in srgb, var(--color-3) 10%, #ffffff);
+    /* Low / Neutral / Info */
+    --color-sky-50:  #f0f9ff;
+    --color-sky-100: #e0f2fe;
+    --color-sky-200: #bae6fd;
+    --color-sky-300: #7dd3fc;
+    --color-sky-400: #0284c7;
+    --color-sky-500: #0369a1;
+    --color-sky-600: #075985;
+    --color-sky-700: #0c4a6e;
+    --color-sky-800: #082f49;
+    --color-sky-950: #f0f9ff;
 
-    --color-cyan-400: var(--color-5);
-    --color-cyan-500: var(--color-5);
-    --color-cyan-800: var(--color-5);
-    --color-cyan-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
+    --color-cyan-400: #0891b2;
+    --color-cyan-500: #0e7490;
+    --color-cyan-600: #155e75;
+    --color-cyan-800: #164e63;
+    --color-cyan-950: #ecfeff;
 
-    --color-emerald-50:  #ffffff;
-    --color-emerald-100: var(--color-4);
-    --color-emerald-200: color-mix(in srgb, var(--color-4) 88%, var(--color-5));
-    --color-emerald-300: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
-    --color-emerald-400: var(--color-5);
-    --color-emerald-500: var(--color-5);
-    --color-emerald-600: color-mix(in srgb, var(--color-5) 75%, var(--color-4));
-    --color-emerald-700: color-mix(in srgb, var(--color-5) 85%, var(--color-4));
-    --color-emerald-800: var(--color-5);
-    --color-emerald-900: var(--color-5);
-    --color-emerald-950: color-mix(in srgb, var(--color-5) 8%, #ffffff);
+    /* Pass / Success: Crisp emerald tones with accessible contrast on light surfaces */
+    --color-emerald-50:  #f0fdf4;
+    --color-emerald-100: #dcfce7;
+    --color-emerald-200: #bbf7d0;
+    --color-emerald-300: #16a34a;
+    --color-emerald-400: #15803d;
+    --color-emerald-500: #16a34a;
+    --color-emerald-600: #15803d;
+    --color-emerald-700: #166534;
+    --color-emerald-800: #14532d;
+    --color-emerald-900: #052e16;
+    --color-emerald-950: #f0fdf4;
 
-    --scrollbar-track: var(--color-4);
-    --scrollbar-thumb: color-mix(in srgb, var(--color-4) 75%, var(--color-5));
+    --scrollbar-track: #f1f1f4;
+    --scrollbar-thumb: #c8c8cc;
     --scrollbar-hover: var(--color-1);
   }
 
   body {
-    background-color: var(--color-zinc-950);
-    color: var(--color-zinc-100);
+    background-color: var(--bg-page, var(--color-zinc-950));
+    color: var(--text-page, var(--color-zinc-100));
     font-family: var(--font-sans);
     font-size: 13.5px;
     line-height: 1.5;

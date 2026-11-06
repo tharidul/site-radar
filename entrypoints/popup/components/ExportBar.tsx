@@ -30,12 +30,12 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
   };
 
   return (
-    <div className="border-b border-zinc-800 bg-zinc-950 p-4 space-y-2 select-none">
+    <div className="border-b border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 p-4 space-y-2 select-none">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-zinc-300">
+        <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200">
           Export Report
         </span>
-        <span className="text-xs text-zinc-400">
+        <span className="text-xs text-zinc-500 dark:text-zinc-400">
           Client-side download
         </span>
       </div>
@@ -46,13 +46,13 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           variant="outline"
           size="md"
           onClick={handleExportJson}
-          className="w-full py-2.5"
+          className="w-full py-2.5 font-semibold text-zinc-800 dark:text-zinc-200"
           title="Export sanitized, schema-compliant JSON report"
           leftIcon={
             downloadedType === 'json' ? (
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <FileCode className="w-4 h-4 text-orange-400" />
+              <FileCode className="w-4 h-4 text-orange-500" />
             )
           }
         >
@@ -64,13 +64,13 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           variant="outline"
           size="md"
           onClick={handleExportHtml}
-          className="w-full py-2.5"
+          className="w-full py-2.5 font-semibold text-zinc-800 dark:text-zinc-200"
           title="Export self-contained standalone HTML report with zero external CDN calls"
           leftIcon={
             downloadedType === 'html' ? (
-              <Check className="w-4 h-4 text-emerald-500" />
+              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
             ) : (
-              <FileText className="w-4 h-4 text-orange-400" />
+              <FileText className="w-4 h-4 text-orange-500" />
             )
           }
         >
