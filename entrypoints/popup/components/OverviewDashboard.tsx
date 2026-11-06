@@ -180,9 +180,9 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-row items-center justify-between gap-4">
         {/* Left: Overall Circular Gauge + Text */}
         <div className="flex items-center gap-4 min-w-0">
-          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-            <svg className="w-24 h-24 -rotate-90 transform" viewBox="0 0 100 100">
-              {/* Background ring */}
+          <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+            <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 100 100">
+              {/* Background ring with clear contrast */}
               <circle
                 cx="50"
                 cy="50"
@@ -190,7 +190,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 fill="transparent"
                 stroke="currentColor"
                 className="text-zinc-100 dark:text-zinc-800"
-                strokeWidth="9"
+                strokeWidth="8"
               />
               {/* Progress ring */}
               <circle
@@ -199,7 +199,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 r={gaugeRadius}
                 fill="transparent"
                 stroke="#e88438"
-                strokeWidth="9"
+                strokeWidth="8"
                 strokeDasharray={gaugeCircumference}
                 strokeDashoffset={gaugeDashOffset}
                 strokeLinecap="round"
@@ -207,10 +207,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-extrabold text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
+              <span className="text-2xl font-black text-zinc-900 dark:text-zinc-100 tracking-tight leading-none">
                 {overallScore}
               </span>
-              <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 mt-1">
+              <span className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mt-1">
                 /100
               </span>
             </div>
@@ -219,72 +219,62 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           {/* Overall Score text & Grade Badge */}
           <div className="min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-2">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-                Overall Score
+              <h2 className="text-base font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
+                Overall Health
               </h2>
-              <span className="inline-flex items-center justify-center bg-[#e88438] text-white font-black text-xs w-6 h-6 rounded-md shadow-xs shrink-0">
-                {grade}
+              <span className="inline-flex items-center gap-1 bg-orange-500/10 dark:bg-orange-950/60 text-orange-600 dark:text-orange-400 text-xs font-bold px-2 py-0.5 rounded-md">
+                Grade {grade}
               </span>
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[220px]">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[210px]">
               {gradeDescription}
             </p>
           </div>
         </div>
 
-        {/* Right: Evaluated Rules Breakdown Mini-Card */}
-        <div className="rounded-lg bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
-          <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-1.5">
-            {totalRules} rules evaluated
+        {/* Right: Evaluated Rules Breakdown (Clean borderless column, no card-in-card) */}
+        <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-4 min-w-[150px] shrink-0 space-y-1">
+          <div className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-1">
+            {totalRules} Rules Checked
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-zinc-800 dark:text-zinc-200" />
-              <span className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
-                {passedCount}
-              </span>
+          <div className="flex items-center justify-between text-xs py-0.5">
+            <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               <span>Passed</span>
             </span>
+            <span className="font-bold text-zinc-900 dark:text-zinc-100 tabular-nums">
+              {passedCount}
+            </span>
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+          <div className="flex items-center justify-between text-xs py-0.5">
+            <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
               <XCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
-              <span className="font-semibold text-rose-700 dark:text-rose-400 tabular-nums">
-                {failedCount}
-              </span>
               <span>Failed</span>
             </span>
+            <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
+              {failedCount}
+            </span>
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <AlertTriangle className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400" />
-              <span className="font-semibold text-orange-700 dark:text-orange-400 tabular-nums">
-                {warningCount}
-              </span>
+          <div className="flex items-center justify-between text-xs py-0.5">
+            <span className="flex items-center gap-1.5 text-zinc-600 dark:text-zinc-400">
+              <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
               <span>Warnings</span>
             </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <Info className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
-              <span className="font-semibold text-zinc-700 dark:text-zinc-300 tabular-nums">
-                {infoStatusCount}
-              </span>
-              <span>Info</span>
+            <span className="font-bold text-orange-600 dark:text-orange-400 tabular-nums">
+              {warningCount}
             </span>
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
-              <Minus className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500" />
-              <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
-                {naCount}
-              </span>
-              <span>N/A</span>
+          <div className="flex items-center justify-between text-xs py-0.5">
+            <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+              <Info className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Info / N/A</span>
+            </span>
+            <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
+              {infoStatusCount + naCount}
             </span>
           </div>
         </div>
