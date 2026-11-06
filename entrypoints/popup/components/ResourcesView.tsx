@@ -4,8 +4,8 @@
  */
 
 import React from 'react';
-import { FileCode, FileSpreadsheet, Image as ImageIcon, Globe, Database } from 'lucide-react';
-import type { WebsiteInspection } from '@/types/inspection';
+import { FileCode, FileSpreadsheet, Image as ImageIcon, Globe, Database, Cpu } from 'lucide-react';
+import type { WebsiteInspection, TechnologyData } from '@/types/inspection';
 
 interface ResourcesViewProps {
   inspection: WebsiteInspection;
@@ -13,6 +13,8 @@ interface ResourcesViewProps {
 
 export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
   const resModule = inspection.modules?.resources?.data as any;
+  const techModule = inspection.modules?.technology?.data as TechnologyData | undefined;
+  const technologies = techModule?.technologies || [];
   const scripts = resModule?.scripts || [];
   const stylesheets = resModule?.stylesheets || [];
   const images = resModule?.images || [];
@@ -65,6 +67,34 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           <div className="text-[11px] text-zinc-500 dark:text-zinc-400">Origins</div>
         </div>
       </div>
+
+      {/* Detected Technologies Card */}
+      {technologies.length > 0 && (
+        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-2">
+          <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+            <Cpu className="w-3.5 h-3.5 text-orange-500" />
+            <span>Detected Frontend Frameworks &amp; Technologies ({technologies.length})</span>
+          </h4>
+          <div className="flex flex-wrap gap-1.5 pt-1">
+            {technologies.map((tech, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200"
+                title={`${tech.category}: ${tech.evidence}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">{tech.name}</span>
+                {tech.version && (
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">v{tech.version}</span>
+                )}
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+                  ({tech.category})
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Origin Domains Card */}
       <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-2xs space-y-2">

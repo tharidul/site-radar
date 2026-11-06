@@ -173,6 +173,30 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                     </div>
                   )}
 
+                  {def.key === 'technology' && Array.isArray((mod?.data as any)?.technologies) && (mod?.data as any).technologies.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs block">
+                        Detected Technologies ({(mod?.data as any).technologies.length})
+                      </span>
+                      <div className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900">
+                        {((mod?.data as any).technologies as any[]).map((t: any, idx: number) => (
+                          <div key={idx} className="p-2 flex items-center justify-between text-xs">
+                            <div className="min-w-0 pr-2">
+                              <div className="flex items-center gap-1.5">
+                                <span className="font-bold text-zinc-900 dark:text-zinc-100">{t.name}</span>
+                                {t.version && <span className="text-[10px] text-zinc-500 font-mono">v{t.version}</span>}
+                              </div>
+                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block truncate">{t.evidence}</span>
+                            </div>
+                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                              {t.category}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {limitations.length > 0 && (
                     <div className="border-l-2 border-orange-500 pl-3 py-0.5 space-y-1">
                       <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">

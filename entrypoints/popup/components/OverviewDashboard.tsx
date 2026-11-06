@@ -21,8 +21,9 @@ import {
   FileText,
   ArrowRight,
   Check,
+  Cpu,
 } from 'lucide-react';
-import type { WebsiteInspection, AuditFinding, Severity, CategoryScore } from '@/types/inspection';
+import type { WebsiteInspection, AuditFinding, Severity, CategoryScore, TechnologyData } from '@/types/inspection';
 import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
 
 interface OverviewDashboardProps {
@@ -38,6 +39,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const findings = inspection.findings || [];
   const scores = inspection.scores || {};
+  const techData = (inspection.modules?.technology?.data as TechnologyData | undefined)?.technologies || [];
 
   // Status counts across all evaluated rules
   const passedCount = findings.filter((f) => f.status === 'passed').length;
@@ -315,6 +317,39 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           );
         })}
       </div>
+
+      {/* 2.5 Detected Frameworks & Tech Stack */}
+      {techData.length > 0 && (
+        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <Cpu className="w-3.5 h-3.5 text-orange-500" />
+              <span>Detected Technologies &amp; Frameworks</span>
+            </span>
+            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
+              {techData.length} identified
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {techData.map((tech, idx) => (
+              <span
+                key={idx}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200"
+                title={`${tech.category}: ${tech.evidence}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
+                <span className="font-bold text-zinc-900 dark:text-zinc-100">{tech.name}</span>
+                {tech.version && (
+                  <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-mono">v{tech.version}</span>
+                )}
+                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 font-normal">
+                  ({tech.category})
+                </span>
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* 3. Bottom Two Cards: Audit Scorecard & Severity Distribution */}
       <div className="grid grid-cols-2 gap-3">

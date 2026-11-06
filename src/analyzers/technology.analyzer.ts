@@ -1,7 +1,7 @@
 /**
  * @file src/analyzers/technology.analyzer.ts
- * @description Evaluates detected technology stacks, meta generator version disclosure,
- * and multi-framework bloat under Best Practices.
+ * @description Evaluates detected technology stacks, identifies framework composition,
+ * flags meta generator version disclosure, and checks for multi-framework bloat.
  */
 
 import type { AuditFinding, TechnologyData } from '../types/inspection';
@@ -17,9 +17,11 @@ export class TechnologyAnalyzer implements Analyzer {
     const findings: AuditFinding[] = [];
     const { modules } = context;
 
-    // 1. Meta generator version disclosure
     const techRes = getModuleData<TechnologyData>(modules, 'technology');
-    const generatorTech = techRes.data?.technologies?.find((t) => t.evidence.toLowerCase().includes('generator'));
+    const technologies = techRes.data?.technologies || [];
+
+    // 1. Meta generator version disclosure
+    const generatorTech = technologies.find((t) => t.evidence.toLowerCase().includes('generator'));
     const generator = generatorTech?.version || generatorTech?.evidence;
     if (generator) {
       const hasVersion = /\d+\.\d+/.test(generator);
@@ -47,19 +49,39 @@ export class TechnologyAnalyzer implements Analyzer {
       }
     }
 
-    // 2. Competing UI Frameworks
-    if (techRes.data?.technologies) {
-      const uiFrameworks = techRes.data.technologies.filter((t) =>
-        ['react', 'vue', 'angular', 'svelte', 'solid'].includes(t.name.toLowerCase()),
-      );
-      if (uiFrameworks.length > 1) {
+    // 2. Competing UI Frameworks (checking across distinct frontend ecosystems)
+    if (technologies.length > 0) {
+      const ecosystems = new Set<string>();
+      for (const t of technologies) {
+        const name = t.name.toLowerCase();
+        if (['react', 'next.js', 'remix', 'gatsby', 'preact'].includes(name)) {
+          ecosystems.add('react');
+        } else if (['vue.js', 'nuxt.js'].includes(name)) {
+          ecosystems.add('vue');
+        } else if (['angular'].includes(name)) {
+          ecosystems.add('angular');
+        } else if (['svelte'].includes(name)) {
+          ecosystems.add('svelte');
+        } else if (['solid.js'].includes(name)) {
+          ecosystems.add('solid');
+        } else if (['ember.js'].includes(name)) {
+          ecosystems.add('ember');
+        }
+      }
+
+      if (ecosystems.size > 1) {
+        const competing = technologies
+          .filter((t) => ['JavaScript Framework', 'Web Framework'].includes(t.category))
+          .map((t) => t.name)
+          .join(', ');
+
         findings.push(
           new FindingBuilder('tech-multiple-frameworks')
             .setCategory('best-practices')
             .setStatus('warning')
             .setSeverity('low')
-            .setConfidence(0.8)
-            .addEvidence('Detected Frameworks', uiFrameworks.map((f) => f.name).join(', '))
+            .setConfidence(0.85)
+            .addEvidence('Competing Frameworks', competing)
             .setExpectedBehavior('Consolidate client application to a single primary UI framework.')
             .setExplanation('Running multiple UI frameworks simultaneously incurs redundant bundle and memory overhead.')
             .build(),
@@ -70,10 +92,28 @@ export class TechnologyAnalyzer implements Analyzer {
             .setCategory('best-practices')
             .setStatus('passed')
             .setConfidence(0.9)
-            .addEvidence('Framework Count', uiFrameworks.length)
+            .addEvidence('Framework Ecosystems', ecosystems.size)
             .build(),
         );
       }
+
+      // 3. Identified Technology Stack finding
+      const stackSummary = technologies
+        .map((t) => (t.version ? `${t.name} (v${t.version})` : t.name))
+        .join(', ');
+
+      const stackFinding = new FindingBuilder('tech-stack-detected')
+        .setCategory('best-practices')
+        .setStatus('passed')
+        .setSeverity('info')
+        .setConfidence(1.0)
+        .addEvidence('Detected Stack', stackSummary);
+
+      for (const t of technologies) {
+        stackFinding.addEvidence(t.name, `${t.category} — ${t.evidence}`);
+      }
+
+      findings.push(stackFinding.build());
     }
 
     return findings;

@@ -780,6 +780,21 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     source: 'TechnologyCollector',
     references: ['https://web.dev/fast/'],
   },
+  'tech-stack-detected': {
+    ruleId: 'tech-stack-detected',
+    category: 'best-practices',
+    title: 'Frontend Framework & Technology Stack Identified',
+    description: 'Fingerprinted client-side frameworks, libraries, and CMS platforms on this page.',
+    defaultSeverity: 'info',
+    weight: 0,
+    confidence: 1.0,
+    isHeuristic: true,
+    expectedBehavior: 'Frontend framework dependencies are clearly identified and actively maintained.',
+    explanation: 'Identifying active frontend frameworks and libraries verifies architectural stack composition and runtime dependencies.',
+    recommendation: 'Keep all identified framework libraries updated to their latest stable releases.',
+    source: 'TechnologyCollector',
+    references: ['https://wappalyzer.com/', 'https://web.dev/fast/'],
+  },
 };
 
 export function getRuleDefinition(ruleId: string): RuleDefinition | undefined {

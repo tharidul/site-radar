@@ -1,128 +1,290 @@
 /**
  * @file src/collectors/page/technology.collector.ts
- * @description Fingerprints web frameworks, CMS platforms, CDNs, and libraries through deterministic DOM signatures.
+ * @description Comprehensive fingerprinting for modern frontend frameworks (React, Next.js, Vue, Nuxt,
+ * Svelte, Angular, Solid, Alpine, HTMX, Remix, Gatsby, etc.), UI libraries, CMS platforms, and CDNs.
  */
 
-import type { TechnologyData } from '../../types/inspection';
+import type { DetectedTechnology, TechnologyData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
 
 interface TechSignature {
   name: string;
   category: string;
-  matches: (doc: Document) => { matched: boolean; version?: string; evidence: string; confidence: number };
+  matches: (
+    doc: Document,
+    scripts: HTMLScriptElement[],
+    links: HTMLLinkElement[],
+    win?: Window,
+  ) => { matched: boolean; version?: string; evidence: string; confidence: number };
 }
 
 const TECH_SIGNATURES: TechSignature[] = [
-  // CMS
-  {
-    name: 'WordPress',
-    category: 'CMS',
-    matches: (doc) => {
-      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
-      if (/wordpress/i.test(generator)) {
-        const vMatch = generator.match(/wordpress\s*([\d.]+)/i);
-        return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
-      }
-      if (doc.querySelector('link[href*="wp-content"], script[src*="wp-content"], link[rel*="wlwmanifest"]')) {
-        return { matched: true, evidence: 'wp-content paths in assets', confidence: 0.95 };
-      }
-      return { matched: false, evidence: '', confidence: 0 };
-    },
-  },
-  {
-    name: 'Shopify',
-    category: 'Ecommerce',
-    matches: (doc) => {
-      if (doc.querySelector('script[src*="cdn.shopify.com"], link[href*="cdn.shopify.com"]')) {
-        return { matched: true, evidence: 'cdn.shopify.com asset links', confidence: 0.95 };
-      }
-      return { matched: false, evidence: '', confidence: 0 };
-    },
-  },
-  {
-    name: 'Webflow',
-    category: 'CMS',
-    matches: (doc) => {
-      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
-      if (/webflow/i.test(generator)) {
-        return { matched: true, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
-      }
-      if (doc.documentElement.getAttribute('data-wf-page') || doc.documentElement.getAttribute('data-wf-site')) {
-        return { matched: true, evidence: 'data-wf-page attribute on <html>', confidence: 0.95 };
-      }
-      return { matched: false, evidence: '', confidence: 0 };
-    },
-  },
-  {
-    name: 'Wix',
-    category: 'CMS',
-    matches: (doc) => {
-      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
-      if (/wix/i.test(generator)) {
-        return { matched: true, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
-      }
-      if (doc.querySelector('meta[name="X-Wix-Meta-Site-Id"], script[src*="static.parastorage.com"]')) {
-        return { matched: true, evidence: 'static.parastorage.com or Wix meta headers', confidence: 0.95 };
-      }
-      return { matched: false, evidence: '', confidence: 0 };
-    },
-  },
-
-  // Frameworks
+  // ==========================================
+  // Modern Frontend & Web Frameworks
+  // ==========================================
   {
     name: 'React',
     category: 'JavaScript Framework',
-    matches: (doc) => {
-      if (doc.querySelector('[data-reactroot], [data-reactid]')) {
-        return { matched: true, evidence: 'data-reactroot attribute present', confidence: 0.95 };
+    matches: (doc, scripts, links, win) => {
+      // 1. Next.js / Remix / Gatsby indicators guarantee React
+      if (doc.querySelector('script[id="__NEXT_DATA__"]') || doc.querySelector('#__next')) {
+        return { matched: true, evidence: 'Next.js application runtime (React-based)', confidence: 1.0 };
       }
-      if (doc.querySelector('script[id="__NEXT_DATA__"]')) {
-        return { matched: true, evidence: 'Next.js React data layer', confidence: 0.9 };
+      if (doc.querySelector('#___gatsby, div[id="gatsby-focus-wrapper"]')) {
+        return { matched: true, evidence: 'Gatsby application root (React-based)', confidence: 1.0 };
       }
+
+      // 2. Next.js App Router (Next 13/14/15) Server Components stream
+      for (const script of scripts) {
+        const text = script.textContent || '';
+        if (text.includes('self.__next_f') || text.includes('__next_f.push')) {
+          return { matched: true, evidence: 'Next.js App Router RSC stream (React 18/19)', confidence: 1.0 };
+        }
+        if (text.includes('window.__remixContext') || text.includes('window.__remixManifest')) {
+          return { matched: true, evidence: 'Remix application context (React-based)', confidence: 1.0 };
+        }
+      }
+
+      // 3. React DOM attributes & component tags
+      if (doc.querySelector('[data-reactroot], [data-reactid], [data-react-helmet]')) {
+        return { matched: true, evidence: 'React DOM attributes (data-reactroot / data-react-helmet)', confidence: 0.98 };
+      }
+      if (doc.querySelector('[data-radix-portal], [data-radix-popper-content-wrapper], [data-radix-collection-item]')) {
+        return { matched: true, evidence: 'Radix UI primitive components (React)', confidence: 0.95 };
+      }
+      if (doc.querySelector('style[data-styled], style[data-emotion], style[data-styled-components]')) {
+        return { matched: true, evidence: 'CSS-in-JS style tags (styled-components / Emotion for React)', confidence: 0.9 };
+      }
+
+      // 4. Script sources matching react bundles
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (/(?:^|\/|[._-])react(?:[-._]dom)?(?:\.production|\.development)?(?:\.min)?\.js/i.test(src) ||
+            src.includes('/react@') || src.includes('/react-dom@') || src.includes('/_next/static/chunks/framework-') ||
+            src.includes('/_next/static/chunks/main-') || src.includes('static/js/main.') || src.includes('chunk-vendors.')) {
+          const vMatch = src.match(/react(?:-dom)?@([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Script asset: ${src.split('/').pop()}`, confidence: 0.95 };
+        }
+      }
+
+      // 5. Inline script content keywords
+      for (const script of scripts) {
+        const text = script.textContent || '';
+        if (text.includes('__REACT_DEVTOOLS_GLOBAL_HOOK__') || text.includes('_reactRootContainer') ||
+            text.includes('createRoot(') || text.includes('ReactDOM.render') || text.includes('react-dom') ||
+            text.includes('react/jsx-runtime') || text.includes('jsx-runtime')) {
+          return { matched: true, evidence: 'React runtime initialization patterns in inline script', confidence: 0.92 };
+        }
+      }
+
+      // 6. Root element mount point convention (#root with children)
+      const rootEl = doc.querySelector('#root, #__next');
+      if (rootEl && rootEl.children.length > 0) {
+        // If there's an id="root" or id="__next" populated with elements and modern JS scripts
+        const hasModuleScripts = scripts.some((s) => s.type === 'module' || (s.src && s.src.includes('assets/')));
+        if (hasModuleScripts) {
+          return { matched: true, evidence: '#root mount container with client script bundle', confidence: 0.85 };
+        }
+      }
+
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
   {
     name: 'Next.js',
     category: 'Web Framework',
-    matches: (doc) => {
+    matches: (doc, scripts, links) => {
       if (doc.querySelector('script[id="__NEXT_DATA__"]')) {
-        return { matched: true, evidence: 'script#__NEXT_DATA__ presence', confidence: 1.0 };
+        return { matched: true, evidence: 'script#__NEXT_DATA__ presence (Pages Router)', confidence: 1.0 };
       }
-      if (doc.querySelector('link[href*="/_next/static/"], script[src*="/_next/static/"]')) {
-        return { matched: true, evidence: '/_next/static/ asset directory', confidence: 0.95 };
+      if (doc.querySelector('meta[name="next-head-count"]')) {
+        return { matched: true, evidence: 'meta[name="next-head-count"] header tag', confidence: 1.0 };
       }
+      if (doc.querySelector('#__next, #__next-build-watcher')) {
+        return { matched: true, evidence: '#__next mounting container', confidence: 0.98 };
+      }
+
+      // Check for /_next/static assets in scripts and preload links
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('/_next/static/')) {
+          return { matched: true, evidence: '/_next/static/ asset directory', confidence: 0.98 };
+        }
+        const text = script.textContent || '';
+        if (text.includes('self.__next_f') || text.includes('__next_f.push')) {
+          return { matched: true, evidence: 'Next.js App Router streaming payload (self.__next_f)', confidence: 1.0 };
+        }
+      }
+
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('/_next/static/')) {
+          return { matched: true, evidence: '/_next/static/ stylesheet/preload asset', confidence: 0.95 };
+        }
+      }
+
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
   {
     name: 'Vue.js',
     category: 'JavaScript Framework',
-    matches: (doc) => {
-      if (doc.querySelector('[data-v-]') || doc.querySelector('[data-server-rendered]')) {
-        return { matched: true, evidence: 'Scoped CSS data-v-* or SSR attribute', confidence: 0.9 };
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[data-v-]') || doc.querySelector('style[data-v-]')) {
+        return { matched: true, evidence: 'Scoped CSS data-v-* attributes (Vue Single File Components)', confidence: 0.98 };
       }
+      if (doc.querySelector('[data-server-rendered]')) {
+        return { matched: true, evidence: 'data-server-rendered SSR attribute (Vue / Nuxt)', confidence: 0.95 };
+      }
+      if (doc.querySelector('#__nuxt') || doc.querySelector('script[id="__NUXT_DATA__"]')) {
+        return { matched: true, evidence: 'Nuxt.js Vue application container', confidence: 0.98 };
+      }
+      if (doc.querySelector('[v-cloak], [v-if], [v-for], [v-model]')) {
+        return { matched: true, evidence: 'Vue template directives in DOM', confidence: 0.95 };
+      }
+
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (/(?:^|\/|[._-])vue(?:\.runtime|\.global)?(?:\.esm-browser)?(?:\.min)?\.js/i.test(src) || src.includes('/vue@')) {
+          const vMatch = src.match(/vue@([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Vue script asset: ${src.split('/').pop()}`, confidence: 0.95 };
+        }
+        const text = script.textContent || '';
+        if (text.includes('Vue.createApp') || text.includes('__VUE__') || text.includes('__VUE_OPTIONS_API__') || text.includes('__VUE_HMR_RUNTIME__')) {
+          return { matched: true, evidence: 'Vue 3 runtime symbols in inline script', confidence: 0.95 };
+        }
+      }
+
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
   {
     name: 'Nuxt.js',
     category: 'Web Framework',
-    matches: (doc) => {
+    matches: (doc, scripts, links) => {
       if (doc.querySelector('#__nuxt') || doc.querySelector('script[id="__NUXT_DATA__"]')) {
-        return { matched: true, evidence: '#__nuxt mounting element or __NUXT_DATA__ script', confidence: 1.0 };
+        return { matched: true, evidence: '#__nuxt element or __NUXT_DATA__ script', confidence: 1.0 };
       }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('/_nuxt/')) {
+          return { matched: true, evidence: '/_nuxt/ asset directory', confidence: 0.98 };
+        }
+      }
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('/_nuxt/')) {
+          return { matched: true, evidence: '/_nuxt/ stylesheet link', confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Svelte',
+    category: 'JavaScript Framework',
+    matches: (doc, scripts, links) => {
+      // Svelte compiler adds scoped class names formatted as svelte-[hash]
+      if (doc.querySelector('[class*="svelte-"]')) {
+        return { matched: true, evidence: 'Scoped svelte-* class name patterns on DOM elements', confidence: 0.98 };
+      }
+      if (doc.querySelector('div[id^="svelte-"]')) {
+        return { matched: true, evidence: 'svelte-* mount id attribute', confidence: 0.95 };
+      }
+      if (doc.querySelector('script[data-sveltekit-hydrate]')) {
+        return { matched: true, evidence: 'script[data-sveltekit-hydrate] SvelteKit tag', confidence: 1.0 };
+      }
+
+      // SvelteKit bundles asset path
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('/_app/immutable/') || src.includes('svelte-')) {
+          return { matched: true, evidence: 'SvelteKit immutable asset directory (/_app/immutable/)', confidence: 0.98 };
+        }
+        const text = script.textContent || '';
+        if (text.includes('__svelte') || text.includes('svelte-kit:')) {
+          return { matched: true, evidence: 'SvelteKit hydration symbols in inline script', confidence: 0.95 };
+        }
+      }
+
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('/_app/immutable/')) {
+          return { matched: true, evidence: 'SvelteKit immutable stylesheet link', confidence: 0.95 };
+        }
+      }
+
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
   {
     name: 'Angular',
     category: 'JavaScript Framework',
-    matches: (doc) => {
+    matches: (doc, scripts) => {
       const ngVersion = doc.querySelector('[ng-version]');
       if (ngVersion) {
         const v = ngVersion.getAttribute('ng-version') || undefined;
         return { matched: true, version: v, evidence: `ng-version attribute: ${v}`, confidence: 1.0 };
+      }
+      if (doc.querySelector('app-root, [ng-app], [ng-controller], [ng-reflect-], [ng-model]')) {
+        return { matched: true, evidence: 'Angular directive or <app-root> mount element', confidence: 0.95 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('angular') || src.includes('zone.js')) {
+          return { matched: true, evidence: `Angular script asset: ${src.split('/').pop()}`, confidence: 0.9 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Solid.js',
+    category: 'JavaScript Framework',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[data-hk]')) {
+        return { matched: true, evidence: 'data-hk hydration keys (Solid.js)', confidence: 0.98 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('solid-js') || src.includes('solid.js')) {
+          return { matched: true, evidence: 'Solid.js library script', confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Remix',
+    category: 'Web Framework',
+    matches: (doc, scripts, links) => {
+      for (const script of scripts) {
+        const text = script.textContent || '';
+        if (text.includes('window.__remixContext') || text.includes('window.__remixManifest') || text.includes('window.__remixRouteModules')) {
+          return { matched: true, evidence: 'Remix context payload in inline script', confidence: 1.0 };
+        }
+      }
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (/\/build\/manifest-[a-f0-9]+\.js/i.test(href)) {
+          return { matched: true, evidence: 'Remix build manifest asset link', confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Gatsby',
+    category: 'Web Framework',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('#___gatsby, div[id="gatsby-focus-wrapper"], script[id="gatsby-chunk-mapping"]')) {
+        return { matched: true, evidence: '#___gatsby container element', confidence: 1.0 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('gatsby')) {
+          return { matched: true, evidence: 'Gatsby script asset', confidence: 0.95 };
+        }
       }
       return { matched: false, evidence: '', confidence: 0 };
     },
@@ -136,48 +298,277 @@ const TECH_SIGNATURES: TechSignature[] = [
         const vMatch = generator.match(/astro\s*v?([\d.]+)/i);
         return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
       }
-      if (doc.querySelector('style[data-astro-cid]')) {
-        return { matched: true, evidence: 'data-astro-cid style attribute', confidence: 0.95 };
+      if (doc.querySelector('astro-island, [data-astro-cid], style[data-astro-cid], [data-astro-rerun]')) {
+        return { matched: true, evidence: 'Astro island / component attributes in DOM', confidence: 0.98 };
       }
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
-
-  // CSS Frameworks
   {
-    name: 'Tailwind CSS',
-    category: 'CSS Framework',
-    matches: (doc) => {
-      if (doc.querySelector('[class*="flex"], [class*="grid"], [class*="text-"], [class*="bg-"]')) {
-        const hasUtilities = doc.querySelector('[class*="max-w-"], [class*="mx-auto"], [class*="items-center"]');
-        if (hasUtilities) {
-          return { matched: true, evidence: 'Atomic utility class pattern matches', confidence: 0.85 };
+    name: 'Alpine.js',
+    category: 'JavaScript Framework',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[x-data], [x-init], [x-show], [x-bind], [x-on], [x-model], [x-text]')) {
+        return { matched: true, evidence: 'Alpine.js x-* directives in DOM', confidence: 0.98 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('alpine') || src.includes('alpinejs')) {
+          return { matched: true, evidence: 'Alpine.js script asset', confidence: 0.95 };
         }
       }
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
   {
-    name: 'Bootstrap',
-    category: 'CSS Framework',
-    matches: (doc) => {
-      if (doc.querySelector('link[href*="bootstrap"]') || doc.querySelector('script[src*="bootstrap"]')) {
-        return { matched: true, evidence: 'Bootstrap asset URLs', confidence: 0.95 };
+    name: 'HTMX',
+    category: 'JavaScript Library',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[hx-get], [hx-post], [hx-target], [hx-trigger], [hx-swap], [hx-push-url], [hx-select]')) {
+        return { matched: true, evidence: 'HTMX hx-* attributes in DOM', confidence: 1.0 };
       }
-      if (doc.querySelector('.container-fluid, .row, [class*="col-md-"]')) {
-        return { matched: true, evidence: 'Bootstrap grid system class patterns', confidence: 0.85 };
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('htmx')) {
+          const vMatch = src.match(/htmx(?:\.org)?@([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: 'HTMX script asset', confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Preact',
+    category: 'JavaScript Framework',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[data-preact]')) {
+        return { matched: true, evidence: 'data-preact attribute', confidence: 0.95 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('preact')) {
+          return { matched: true, evidence: 'Preact script asset', confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Qwik',
+    category: 'JavaScript Framework',
+    matches: (doc) => {
+      if (doc.querySelector('[q\\:container], [q\\:id], [q\\:key], script[type="qwik/json"]')) {
+        return { matched: true, evidence: 'Qwik q:container / qwik/json script', confidence: 1.0 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'jQuery',
+    category: 'JavaScript Library',
+    matches: (doc, scripts) => {
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (/(?:^|\/|[._-])jquery(?:[-._]([\d.]+))?(?:\.min)?\.js/i.test(src) || src.includes('/jquery/')) {
+          const vMatch = src.match(/jquery[-._]([\d.]+)/i) || src.match(/jquery@([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `jQuery asset: ${src.split('/').pop()}`, confidence: 0.95 };
+        }
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Ember.js',
+    category: 'JavaScript Framework',
+    matches: (doc, scripts) => {
+      if (doc.querySelector('[class*="ember-view"], div[id^="ember"]')) {
+        return { matched: true, evidence: 'ember-view class name or id attribute', confidence: 0.95 };
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('ember')) {
+          return { matched: true, evidence: 'Ember script asset', confidence: 0.9 };
+        }
       }
       return { matched: false, evidence: '', confidence: 0 };
     },
   },
 
-  // CDNs
+  // ==========================================
+  // UI & CSS Frameworks
+  // ==========================================
+  {
+    name: 'Tailwind CSS',
+    category: 'CSS Framework',
+    matches: (doc, scripts, links) => {
+      // Check for presence of atomic utility patterns
+      const hasLayout = doc.querySelector('[class*="flex"], [class*="grid"]');
+      const hasSpacing = doc.querySelector('[class*="mx-auto"], [class*="p-"], [class*="gap-"]');
+      const hasSizing = doc.querySelector('[class*="max-w-"], [class*="w-full"], [class*="h-"]');
+      const hasStyling = doc.querySelector('[class*="rounded-"], [class*="shadow-"], [class*="bg-"]');
+      if (hasLayout && hasSpacing && hasSizing && hasStyling) {
+        return { matched: true, evidence: 'Atomic Tailwind utility class combinations across DOM nodes', confidence: 0.92 };
+      }
+
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('tailwind')) {
+          return { matched: true, evidence: `Tailwind stylesheet link: ${href.split('/').pop()}`, confidence: 0.95 };
+        }
+      }
+
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Bootstrap',
+    category: 'CSS Framework',
+    matches: (doc, scripts, links) => {
+      for (const link of links) {
+        const href = link.getAttribute('href') || '';
+        if (href.includes('bootstrap')) {
+          const vMatch = href.match(/bootstrap@?([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap stylesheet: ${href.split('/').pop()}`, confidence: 0.98 };
+        }
+      }
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('bootstrap')) {
+          const vMatch = src.match(/bootstrap@?([\d.]+)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap script: ${src.split('/').pop()}`, confidence: 0.98 };
+        }
+      }
+      if (doc.querySelector('.container-fluid, .row, [class*="col-md-"], [class*="col-lg-"], .btn-primary')) {
+        return { matched: true, evidence: 'Bootstrap grid system and component class patterns', confidence: 0.88 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Material UI (MUI)',
+    category: 'UI Library',
+    matches: (doc) => {
+      if (doc.querySelector('[class*="MuiButton-"], [class*="MuiTypography-"], [class*="MuiBox-"], [class*="MuiGrid-"]')) {
+        return { matched: true, evidence: 'MUI component class patterns (MuiButton / MuiTypography)', confidence: 0.95 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Chakra UI',
+    category: 'UI Library',
+    matches: (doc) => {
+      if (doc.querySelector('[data-chakra-component], [class*="chakra-"]')) {
+        return { matched: true, evidence: 'Chakra UI data attributes or class patterns', confidence: 0.95 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Ant Design',
+    category: 'UI Library',
+    matches: (doc) => {
+      if (doc.querySelector('[class*="ant-btn"], [class*="ant-layout"], [class*="ant-row"]')) {
+        return { matched: true, evidence: 'Ant Design component class patterns (ant-*)', confidence: 0.95 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+
+  // ==========================================
+  // CMS & Site Builders
+  // ==========================================
+  {
+    name: 'WordPress',
+    category: 'CMS',
+    matches: (doc, scripts, links) => {
+      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
+      if (/wordpress/i.test(generator)) {
+        const vMatch = generator.match(/wordpress\s*([\d.]+)/i);
+        return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
+      }
+      if (doc.querySelector('link[href*="wp-content"], script[src*="wp-content"], link[rel*="wlwmanifest"]')) {
+        return { matched: true, evidence: 'wp-content paths in assets', confidence: 0.98 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Shopify',
+    category: 'Ecommerce',
+    matches: (doc, scripts, links) => {
+      if (doc.querySelector('script[src*="cdn.shopify.com"], link[href*="cdn.shopify.com"], meta[name="shopify-digital-wallet"]')) {
+        return { matched: true, evidence: 'cdn.shopify.com assets or Shopify meta tags', confidence: 0.98 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Webflow',
+    category: 'CMS',
+    matches: (doc) => {
+      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
+      if (/webflow/i.test(generator)) {
+        return { matched: true, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
+      }
+      if (doc.documentElement.getAttribute('data-wf-page') || doc.documentElement.getAttribute('data-wf-site')) {
+        return { matched: true, evidence: 'data-wf-page attribute on <html>', confidence: 0.98 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Wix',
+    category: 'CMS',
+    matches: (doc) => {
+      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
+      if (/wix/i.test(generator)) {
+        return { matched: true, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
+      }
+      if (doc.querySelector('meta[name="X-Wix-Meta-Site-Id"], script[src*="static.parastorage.com"]')) {
+        return { matched: true, evidence: 'static.parastorage.com or Wix meta headers', confidence: 0.98 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Squarespace',
+    category: 'CMS',
+    matches: (doc) => {
+      if (doc.querySelector('link[href*="squarespace.com"], script[src*="squarespace.com"], html[id*="collection-"]')) {
+        return { matched: true, evidence: 'Squarespace CDN assets or collection markup', confidence: 0.95 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+  {
+    name: 'Ghost',
+    category: 'CMS',
+    matches: (doc) => {
+      const generator = doc.querySelector('meta[name="generator" i]')?.getAttribute('content') || '';
+      if (/ghost/i.test(generator)) {
+        const vMatch = generator.match(/ghost\s*([\d.]+)/i);
+        return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `meta[generator]: ${generator}`, confidence: 1.0 };
+      }
+      if (doc.querySelector('script[src*="ghost.io"], link[href*="ghost.io"]')) {
+        return { matched: true, evidence: 'Ghost portal assets', confidence: 0.95 };
+      }
+      return { matched: false, evidence: '', confidence: 0 };
+    },
+  },
+
+  // ==========================================
+  // CDNs & Security
+  // ==========================================
   {
     name: 'Cloudflare',
     category: 'CDN & Security',
-    matches: (doc) => {
-      if (doc.querySelector('script[src*="cloudflare.com"], script[src*="challenges.cloudflare.com"]')) {
-        return { matched: true, evidence: 'Cloudflare script / Turnstile assets', confidence: 0.95 };
+    matches: (doc, scripts) => {
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('cloudflare.com') || src.includes('challenges.cloudflare.com')) {
+          return { matched: true, evidence: 'Cloudflare script / Turnstile assets', confidence: 0.98 };
+        }
       }
       return { matched: false, evidence: '', confidence: 0 };
     },
@@ -190,27 +581,74 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
 
   collect(context: CollectorContext) {
     const doc = context.document;
-    const technologies: TechnologyData['technologies'] = [];
+    const scripts = Array.from(doc.querySelectorAll('script'));
+    const links = Array.from(doc.querySelectorAll('link'));
+    const win = context.window;
 
+    const detectedMap = new Map<string, DetectedTechnology>();
+
+    // 1. Process main-world probe results if forwarded via options
+    const mainWorldTech = (context.options?.mainWorldTech as DetectedTechnology[]) || [];
+    if (Array.isArray(mainWorldTech)) {
+      for (const t of mainWorldTech) {
+        if (t && t.name) {
+          detectedMap.set(t.name.toLowerCase(), t);
+        }
+      }
+    }
+
+    // 2. Evaluate in-DOM deterministic signatures
     for (const sig of TECH_SIGNATURES) {
       try {
-        const result = sig.matches(doc);
+        const result = sig.matches(doc, scripts, links, win);
         if (result.matched) {
-          technologies.push({
-            name: sig.name,
-            category: sig.category,
-            version: result.version,
-            confidence: result.confidence,
-            evidence: result.evidence,
-          });
+          const key = sig.name.toLowerCase();
+          const existing = detectedMap.get(key);
+          if (!existing || result.confidence > existing.confidence || (result.version && !existing.version)) {
+            detectedMap.set(key, {
+              name: sig.name,
+              category: sig.category,
+              version: result.version || existing?.version,
+              confidence: Math.max(result.confidence, existing?.confidence || 0),
+              evidence: result.evidence || existing?.evidence || 'DOM signature',
+            });
+          }
         }
       } catch {
         // Individual signature evaluation failure contained
       }
     }
 
+    // 3. Implied framework associations
+    // E.g. Next.js, Remix, Gatsby imply React
+    if (detectedMap.has('next.js') || detectedMap.has('remix') || detectedMap.has('gatsby')) {
+      if (!detectedMap.has('react')) {
+        const framework = detectedMap.get('next.js') ? 'Next.js' : detectedMap.get('remix') ? 'Remix' : 'Gatsby';
+        detectedMap.set('react', {
+          name: 'React',
+          category: 'JavaScript Framework',
+          confidence: 0.98,
+          evidence: `Implied dependency of ${framework}`,
+        });
+      }
+    }
+
+    // Nuxt implies Vue
+    if (detectedMap.has('nuxt.js') && !detectedMap.has('vue.js')) {
+      detectedMap.set('vue.js', {
+        name: 'Vue.js',
+        category: 'JavaScript Framework',
+        confidence: 0.98,
+        evidence: 'Implied dependency of Nuxt.js',
+      });
+    }
+
+    const technologies = Array.from(detectedMap.values());
+    const categoriesFound = Array.from(new Set(technologies.map((t) => t.category)));
+
     const data: TechnologyData = {
       technologies,
+      categoriesFound,
     };
 
     return createCollectionResult<TechnologyData>({
@@ -219,15 +657,21 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
       data,
       coverage: {
         expected: 5,
-        collected: 5,
+        collected: technologies.length,
         unavailable: 0,
         supported: true,
       },
       limitations: [
-        'Technology detection is heuristic; heavily minified or custom builds may obscure signatures.',
-        'Global window JavaScript variables are inaccessible inside content script isolated worlds.',
+        'Technology detection is heuristic; heavily obfuscated custom builds may omit public signatures.',
       ],
-      sources: ['DOM:meta[name="generator"]', 'DOM:scripts', 'DOM:classes', 'DOM:attributes'],
+      sources: [
+        'DOM:meta[name="generator"]',
+        'DOM:scripts[src]',
+        'DOM:inline-scripts',
+        'DOM:classes',
+        'DOM:attributes',
+        'MainWorld:globals',
+      ],
     });
   }
 }

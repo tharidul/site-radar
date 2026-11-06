@@ -210,11 +210,122 @@ export class InspectionOrchestrator {
             throw moduleSignal.reason;
           }
 
+          let moduleOptions: Record<string, unknown> | undefined;
+
+          // Perform non-invasive main-world inspection for framework signatures
+          if (planItem.id === 'technology') {
+            try {
+              if (this.adapter.capabilities?.hasScriptingApi) {
+                const mainWorldResults = await this.adapter.executeScript({
+                  tabId,
+                  world: 'MAIN',
+                  func: () => {
+                    const results: Array<{ name: string; category: string; version?: string; evidence: string; confidence: number }> = [];
+                    try {
+                      const w = window as any;
+                      // 1. React
+                      if (w.React?.version) {
+                        results.push({ name: 'React', category: 'JavaScript Framework', version: String(w.React.version), evidence: `window.React.version: ${w.React.version}`, confidence: 1.0 });
+                      } else if (w.React || w.ReactDOM || w.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers?.size > 0) {
+                        results.push({ name: 'React', category: 'JavaScript Framework', evidence: 'window.React / ReactDOM in main world', confidence: 0.98 });
+                      } else {
+                        const candidates = document.querySelectorAll('#root, #__next, #app, #main, [id*="root"], body > div');
+                        for (const el of Array.from(candidates)) {
+                          const keys = Object.keys(el);
+                          const fiberKey = keys.find((k) => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance') || k.startsWith('__reactContainer') || k.startsWith('_reactRootContainer'));
+                          if (fiberKey) {
+                            results.push({ name: 'React', category: 'JavaScript Framework', evidence: `React Fiber mounted on DOM node #${(el as HTMLElement).id || el.tagName.toLowerCase()} (${fiberKey})`, confidence: 1.0 });
+                            break;
+                          }
+                        }
+                      }
+
+                      // 2. Next.js
+                      if (w.next?.version) {
+                        results.push({ name: 'Next.js', category: 'Web Framework', version: String(w.next.version), evidence: `window.next.version: ${w.next.version}`, confidence: 1.0 });
+                      } else if (w.__NEXT_DATA__ || w.next || w.__next_f) {
+                        results.push({ name: 'Next.js', category: 'Web Framework', evidence: 'window.__NEXT_DATA__ / window.next in main world', confidence: 1.0 });
+                      }
+
+                      // 3. Vue.js
+                      if (w.Vue?.version) {
+                        results.push({ name: 'Vue.js', category: 'JavaScript Framework', version: String(w.Vue.version), evidence: `window.Vue.version: ${w.Vue.version}`, confidence: 1.0 });
+                      } else if (w.Vue || w.__VUE__ || w.__VUE_HMR_RUNTIME__) {
+                        results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'window.Vue / __VUE__ in main world', confidence: 0.98 });
+                      } else {
+                        const el = document.querySelector('#app, #root, body > div');
+                        if (el && ('__vue__' in el || '__vue_app__' in el)) {
+                          results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'Vue instance mounted on DOM node', confidence: 1.0 });
+                        }
+                      }
+
+                      // 4. Nuxt.js
+                      if (w.$nuxt || w.__NUXT__ || w.__NUXT_DATA__) {
+                        results.push({ name: 'Nuxt.js', category: 'Web Framework', evidence: 'window.$nuxt / __NUXT__ in main world', confidence: 1.0 });
+                      }
+
+                      // 5. Angular
+                      if (w.angular?.version?.full) {
+                        results.push({ name: 'Angular', category: 'JavaScript Framework', version: String(w.angular.version.full), evidence: `window.angular.version: ${w.angular.version.full}`, confidence: 1.0 });
+                      } else if (w.angular || w.ng || w.getAllAngularRootElements) {
+                        results.push({ name: 'Angular', category: 'JavaScript Framework', evidence: 'window.angular / window.ng in main world', confidence: 0.95 });
+                      }
+
+                      // 6. Remix
+                      if (w.__remixContext || w.__remixManifest) {
+                        results.push({ name: 'Remix', category: 'Web Framework', evidence: 'window.__remixContext in main world', confidence: 1.0 });
+                      }
+
+                      // 7. Gatsby
+                      if (w.___gatsby) {
+                        results.push({ name: 'Gatsby', category: 'Web Framework', evidence: 'window.___gatsby in main world', confidence: 1.0 });
+                      }
+
+                      // 8. Solid.js
+                      if (w.Solid || w._$HY) {
+                        results.push({ name: 'Solid.js', category: 'JavaScript Framework', evidence: 'window.Solid in main world', confidence: 0.95 });
+                      }
+
+                      // 9. Alpine.js
+                      if (w.Alpine?.version) {
+                        results.push({ name: 'Alpine.js', category: 'JavaScript Framework', version: String(w.Alpine.version), evidence: `window.Alpine.version: ${w.Alpine.version}`, confidence: 1.0 });
+                      } else if (w.Alpine) {
+                        results.push({ name: 'Alpine.js', category: 'JavaScript Framework', evidence: 'window.Alpine in main world', confidence: 0.95 });
+                      }
+
+                      // 10. HTMX
+                      if (w.htmx?.version) {
+                        results.push({ name: 'HTMX', category: 'JavaScript Library', version: String(w.htmx.version), evidence: `window.htmx.version: ${w.htmx.version}`, confidence: 1.0 });
+                      } else if (w.htmx) {
+                        results.push({ name: 'HTMX', category: 'JavaScript Library', evidence: 'window.htmx in main world', confidence: 0.95 });
+                      }
+
+                      // 11. jQuery
+                      if (w.jQuery?.fn?.jquery) {
+                        results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.jQuery.fn.jquery), evidence: `window.jQuery.fn.jquery: ${w.jQuery.fn.jquery}`, confidence: 1.0 });
+                      } else if (w.$?.fn?.jquery) {
+                        results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.$.fn.jquery), evidence: `window.$.fn.jquery: ${w.$.fn.jquery}`, confidence: 1.0 });
+                      }
+                    } catch {
+                      // Handled
+                    }
+                    return results;
+                  },
+                });
+                if (mainWorldResults && mainWorldResults[0] && Array.isArray(mainWorldResults[0])) {
+                  moduleOptions = { mainWorldTech: mainWorldResults[0] };
+                }
+              }
+            } catch {
+              // Main world probe failure is non-fatal; DOM analysis proceeds
+            }
+          }
+
           try {
             const response = await this.bus.sendToTab(
               tabId,
               MESSAGE_CHANNELS.EXECUTE_COLLECTOR,
-              { module: planItem.id },
+              { module: planItem.id, options: moduleOptions },
             );
 
             if (response && response.result) {
@@ -229,6 +340,7 @@ export class InspectionOrchestrator {
               document: (typeof document !== 'undefined' ? document : undefined) as unknown as Document,
               window: typeof window !== 'undefined' ? window : undefined,
               url: normalizedUrl,
+              options: moduleOptions,
             });
             if (res.status === 'partial') {
               res.status = 'completed';
