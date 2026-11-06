@@ -1,6 +1,8 @@
 /**
  * @file src/collectors/page/links.collector.ts
- * @description Analyzes anchor links, tabnabbing vulnerabilities, protocol schemes, and internal/external boundaries.
+ * @description Analyzes anchor links for actionable security and QA signals:
+ * reverse tabnabbing vulnerabilities, dangerous protocols (javascript:, data:),
+ * empty hrefs, and internal/external boundary counts. (Pruned: 100-item raw link dump).
  */
 
 import type { LinksData, LinkItem } from '../../types/inspection';
@@ -24,12 +26,13 @@ export class LinksCollector implements PageCollector<LinksData> {
     const anchorElements = doc.querySelectorAll('a, area');
     const totalLinks = anchorElements.length;
 
-    const internalLinks: LinkItem[] = [];
     const externalLinks: LinkItem[] = [];
     const invalidProtocols = new Set<string>();
     const protocolCounts: Record<string, number> = {};
     let emptyHrefs = 0;
     let tabnabbingVulnerableCount = 0;
+    let internalCount = 0;
+    let externalCount = 0;
 
     anchorElements.forEach((el) => {
       const rawHref = el.getAttribute('href');
@@ -41,7 +44,7 @@ export class LinksCollector implements PageCollector<LinksData> {
 
       const trimmedHref = rawHref.trim();
       const rawText = (el.textContent || '').trim();
-      const text = redactSecretsFromString(rawText).slice(0, 100);
+      const text = redactSecretsFromString(rawText).slice(0, 80);
       const rel = el.getAttribute('rel') || undefined;
       const target = el.getAttribute('target') || undefined;
 
@@ -75,42 +78,45 @@ export class LinksCollector implements PageCollector<LinksData> {
         }
       }
 
+      if (isExternal) {
+        externalCount++;
+      } else {
+        internalCount++;
+      }
+
       const relLower = (rel || '').toLowerCase();
       const hasNoopener = relLower.includes('noopener');
       const hasNoreferrer = relLower.includes('noreferrer');
 
-      // Check tabnabbing
+      // Check reverse tabnabbing (target="_blank" without noopener)
       const isVulnerableTabnabbing = Boolean(target === '_blank' && isExternal && !hasNoopener && !hasNoreferrer);
       if (isVulnerableTabnabbing) {
         tabnabbingVulnerableCount++;
       }
 
-      const linkItem: LinkItem = {
-        url: sanitizedHref,
-        text: text || undefined,
-        rel,
-        target,
-        isExternal,
-        isVulnerableTabnabbing,
-        hasNoopener,
-        hasNoreferrer,
-      };
-
-      if (isExternal) {
-        if (externalLinks.length < 100) externalLinks.push(linkItem);
-      } else {
-        if (internalLinks.length < 100) internalLinks.push(linkItem);
+      // Store only actionable links (vulnerable tabnabbing or sample external links up to 25)
+      if (isExternal && (isVulnerableTabnabbing || externalLinks.length < 25)) {
+        externalLinks.push({
+          url: sanitizedHref,
+          text: text || undefined,
+          rel,
+          target,
+          isExternal: true,
+          isVulnerableTabnabbing,
+          hasNoopener,
+          hasNoreferrer,
+        });
       }
     });
 
     const data: LinksData = {
       totalLinks,
-      internalLinks,
+      internalLinks: [], // Zero bloat: raw internal links omitted
       externalLinks,
       invalidProtocols: Array.from(invalidProtocols),
       emptyHrefs,
-      internalCount: internalLinks.length,
-      externalCount: externalLinks.length,
+      internalCount,
+      externalCount,
       tabnabbingVulnerableCount,
       protocolCounts,
     };
@@ -126,8 +132,7 @@ export class LinksCollector implements PageCollector<LinksData> {
         supported: true,
       },
       limitations: [
-        'DOM link presence does not verify HTTP response code (200 OK) or server reachability.',
-        'Sample lists are capped at 100 entries each to conserve memory.',
+        'Link presence does not verify destination server reachability or HTTP 200 response.',
       ],
       sources: ['DOM:a[href]', 'DOM:area[href]'],
     });

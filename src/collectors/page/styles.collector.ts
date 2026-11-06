@@ -4,7 +4,6 @@
  */
 
 import type { CssData, StylesheetItem } from '../../types/inspection';
-import { isSensitiveKey } from '../../security/secret-redactor';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
 
 export class StylesCollector implements PageCollector<CssData> {
@@ -31,7 +30,6 @@ export class StylesCollector implements PageCollector<CssData> {
     const hasInlineStyleAttributes = inlineStyleElements.length > 0;
 
     const stylesheets: StylesheetItem[] = [];
-    const customPropertiesSet = new Set<string>();
     const fontFamiliesSet = new Set<string>();
     let printStylesPresent = false;
     let darkModeSupported = false;
@@ -91,16 +89,6 @@ export class StylesCollector implements PageCollector<CssData> {
       if (text.includes('@media print')) {
         printStylesPresent = true;
       }
-
-      // Extract custom properties from text
-      const matches = text.match(/--[a-zA-Z0-9_-]+/g);
-      if (matches) {
-        matches.forEach((prop) => {
-          if (!isSensitiveKey(prop.replace(/^--/, '')) && customPropertiesSet.size < 100) {
-            customPropertiesSet.add(prop);
-          }
-        });
-      }
     });
 
     // Inspect document.styleSheets CSSOM (with cross-origin try/catch isolation)
@@ -155,7 +143,7 @@ export class StylesCollector implements PageCollector<CssData> {
     const data: CssData = {
       stylesheetCount,
       inlineStyleCount,
-      customProperties: Array.from(customPropertiesSet),
+      customProperties: [],
       fontFamilies: Array.from(fontFamiliesSet),
       darkModeSupported,
       printStylesPresent,

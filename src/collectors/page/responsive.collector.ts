@@ -1,6 +1,7 @@
 /**
  * @file src/collectors/page/responsive.collector.ts
- * @description Analyzes viewport configuration, tap target sizing, horizontal overflow, and text-to-HTML content ratio.
+ * @description Analyzes viewport configuration, mobile zoom accessibility, tap target sizing,
+ * and horizontal layout overflow. (Pruned bloat: removed cloneNode word count and text ratio).
  */
 
 import type { ResponsiveData } from '../../types/inspection';
@@ -14,12 +15,16 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
     const doc = context.document;
     const win = context.window || (doc.defaultView as Window | null);
 
-    // 1. Viewport Meta Tag
+    // 1. Viewport Meta Tag & Zoom Settings
     const viewportMeta = doc.querySelector('meta[name="viewport" i]');
     const hasViewportTag = Boolean(viewportMeta);
     const viewportContent = viewportMeta?.getAttribute('content') || undefined;
 
-    // 2. Tap Targets Evaluation
+    const allowsZoom = viewportContent
+      ? !/user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0)?/i.test(viewportContent)
+      : true;
+
+    // 2. Tap Targets Evaluation (WCAG 2.5.5 / 2.5.8 mobile touch sizing)
     const interactiveElements = doc.querySelectorAll('a, button, input:not([type="hidden"]), select');
     let undersizedCount = 0;
 
@@ -41,7 +46,7 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       undersized: undersizedCount,
     };
 
-    // 3. Horizontal Overflow Detection
+    // 3. Horizontal Overflow Detection (identifies broken mobile horizontal scrolling)
     let horizontalOverflowDetected = false;
 
     if (doc.documentElement) {
@@ -52,33 +57,12 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       }
     }
 
-    // 4. Content Text Metrics
-    const rawHtml = doc.documentElement?.innerHTML || '';
-    const totalHtmlLength = rawHtml.length;
-
-    let textContent = '';
-    if (doc.body) {
-      const clone = doc.body.cloneNode(true) as HTMLElement;
-      clone.querySelectorAll('script, style, noscript, svg').forEach((n) => n.remove());
-      textContent = (clone.textContent || '').replace(/\s+/g, ' ').trim();
-    }
-
-    const words = textContent.length > 0 ? textContent.split(/\s+/).filter(Boolean) : [];
-    const wordCount = words.length;
-    const textToHtmlRatio = totalHtmlLength > 0 ? Number((textContent.length / totalHtmlLength).toFixed(4)) : 0;
-
-    const allowsZoom = viewportContent
-      ? !/user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0)?/i.test(viewportContent)
-      : true;
-
     const data: ResponsiveData = {
       hasViewportTag,
       viewportContent,
       allowsZoom,
       tapTargetsEvaluation,
       horizontalOverflowDetected,
-      wordCount,
-      textToHtmlRatio,
     };
 
     return createCollectionResult<ResponsiveData>({
@@ -86,16 +70,15 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       status: 'completed',
       data,
       coverage: {
-        expected: 5,
-        collected: 5,
+        expected: 3,
+        collected: 3,
         unavailable: 0,
         supported: true,
       },
       limitations: [
         'Tap target bounding rect evaluations reflect the active browser viewport dimension.',
-        'Word count and text ratio exclude embedded scripts, stylesheets, and svg paths.',
       ],
-      sources: ['DOM:meta[name="viewport"]', 'DOM:getBoundingClientRect', 'DOM:textContent'],
+      sources: ['DOM:meta[name="viewport"]', 'DOM:getBoundingClientRect', 'DOM:scrollWidth'],
     });
   }
 }

@@ -82,18 +82,7 @@ export class DomCollector implements PageCollector<DomSemanticData> {
     const hiddenNodes = doc.querySelectorAll('[hidden], [aria-hidden="true"]');
     const hiddenNodeCount = hiddenNodes.length;
 
-    // 4. Custom elements count
-    let customElementCount = 0;
-    const customTags = new Set<string>();
-    allElements.forEach((el) => {
-      const tag = el.tagName.toLowerCase();
-      if (tag.includes('-')) {
-        customElementCount++;
-        customTags.add(tag);
-      }
-    });
-
-    // 5. Max DOM Depth
+    // 4. Max DOM Depth
     let maxDomDepth = 0;
     function calculateDepth(node: Node, depth: number) {
       if (depth > maxDomDepth) maxDomDepth = depth;
@@ -113,12 +102,12 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       headingHierarchy,
       landmarkElements,
       hiddenNodeCount,
-      customElementCount,
+      customElementCount: 0,
       maxDomDepth,
       hasMainLandmark,
       hasMultipleH1: h1Count > 1,
       headingOrderValid,
-      customElementTags: Array.from(customTags),
+      customElementTags: [],
     };
 
     return createCollectionResult<DomSemanticData>({

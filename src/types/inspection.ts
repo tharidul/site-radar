@@ -281,7 +281,7 @@ export interface DomSemanticData {
   headingHierarchy: HeadingItem[];
   landmarkElements: LandmarkItem[];
   hiddenNodeCount: number;
-  customElementCount: number;
+  customElementCount?: number;
   maxDomDepth: number;
   hasMainLandmark?: boolean;
   hasMultipleH1?: boolean;
@@ -419,7 +419,7 @@ export interface StylesheetItem {
 export interface CssData {
   stylesheetCount: number;
   inlineStyleCount: number;
-  customProperties: string[];
+  customProperties?: string[];
   fontFamilies: string[];
   darkModeSupported: boolean;
   printStylesPresent: boolean;
@@ -556,8 +556,8 @@ export interface ResponsiveData {
   viewportContent?: string;
   tapTargetsEvaluation?: TapTargetMetrics;
   horizontalOverflowDetected: boolean;
-  wordCount: number;
-  textToHtmlRatio: number;
+  wordCount?: number;
+  textToHtmlRatio?: number;
   viewportValid?: boolean;
   allowsZoom?: boolean;
   overflowDeltaPx?: number;
