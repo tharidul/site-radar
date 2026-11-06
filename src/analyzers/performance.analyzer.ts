@@ -76,7 +76,10 @@ export class PerformanceAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('perf-lcp')
             .setStatus('not-available')
+            .setExplanation('Chrome only records Largest Contentful Paint (LCP) timestamps during initial page load. Because this page was already open or idle in memory before scanning, the paint timeline had no active LCP entry.')
+            .setRecommendation('Reload this tab (Ctrl+R / Cmd+R) and click Start Inspection immediately after load to capture live Core Web Vitals.')
             .addEvidence('Observation State', 'LCP entry not recorded by browser prior to inspection')
+            .addEvidence('How to measure', 'Reload this tab and re-run inspection')
             .build(),
         );
       }
@@ -121,7 +124,10 @@ export class PerformanceAnalyzer implements Analyzer {
         findings.push(
           new FindingBuilder('perf-cls')
             .setStatus('not-available')
+            .setExplanation('Cumulative Layout Shift (CLS) measures unexpected layout shifts during active rendering. No shift events were recorded by the browser prior to inspection.')
+            .setRecommendation('Reload this tab (Ctrl+R / Cmd+R) and click Start Inspection to capture visual stability metrics during page load.')
             .addEvidence('Observation State', 'CLS metrics not recorded by browser engine')
+            .addEvidence('How to measure', 'Reload this tab and re-run inspection')
             .build(),
         );
       }

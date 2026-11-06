@@ -13,6 +13,7 @@ import { MESSAGE_CHANNELS, type ScanProgressEvent } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
 import { getBrowserAdapter } from '@/browser/adapters';
 import { validateScheme, type SchemeValidationResult } from '@/security/scheme-validator';
+import { isSameOrigin } from '@/security/url-normalizer';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
 
 import { Header } from './components/Header';
@@ -90,19 +91,16 @@ export function App() {
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
 
-  // Initial load: Fetch theme, active tab info and sync inspection state concurrently (async-parallel)
+  // Initial load: Fetch theme, active tab info and sync inspection state strictly for the current tab & URL
   useEffect(() => {
     let mounted = true;
 
     async function initialize() {
       try {
         const adapter = getBrowserAdapter();
-        const [savedTheme, tab, stateRes] = await Promise.all([
+        const [savedTheme, tab] = await Promise.all([
           loadSavedTheme().catch(() => 'dark' as AppTheme),
           adapter.getActiveTab().catch(() => null),
-          messageBus
-            .sendToBackground(MESSAGE_CHANNELS.GET_INSPECTION_STATE, {})
-            .catch(() => null),
         ]);
 
         if (mounted) {
@@ -115,15 +113,41 @@ export function App() {
             const validation = validateScheme(tab.url || '');
             setSchemeValidation(validation);
           }
-          if (stateRes) {
-            if (stateRes.state === 'running') {
+        }
+
+        // Query background inspection state strictly scoped to this tab and URL
+        if (tab?.id && tab?.url) {
+          const stateRes = await messageBus
+            .sendToBackground(MESSAGE_CHANNELS.GET_INSPECTION_STATE, {
+              tabId: tab.id,
+              url: tab.url,
+            })
+            .catch(() => null);
+
+          if (mounted && stateRes) {
+            // Verify that the inspection target matches the active tab URL to prevent cross-site data retention
+            const isMatch = Boolean(
+              stateRes.inspection?.target?.url &&
+              (tab.url === stateRes.inspection.target.url ||
+               isSameOrigin(tab.url, stateRes.inspection.target.url))
+            );
+
+            if (stateRes.state === 'running' && isMatch) {
               setScanStatus('running');
               if (stateRes.progress) setProgress(stateRes.progress);
-            } else if (stateRes.state === 'completed' && stateRes.inspection) {
+            } else if (stateRes.state === 'completed' && stateRes.inspection && isMatch) {
               setScanStatus('completed');
               setInspection(stateRes.inspection);
+            } else {
+              setScanStatus('idle');
+              setInspection(null);
+              setProgress(null);
             }
           }
+        } else if (mounted) {
+          setScanStatus('idle');
+          setInspection(null);
+          setProgress(null);
         }
       } catch (err: any) {
         console.warn('Initialization error in popup:', err);
@@ -131,6 +155,36 @@ export function App() {
     }
 
     initialize();
+
+    // Listen for tab URL changes while popup is open to reset stale audit data
+    const handleTabUpdated = (updatedTabId: number, changeInfo: { url?: string; status?: string }) => {
+      if (!mounted) return;
+      if (changeInfo.url) {
+        const newUrl = changeInfo.url;
+        setActiveTab((prev) => {
+          if (prev && prev.id === updatedTabId) {
+            return { ...prev, url: newUrl };
+          }
+          return prev;
+        });
+        const validation = validateScheme(newUrl);
+        setSchemeValidation(validation);
+
+        setInspection((curr) => {
+          if (!curr) return null;
+          if (!isSameOrigin(newUrl, curr.target.url)) {
+            setScanStatus('idle');
+            setProgress(null);
+            return null;
+          }
+          return curr;
+        });
+      }
+    };
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
+      chrome.tabs.onUpdated.addListener(handleTabUpdated);
+    }
 
     // Listen to live broadcast events from orchestrator
     const unsubProgress = messageBus.onMessage(
@@ -167,6 +221,9 @@ export function App() {
       unsubProgress();
       unsubCompleted();
       unsubFailed();
+      if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
+        chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+      }
     };
   }, []);
 
@@ -176,6 +233,7 @@ export function App() {
 
     setScanStatus('running');
     setErrorMessage(null);
+    setInspection(null); // Clear previous inspection immediately when starting a new scan
     setProgress({
       scanId: `scan_${Date.now()}`,
       mode: selectedMode,

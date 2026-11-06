@@ -58,7 +58,7 @@ const STATUS_OPTIONS = [
 
 export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   findings,
-  activeSeverityFilter,
+  activeSeverityFilter = 'all',
   activeCategoryFilter = 'all',
   onSelectSeverityFilter,
   onSelectCategoryFilter,
@@ -336,9 +336,11 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                        <Badge variant="severity" severity={finding.severity} status={finding.status}>
-                          {finding.severity}
-                        </Badge>
+                        {finding.status !== 'not-available' && finding.status !== 'not-applicable' && (
+                          <Badge variant="severity" severity={finding.severity} status={finding.status}>
+                            {finding.severity}
+                          </Badge>
+                        )}
                         <Badge variant="status" status={finding.status}>
                           {finding.status}
                         </Badge>

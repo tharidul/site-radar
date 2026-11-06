@@ -47,7 +47,7 @@ export default defineBackground(() => {
 
   // Get Inspection State Channel
   messageBus.onMessage(MESSAGE_CHANNELS.GET_INSPECTION_STATE, async (payload) => {
-    const session = inspectionOrchestrator.getSession(payload?.scanId);
+    const session = inspectionOrchestrator.getSession(payload?.scanId, payload?.tabId, payload?.url);
     return {
       state: session?.state || 'idle',
       inspection: session?.inspection,
@@ -102,4 +102,19 @@ export default defineBackground(() => {
     }
     return { success: true };
   });
+
+  // Zero-persistence guarantee: flush all in-memory audit sessions on browser startup & update
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
+    chrome.runtime.onStartup.addListener(() => {
+      inspectionOrchestrator.clearSessions();
+      apiKeyManager.clearAllKeys();
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
+    chrome.runtime.onInstalled.addListener(() => {
+      inspectionOrchestrator.clearSessions();
+      apiKeyManager.clearAllKeys();
+    });
+  }
 });

@@ -19,7 +19,7 @@ import { MESSAGE_CHANNELS } from '../../types/messaging';
 import { getBrowserAdapter, type BrowserAdapter } from '../../browser/adapters';
 import { messageBus, type IMessageBus } from '../../messaging/bus';
 import { validateScheme } from '../../security/scheme-validator';
-import { normalizeUrl } from '../../security/url-normalizer';
+import { normalizeUrl, isSameOrigin } from '../../security/url-normalizer';
 import { cancellationManager, type ICancellationManager, ScanCancelledError } from './cancellation';
 import { getModePlan } from './mode-plans';
 import { TaskScheduler, type ScheduledTask } from './scheduler';
@@ -75,14 +75,37 @@ export class InspectionOrchestrator {
   }
 
   /**
-   * Returns current active scan session by ID, or the most recent session.
+   * Returns current active scan session by ID, or the most recent matching session for a tab/URL.
    */
-  getSession(scanId?: string): ActiveScanSession | undefined {
+  getSession(scanId?: string, tabId?: number, url?: string): ActiveScanSession | undefined {
     if (scanId) {
       return this.activeSessions.get(scanId);
     }
     const sessions = Array.from(this.activeSessions.values());
-    return sessions.length > 0 ? sessions[sessions.length - 1] : undefined;
+    if (sessions.length === 0) return undefined;
+
+    // Filter by tabId and/or url to prevent cross-site/cross-tab state leakage
+    if (tabId !== undefined || url) {
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        const s = sessions[i];
+        if (tabId !== undefined && s.tabId !== tabId) {
+          continue;
+        }
+        if (url && s.targetUrl) {
+          try {
+            if (!isSameOrigin(s.targetUrl, url)) {
+              continue;
+            }
+          } catch {
+            if (s.targetUrl !== url) continue;
+          }
+        }
+        return s;
+      }
+      return undefined;
+    }
+
+    return sessions[sessions.length - 1];
   }
 
   /**

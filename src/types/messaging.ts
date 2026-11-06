@@ -94,6 +94,8 @@ export interface MessageProtocol {
   [MESSAGE_CHANNELS.GET_INSPECTION_STATE]: {
     request: {
       scanId?: string;
+      tabId?: number;
+      url?: string;
     };
     response: {
       state: 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
