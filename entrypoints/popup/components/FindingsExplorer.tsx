@@ -9,6 +9,7 @@ import React, { useState, useMemo } from 'react';
 import { Search, X, ChevronRight, ChevronDown } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
+import { sortFindingsByPriority } from '../../../src/analyzers';
 
 interface FindingsExplorerProps {
   findings: AuditFinding[];
@@ -54,11 +55,11 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     }
   }, [activeCategoryFilter]);
 
-  // Filter findings based on active criteria
+  // Filter and sort findings: Issues (critical, high, medium, low) on TOP, passed on BOTTOM
   const filteredFindings = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
-    return findings.filter((f) => {
+    const matches = findings.filter((f) => {
       // Severity filter
       if (activeSeverityFilter !== 'all' && f.severity !== activeSeverityFilter) {
         return false;
@@ -87,6 +88,8 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
       return true;
     });
+
+    return sortFindingsByPriority(matches);
   }, [findings, activeSeverityFilter, categoryFilter, statusFilter, searchQuery]);
 
   const hasActiveFilters =
