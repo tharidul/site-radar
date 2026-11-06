@@ -106,19 +106,40 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     onSelectSeverityFilter('all');
   };
 
-  const getSeverityBadgeClass = (severity: Severity) => {
+  const getSeverityBadgeClass = (severity: Severity, status: FindingStatus) => {
+    // If the check passed or is not-applicable, do not color-code it with alert red/orange!
+    if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
+      return 'text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800';
+    }
     switch (severity) {
       case 'critical':
-        return 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border-rose-200 dark:border-rose-900';
+        return 'text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80';
       case 'high':
-        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
+        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80';
       case 'medium':
-        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80 border-orange-200 dark:border-orange-900';
+        return 'text-orange-700 dark:text-orange-400 bg-orange-50 dark:bg-orange-950/80';
       case 'low':
-        return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 border-zinc-200 dark:border-zinc-700';
+        return 'text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800';
       case 'info':
       default:
-        return 'text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800';
+        return 'text-zinc-600 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900';
+    }
+  };
+
+  const getStatusBadgeClass = (status: FindingStatus) => {
+    switch (status) {
+      case 'passed':
+        return 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 font-bold';
+      case 'failed':
+        return 'text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/80 font-bold';
+      case 'warning':
+        return 'text-orange-700 dark:text-orange-300 bg-orange-50 dark:bg-orange-950/80 font-bold';
+      case 'info':
+        return 'text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 font-semibold';
+      case 'not-applicable':
+      case 'not-available':
+      default:
+        return 'text-zinc-500 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 font-medium';
     }
   };
 
@@ -228,13 +249,18 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex items-center gap-2 min-w-0 flex-wrap">
                       <span
-                        className={`text-[10px] uppercase font-bold border rounded-md px-1.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
+                        className={`text-[10px] uppercase font-bold rounded-md px-1.5 py-0.5 shrink-0 ${getSeverityBadgeClass(
                           finding.severity,
+                          finding.status,
                         )}`}
                       >
                         {finding.severity}
                       </span>
-                      <span className="text-[10px] uppercase font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 rounded-md px-1.5 py-0.5 shrink-0">
+                      <span
+                        className={`text-[10px] uppercase rounded-md px-1.5 py-0.5 shrink-0 ${getStatusBadgeClass(
+                          finding.status,
+                        )}`}
+                      >
                         {finding.status}
                       </span>
                       <span className="text-[11px] text-zinc-400 truncate">
