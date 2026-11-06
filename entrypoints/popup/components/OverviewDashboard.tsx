@@ -177,7 +177,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* 1. Hero Overall Score Card */}
-      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
+      <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 sm:p-4 shadow-xs flex flex-row items-center justify-between gap-3">
         {/* Left: Overall Circular Gauge + Text */}
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="relative w-20 h-20 sm:w-22 sm:h-22 shrink-0 flex items-center justify-center">
@@ -233,7 +233,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
         {/* Right: Evaluated Rules Breakdown Mini-Card */}
-        <div className="rounded-lg border border-zinc-200/80 dark:border-zinc-800 bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
+        <div className="rounded-lg bg-zinc-50/90 dark:bg-zinc-950/60 p-2.5 min-w-[165px] shrink-0 space-y-1 shadow-2xs">
           <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 mb-1.5">
             {totalRules} rules evaluated
           </div>
@@ -299,7 +299,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-lg border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:border-orange-400 dark:hover:border-orange-500 transition-colors duration-150 cursor-pointer"
+              className="rounded-lg bg-white dark:bg-zinc-900 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-850 transition-colors duration-150 cursor-pointer"
               title={`View ${cat.label} findings (${cat.score}/100)`}
             >
               <div className="flex flex-col items-center pt-1">
@@ -320,7 +320,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* 2.5 Detected Frameworks & Tech Stack */}
       {techData.length > 0 && (
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-3 shadow-2xs">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-orange-500" />
@@ -334,7 +334,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {techData.map((tech, idx) => (
               <span
                 key={idx}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-zinc-800 dark:text-zinc-200"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200"
                 title={`${tech.category}: ${tech.evidence}`}
               >
                 <span className="w-1.5 h-1.5 rounded-full bg-orange-500 shrink-0" />
@@ -354,7 +354,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       {/* 3. Bottom Two Cards: Audit Scorecard & Severity Distribution */}
       <div className="grid grid-cols-2 gap-3">
         {/* Left: Audit Scorecard */}
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Audit Scorecard
           </div>
@@ -433,7 +433,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
 
         {/* Right: Severity Distribution Donut Chart & Legend */}
-        <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
+        <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs flex flex-col justify-between">
           <div className="text-sm font-bold text-zinc-900 dark:text-zinc-100 mb-2">
             Severity Distribution
           </div>
@@ -542,7 +542,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           <button
             type="button"
             onClick={handleExportHtml}
-            className="flex items-center gap-1.5 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 rounded-lg bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-750 text-zinc-800 dark:text-zinc-200 px-4 py-2.5 text-xs font-semibold transition-colors cursor-pointer"
             title="Download standalone HTML report with zero external CDN calls"
           >
             {downloadedType === 'html' ? (
@@ -558,7 +558,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         <button
           type="button"
           onClick={() => onNavigateToIssues()}
-          className="flex items-center gap-1.5 rounded-lg border border-[#6a0e13]/20 dark:border-rose-900/40 bg-white dark:bg-zinc-900 hover:bg-rose-50/50 dark:hover:bg-zinc-800 text-[#6a0e13] dark:text-orange-400 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-2xs"
+          className="flex items-center gap-1.5 rounded-lg bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-[#6a0e13] dark:text-orange-400 px-4 py-2.5 text-xs font-bold transition-colors cursor-pointer shadow-xs"
           title="Open complete Findings &amp; Issues list"
         >
           <span>View Details</span>

@@ -114,7 +114,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Embedded Target Site URL Strip matching screenshot */}
-      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl border border-zinc-200/90 dark:border-zinc-700 bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs shadow-xs">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
           <span
@@ -127,13 +127,13 @@ export const Header: React.FC<HeaderProps> = ({
 
         <div className="shrink-0">
           {schemeValid ? (
-            <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-md px-2 py-0.5">
+            <span className="flex items-center gap-1.5 text-xs font-semibold text-zinc-800 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-800 rounded-md px-2 py-0.5">
               <Check className="w-3.5 h-3.5 text-orange-500 dark:text-orange-400 stroke-[2.5]" />
               <span>Inspectable</span>
             </span>
           ) : (
             <span
-              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-300 dark:border-rose-900 rounded-md px-2 py-0.5"
+              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 rounded-md px-2 py-0.5"
               title={schemeReason || 'Unsupported browser scheme'}
             >
               <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />

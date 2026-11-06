@@ -110,7 +110,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
         </button>
       </div>
 
-      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-2xs">
+      <div className="rounded-xl bg-white dark:bg-zinc-900 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
         {MODULE_DEFINITIONS.map((def) => {
           const mod = modules[def.key];
           const isExpanded = expandedKeys.has(def.key);
@@ -178,7 +178,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs block">
                         Detected Technologies ({(mod?.data as any).technologies.length})
                       </span>
-                      <div className="divide-y divide-zinc-200 dark:divide-zinc-800 rounded-lg border border-zinc-200 dark:border-zinc-800 overflow-hidden bg-white dark:bg-zinc-900">
+                      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 rounded-lg overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
                         {((mod?.data as any).technologies as any[]).map((t: any, idx: number) => (
                           <div key={idx} className="p-2 flex items-center justify-between text-xs">
                             <div className="min-w-0 pr-2">

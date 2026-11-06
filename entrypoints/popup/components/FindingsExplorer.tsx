@@ -195,7 +195,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       </div>
 
       {/* Unified Findings List (Single container, zero individual floating cards) */}
-      <div className="rounded-xl border border-zinc-200/90 dark:border-zinc-800 bg-white dark:bg-zinc-900 overflow-hidden shadow-2xs divide-y divide-zinc-100 dark:divide-zinc-800/80">
+      <div className="rounded-xl bg-white dark:bg-zinc-900 overflow-hidden shadow-xs divide-y divide-zinc-100 dark:divide-zinc-800/80">
         {filteredFindings.length === 0 ? (
           <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-xs space-y-2">
             <p>No findings match the current search or filters.</p>
@@ -232,7 +232,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                       >
                         {finding.severity}
                       </span>
-                      <span className="text-[10px] uppercase font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-md px-1.5 py-0.5 shrink-0">
+                      <span className="text-[10px] uppercase font-semibold text-zinc-600 dark:text-zinc-400 bg-zinc-100 dark:bg-zinc-800 rounded-md px-1.5 py-0.5 shrink-0">
                         {finding.status}
                       </span>
                       <span className="text-[11px] text-zinc-400 truncate">
