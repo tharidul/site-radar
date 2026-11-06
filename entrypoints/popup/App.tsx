@@ -241,7 +241,7 @@ export function App() {
   return (
     <div
       data-theme={theme}
-      className={`flex flex-col h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
+      className={`flex flex-col h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden rounded-2xl ${theme}`}
     >
       {/* 1. Header with Dark Crimson Wave and URL strip (shrink-0 prevents flex crushing) */}
       <div className="shrink-0">

@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
   onClose,
 }) => {
   return (
-    <header className="relative bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-800 shrink-0">
+    <header className="relative bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-800 shrink-0 rounded-t-2xl">
       {/* Subtle deep red crimson background wave accent matching screenshot */}
       <div
         className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-80"

@@ -207,11 +207,17 @@
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
+  html {
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
   body:not(.options-page) {
     width: 580px;
     min-height: 580px;
     max-height: 600px;
     overflow-x: hidden;
+    border-radius: 16px;
   }
 
   /* Custom compact scrollbar adhering to anti-slop design */
