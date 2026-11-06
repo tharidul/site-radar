@@ -161,6 +161,12 @@ export class ExtensionMessageBus implements IMessageBus {
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       this.runtimeListenerAttached = true;
       chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
+        // MED-1: Reject messages from external extensions or web pages.
+        // Only accept messages originating from this extension's own context.
+        if (sender.id !== chrome.runtime.id) {
+          return false;
+        }
+
         if (!message || typeof message !== 'object' || !('type' in message)) {
           return false;
         }
