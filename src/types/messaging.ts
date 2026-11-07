@@ -34,9 +34,6 @@ export const MESSAGE_CHANNELS = {
   // Consent & Provider settings
   CHECK_EXTERNAL_CONSENT: 'CONSENT_CHECK',
   SET_EXTERNAL_CONSENT: 'CONSENT_SET',
-  GET_CONFIGURED_PROVIDERS: 'PROVIDERS_GET_CONFIGURED',
-  SET_API_KEY: 'API_KEY_SET',
-  REMOVE_API_KEY: 'API_KEY_REMOVE',
 } as const;
 
 export type MessageChannel = (typeof MESSAGE_CHANNELS)[keyof typeof MESSAGE_CHANNELS];
@@ -158,25 +155,6 @@ export interface MessageProtocol {
     };
   };
 
-  [MESSAGE_CHANNELS.GET_CONFIGURED_PROVIDERS]: {
-    request: void;
-    response: {
-      configuredProviders: string[];
-    };
-  };
-
-  [MESSAGE_CHANNELS.SET_API_KEY]: {
-    request: {
-      provider: string;
-      key: string;
-      isSessionOnly?: boolean;
-    };
-    response: {
-      success: boolean;
-      error?: string;
-    };
-  };
-
   [MESSAGE_CHANNELS.SCAN_PROGRESS]: {
     request: ScanProgressEvent;
     response: void;
@@ -196,15 +174,6 @@ export interface MessageProtocol {
       error: string;
     };
     response: void;
-  };
-
-  [MESSAGE_CHANNELS.REMOVE_API_KEY]: {
-    request: {
-      provider: string;
-    };
-    response: {
-      success: boolean;
-    };
   };
 }
 

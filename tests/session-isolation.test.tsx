@@ -3,6 +3,7 @@ import React from 'react';
 import { renderToString } from 'react-dom/server';
 import { InspectionOrchestrator } from '../src/core/orchestrator/inspection-orchestrator';
 import { FindingsExplorer } from '../entrypoints/popup/components/FindingsExplorer';
+import { ModuleAccordions } from '../entrypoints/popup/components/ModuleAccordions';
 import { PerformanceAnalyzer } from '../src/analyzers/performance.analyzer';
 import type { AuditFinding } from '../src/types/inspection';
 
@@ -73,6 +74,35 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
     expect(html).not.toMatch(/>high<\/span>/i);
   });
 
+  it('FindingsExplorer renders a sleek check icon for passed checks without text pill bloating', () => {
+    const passedFinding: AuditFinding = {
+      id: 'f_a11y_alt',
+      ruleId: 'a11y-img-alt',
+      category: 'accessibility',
+      title: 'Image Alt Attributes',
+      description: 'All images have descriptive alt attributes.',
+      severity: 'low',
+      status: 'passed',
+      weight: 10,
+      confidence: 1.0,
+      evidence: [],
+      references: [],
+    };
+
+    const html = renderToString(
+      <FindingsExplorer
+        findings={[passedFinding]}
+        totalRulesEvaluated={1}
+      />
+    );
+
+    // Should render clean check icon
+    expect(html).toContain('Check passed');
+    // Should NOT render bloated text pills [LOW] or [PASSED]
+    expect(html).not.toMatch(/>low<\/span>/i);
+    expect(html).not.toMatch(/>passed<\/span>/i);
+  });
+
   it('PerformanceAnalyzer returns clear actionable explanation when LCP is not-available', () => {
     const analyzer = new PerformanceAnalyzer();
     const findings = analyzer.analyze({
@@ -103,5 +133,24 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
     expect(lcpFinding?.status).toBe('not-available');
     expect(lcpFinding?.explanation).toContain('initial page load');
     expect(lcpFinding?.recommendation).toContain('Reload this tab');
+  });
+
+  it('ModuleAccordions resolves collector key aliases (metadata->seo, security->securityHeaders, dom->content) so completed modules are not marked SKIPPED', () => {
+    const modules = {
+      identity: { module: 'identity', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      metadata: { module: 'metadata', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      security: { module: 'security', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      dom: { module: 'dom', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+    };
+
+    const html = renderToString(<ModuleAccordions modules={modules} />);
+
+    // In the HTML, Overview & Identity, SEO & Metadata, Security & Headers, and Content & DOM Structure must show Ready, NOT SKIPPED
+    const readyMatches = html.match(/>Ready<\/span>/g);
+    expect(readyMatches?.length).toBe(4);
+
+    // Un-executed modules like DNS still show skipped
+    expect(html).toContain('Infrastructure &amp; DNS');
+    expect(html).toContain('skipped');
   });
 });

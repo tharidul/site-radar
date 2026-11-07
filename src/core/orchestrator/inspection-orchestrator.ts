@@ -26,6 +26,7 @@ import { TaskScheduler, type ScheduledTask } from './scheduler';
 import { runAllAnalyzers } from '../../analyzers';
 import { calculateInspectionScores } from '../../scoring';
 import { runPageCollector } from '../../collectors/page';
+import { detectBackendFromHeaders } from '../../collectors/page/backend-signatures';
 import { WebsiteCrawler } from '../../crawler/crawler';
 import {
   consentManager,
@@ -417,6 +418,41 @@ export class InspectionOrchestrator {
             if (secModule && secModule.data) {
               (secModule.data as any).securityHeaders = headersMap;
             }
+
+            // Enrich technology detection with backend web servers, runtimes, frameworks & platforms
+            const techModule = inspection.modules['technology'];
+            if (techModule && techModule.data) {
+              const techData = techModule.data as TechnologyData;
+              const backendTech = detectBackendFromHeaders(headersMap);
+              if (backendTech.length > 0) {
+                const currentList = techData.technologies || [];
+                const existingNames = new Set(currentList.map((t) => t.name.toLowerCase()));
+
+                for (const b of backendTech) {
+                  const key = b.name.toLowerCase();
+                  if (!existingNames.has(key)) {
+                    currentList.push(b);
+                    existingNames.add(key);
+                  } else {
+                    const existing = currentList.find((t) => t.name.toLowerCase() === key);
+                    if (existing) {
+                      if (!existing.version && b.version) existing.version = b.version;
+                      if (b.confidence > existing.confidence) {
+                        existing.confidence = b.confidence;
+                        existing.evidence = b.evidence;
+                      }
+                    }
+                  }
+                }
+
+                techData.technologies = currentList;
+                const catSet = new Set(techData.categoriesFound || []);
+                currentList.forEach((t) => {
+                  if (t.category) catSet.add(t.category);
+                });
+                techData.categoriesFound = Array.from(catSet);
+              }
+            }
           }
         }
       } catch {
@@ -424,28 +460,17 @@ export class InspectionOrchestrator {
       }
 
       if (inspection.modules['security']) {
-        Object.defineProperty(inspection.modules, 'securitySignals', {
-          value: inspection.modules['security'],
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        });
+        inspection.modules['securitySignals'] = inspection.modules['security'];
+        inspection.modules['securityHeaders'] = inspection.modules['security'];
       }
       if (inspection.modules['privacy']) {
-        Object.defineProperty(inspection.modules, 'privacySignals', {
-          value: inspection.modules['privacy'],
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        });
+        inspection.modules['privacySignals'] = inspection.modules['privacy'];
       }
       if (inspection.modules['metadata']) {
-        Object.defineProperty(inspection.modules, 'seo', {
-          value: inspection.modules['metadata'],
-          enumerable: false,
-          configurable: true,
-          writable: true,
-        });
+        inspection.modules['seo'] = inspection.modules['metadata'];
+      }
+      if (inspection.modules['dom']) {
+        inspection.modules['content'] = inspection.modules['dom'];
       }
 
       // Synthesize unified 'resources' module combining scripts, styles, media, and third-party origins
@@ -654,8 +679,8 @@ export class InspectionOrchestrator {
                 supported: true,
                 message: 'User consent required',
               },
-              limitations: ['External lookup blocked pending user consent'],
-              errors: ['External DoH lookup blocked: user consent required.'],
+              limitations: ['External lookup paused pending user consent in Settings (⚙️)'],
+              errors: [],
               sources: ['ConsentManager'],
             };
           }
@@ -704,8 +729,8 @@ export class InspectionOrchestrator {
                 supported: true,
                 message: 'User consent required',
               },
-              limitations: ['External lookup blocked pending user consent'],
-              errors: ['External IP/ASN lookup blocked: user consent required.'],
+              limitations: ['External lookup paused pending user consent in Settings (⚙️)'],
+              errors: [],
               sources: ['ConsentManager'],
             };
           }
@@ -755,8 +780,8 @@ export class InspectionOrchestrator {
                 supported: true,
                 message: 'User consent required',
               },
-              limitations: ['External lookup blocked pending user consent'],
-              errors: ['External CT logs lookup blocked: user consent required.'],
+              limitations: ['External lookup paused pending user consent in Settings (⚙️)'],
+              errors: [],
               sources: ['ConsentManager'],
             };
           }
@@ -804,8 +829,8 @@ export class InspectionOrchestrator {
                 supported: true,
                 message: 'User consent required',
               },
-              limitations: ['External lookup blocked pending user consent'],
-              errors: ['Live TLS inspection blocked: user consent required.'],
+              limitations: ['External lookup paused pending user consent in Settings (⚙️)'],
+              errors: [],
               sources: ['ConsentManager'],
             };
           }

@@ -12,6 +12,8 @@ import {
   ChevronRight,
   ChevronDown,
   CheckCircle2,
+  Check,
+  Minus,
   AlertTriangle,
   Shield,
   Zap,
@@ -332,27 +334,45 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                       toggleFinding(finding.id);
                       if (onSelectFinding) onSelectFinding(finding);
                     }}
-                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-150 cursor-pointer select-none"
+                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-all duration-150 ease-out active:scale-[0.995] cursor-pointer select-none"
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                        {finding.status !== 'not-available' && finding.status !== 'not-applicable' && (
-                          <Badge variant="severity" severity={finding.severity} status={finding.status}>
-                            {finding.severity}
-                          </Badge>
+                        {finding.status === 'passed' ? (
+                          <span
+                            title="Check passed"
+                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shrink-0 select-none"
+                          >
+                            <Check className="w-3 h-3 stroke-[2.5]" />
+                          </span>
+                        ) : finding.status === 'not-available' || finding.status === 'not-applicable' ? (
+                          <span
+                            data-status="not-available"
+                            title={finding.status === 'not-available' ? 'Not Available' : 'Not Applicable'}
+                            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 shrink-0 select-none"
+                          >
+                            <Minus className="w-2.5 h-2.5 text-zinc-400" />
+                            <span>N/A</span>
+                          </span>
+                        ) : (
+                          <>
+                            <Badge variant="severity" severity={finding.severity} status={finding.status}>
+                              {finding.severity}
+                            </Badge>
+                            <Badge variant="status" status={finding.status}>
+                              {finding.status}
+                            </Badge>
+                          </>
                         )}
-                        <Badge variant="status" status={finding.status}>
-                          {finding.status}
-                        </Badge>
                         <span className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                           {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
                         </span>
                       </div>
 
                       {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5" />
+                        <ChevronDown className="w-4 h-4 text-orange-500 shrink-0 mt-0.5 transition-transform duration-200 ease-out" />
                       ) : (
-                        <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5" />
+                        <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5 transition-transform duration-200 ease-out" />
                       )}
                     </div>
 
@@ -364,9 +384,9 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                     </p>
                   </div>
 
-                  {/* Inline Clean Expanded Detail Panel (No sub-cards) */}
+                  {/* Inline Clean Expanded Detail Panel - Rule 1 (Ease-out for entrances), Rule 13 (No bounce) */}
                   {isExpanded && (
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50">
+                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50 transition-all duration-200 ease-out animate-in fade-in-0 slide-in-from-top-1">
                       <FindingDetailInspector
                         finding={finding}
                         onCollapse={() => toggleFinding(finding.id)}

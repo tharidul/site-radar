@@ -131,9 +131,8 @@ The only information that leaves your device is the information transmitted to t
 
 | Information | Retention |
 |-------------|-----------|
-| Inspection results, findings, scores | Until you click "Clear" or close the popup; never persisted to storage |
+| Inspection results, findings, scores | Until you click "Reset" or close the popup; never persisted to storage |
 | Active tab URL (during inspection) | In memory during inspection only |
-| Session API keys (if entered) | In service worker memory only; cleared when SW restarts or you remove the key |
 | Theme preference | In `chrome.storage.local` until you change it or uninstall |
 | Crawl limit configuration | In `chrome.storage.local` until you change it or uninstall |
 | Exported JSON / HTML reports | On your device only; controlled entirely by you |
@@ -142,13 +141,11 @@ The only information that leaves your device is the information transmitted to t
 
 ## 10. Data Deletion
 
-**To clear current inspection results:** Click the "Clear" button (trash icon) in the Extension popup header.
+**To reset current inspection results:** Click the "Reset" button (rotate icon) in the Extension popup header.
 
-**To reset crawl configuration:** Click "Reset Defaults" in the Extension Settings page.
+**To reset crawl configuration:** Click "Reset" in the Extension Settings page.
 
-**To revoke all external intelligence consent:** Click "Revoke All" in Settings > External Intelligence Consent.
-
-**To remove an API key:** Click the trash icon next to the provider name in Settings > Third-Party API Keys.
+**To disable all external intelligence lookups:** Click "Disable all" in Settings > External Intelligence Opt-In.
 
 **To remove all Extension data:** Uninstall the Extension. This removes all `chrome.storage.local` data associated with the Extension.
 

@@ -319,7 +319,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors duration-150 cursor-pointer"
+              className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/60 p-2.5 flex flex-col items-center justify-between text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
               title={`View ${cat.label} findings (${cat.score}/100)`}
             >
               <div className="flex flex-col items-center pt-1">
@@ -362,7 +362,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {techData.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98]"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center justify-between gap-1.5 min-w-0">
@@ -563,6 +563,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             size="md"
             onClick={handleExportJson}
             title="Download sanitized, schema-compliant JSON report"
+            className={downloadedType === 'json' ? 'animate-pulse ring-2 ring-emerald-500/50' : ''}
             leftIcon={
               downloadedType === 'json' ? (
                 <Check className="w-4 h-4 text-white" />
@@ -581,6 +582,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             size="md"
             onClick={handleExportHtml}
             title="Download standalone HTML report with zero external CDN calls"
+            className={downloadedType === 'html' ? 'animate-pulse ring-2 ring-emerald-500/50' : ''}
             leftIcon={
               downloadedType === 'html' ? (
                 <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />

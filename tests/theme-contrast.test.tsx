@@ -337,7 +337,7 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(rootEl.className).toContain('dark:text-zinc-100');
 
       const sections = div.querySelectorAll('section');
-      expect(sections.length).toBe(3);
+      expect(sections.length).toBe(2);
       sections.forEach((sec) => {
         expect(sec.className).toContain('bg-white');
         expect(sec.className).toContain('dark:bg-zinc-900/60');

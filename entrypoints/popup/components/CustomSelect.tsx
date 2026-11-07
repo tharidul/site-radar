@@ -73,7 +73,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer ${
+        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-orange-500 focus:outline-none transition-all duration-150 ease-out active:scale-[0.97] shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer ${
           fullWidth ? 'w-full' : 'min-w-[110px]'
         } ${className}`}
       >
@@ -81,17 +81,17 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
           {selectedOption ? selectedOption.label : placeholder || 'Select'}
         </span>
         <ChevronDown
-          className={`w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 transition-transform duration-150 shrink-0 ${
+          className={`w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 transition-transform duration-200 ease-out shrink-0 ${
             isOpen ? 'rotate-180 text-orange-500' : ''
           }`}
         />
       </button>
 
-      {/* Dropdown Menu */}
+      {/* Dropdown Menu - Follows rules 1, 2, 10, 11 (origin-top, 200ms, starts at 0.95 scale, ease-out) */}
       {isOpen && (
         <div
           role="listbox"
-          className={`absolute left-0 top-full mt-1 z-50 min-w-full w-max max-h-56 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1 shadow-lg text-xs transition-opacity duration-150 ${menuClassName}`}
+          className={`absolute left-0 top-full mt-1 z-50 min-w-full w-max max-h-56 overflow-y-auto rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-1 shadow-lg text-xs origin-top transition-all duration-200 ease-out animate-in fade-in zoom-in-95 ${menuClassName}`}
         >
           {options.map((option) => {
             const isSelected = option.value === value;
@@ -106,7 +106,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   onChange(option.value);
                   setIsOpen(false);
                 }}
-                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-colors duration-100 ${
+                className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-md cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] ${
                   isSelected
                     ? 'bg-orange-500/10 text-orange-600 dark:text-orange-400 font-semibold'
                     : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'

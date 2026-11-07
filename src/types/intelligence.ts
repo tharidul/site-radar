@@ -251,8 +251,6 @@ export interface ConsentDisclosure {
   privacyPolicyUrl?: string;
   /** True if querying an unauthenticated public API */
   isPublicService: boolean;
-  /** True if query requires user's API key */
-  requiresApiKey: boolean;
 }
 
 /**
@@ -267,21 +265,6 @@ export interface ConsentState {
   allowedProviders: Record<string, boolean>;
   /** Whether user selected to remember this choice for session */
   rememberChoice: boolean;
-}
-
-/**
- * Transient configuration for an optional third-party API key.
- * Strictly session-only; never exported, logged, or sent to unauthorized destinations.
- */
-export interface ApiKeyConfig {
-  /** Provider identifier (e.g. 'securitytrails', 'virustotal') */
-  provider: string;
-  /** User-provided secret API key */
-  key: string;
-  /** Whether key is held only in memory (default: true) */
-  isSessionOnly: boolean;
-  /** Epoch timestamp when key was entered */
-  setAt: number;
 }
 
 declare module './inspection' {

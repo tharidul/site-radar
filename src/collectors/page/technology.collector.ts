@@ -6,6 +6,7 @@
 
 import type { DetectedTechnology, TechnologyData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
+import { detectBackendFromDom } from './backend-signatures';
 
 interface TechSignature {
   name: string;
@@ -617,6 +618,20 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
       } catch {
         // Individual signature evaluation failure contained
       }
+    }
+
+    // 2.5 Evaluate in-DOM backend signatures (cookies, CSRF tokens, backend meta tags)
+    try {
+      const backendDomTech = detectBackendFromDom(doc, win);
+      for (const b of backendDomTech) {
+        const key = b.name.toLowerCase();
+        const existing = detectedMap.get(key);
+        if (!existing || b.confidence > existing.confidence) {
+          detectedMap.set(key, b);
+        }
+      }
+    } catch {
+      // Backend in-DOM signature failure contained
     }
 
     // 3. Implied framework associations

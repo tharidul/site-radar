@@ -52,7 +52,7 @@ export const TabBar: React.FC<TabBarProps> = ({
               <button
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-colors duration-150 cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer ${
                   isActive
                     ? 'text-orange-600 dark:text-orange-400'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/40 dark:hover:bg-zinc-900/60 rounded-md'
@@ -74,8 +74,8 @@ export const TabBar: React.FC<TabBarProps> = ({
               </button>
               {/* Active Tab Underline Indicator - only keep underline */}
               <div
-                className={`h-0.5 -mb-px rounded-full w-full transition-colors ${
-                  isActive ? 'bg-orange-500 dark:bg-orange-400' : 'bg-transparent'
+                className={`h-0.5 -mb-px rounded-full w-full transition-all duration-200 ease-out ${
+                  isActive ? 'bg-orange-500 dark:bg-orange-400 opacity-100 scale-x-100' : 'bg-transparent opacity-0 scale-x-75'
                 }`}
               />
             </div>

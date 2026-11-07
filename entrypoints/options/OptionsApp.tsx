@@ -1,7 +1,7 @@
 /**
  * @file entrypoints/options/OptionsApp.tsx
  * @description Dedicated options and settings page (Feature 47).
- * Manages external intelligence consent, provider disclosures, masked session API keys,
+ * Manages external intelligence consent, provider disclosures,
  * and bounded crawl boundaries.
  * Adheres strictly to anti-slop guidelines: compact, intentional, zero decorative fluff.
  */
@@ -9,18 +9,15 @@
 import React, { useState, useEffect } from 'react';
 import {
   Shield,
-  Key,
   Compass,
   FileText,
   Check,
   AlertTriangle,
-  Trash2,
   ExternalLink,
-  Eye,
-  EyeOff,
   RotateCcw,
   Sun,
   Moon,
+  ChevronDown,
 } from 'lucide-react';
 import { MESSAGE_CHANNELS } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
@@ -28,7 +25,6 @@ import { getBrowserAdapter } from '@/browser/adapters';
 import { consentManager } from '../../src/intelligence/consent-manager';
 import type { IntelligenceProviderType, ConsentDisclosure } from '@/types/intelligence';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
-import { CustomSelect } from '../popup/components/CustomSelect';
 import { Button } from '../popup/components/Button';
 import { Badge } from '../popup/components/Badge';
 
@@ -46,11 +42,38 @@ const DEFAULT_CRAWL_CONFIG: CrawlConfig = {
   timeoutSeconds: 15,
 };
 
-const PROVIDER_LIST: Array<{ id: IntelligenceProviderType; name: string }> = [
-  { id: 'doh', name: 'DNS-over-HTTPS (DoH)' },
-  { id: 'ip-asn', name: 'IP & ASN Intelligence' },
-  { id: 'crt-sh', name: 'Certificate Transparency (crt.sh)' },
-  { id: 'tls', name: 'TLS Security Inspector' },
+interface ProviderItem {
+  id: IntelligenceProviderType;
+  name: string;
+  summary: string;
+  endpoint: string;
+}
+
+const PROVIDER_LIST: ProviderItem[] = [
+  {
+    id: 'doh',
+    name: 'DNS-over-HTTPS (DoH)',
+    summary: 'Resolves DNS A, AAAA, MX, and TXT records via Cloudflare (1.1.1.1) to verify DNSSEC and CNAME chains.',
+    endpoint: 'https://cloudflare-dns.com/dns-query',
+  },
+  {
+    id: 'ip-asn',
+    name: 'IP & ASN Intelligence',
+    summary: 'Identifies hosting provider, data center, Autonomous System Number (ASN), and network routing via ipapi.co.',
+    endpoint: 'https://ipapi.co/',
+  },
+  {
+    id: 'crt-sh',
+    name: 'Certificate Transparency (crt.sh)',
+    summary: 'Audits historical SSL/TLS certificates and known subdomains logged to public CT transparency logs.',
+    endpoint: 'https://crt.sh/',
+  },
+  {
+    id: 'tls',
+    name: 'TLS Security Inspector',
+    summary: 'Inspects active TLS protocol version, cipher suite strength, and certificate validity directly.',
+    endpoint: 'Direct host connection',
+  },
 ];
 
 export function OptionsApp() {
@@ -62,13 +85,6 @@ export function OptionsApp() {
     'crt-sh': false,
     tls: false,
   });
-
-  // API Key management
-  const [selectedProvider, setSelectedProvider] = useState('shodan');
-  const [apiKeyInput, setApiKeyInput] = useState('');
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [configuredProviders, setConfiguredProviders] = useState<string[]>([]);
-  const [keyFeedback, setKeyFeedback] = useState<string | null>(null);
 
   // Crawl boundaries
   const [crawlConfig, setCrawlConfig] = useState<CrawlConfig>(DEFAULT_CRAWL_CONFIG);
@@ -87,7 +103,7 @@ export function OptionsApp() {
     async function loadSettings() {
       try {
         const adapter = getBrowserAdapter();
-        const [savedTheme, consentResults, keyRes, stored] = await Promise.all([
+        const [savedTheme, consentResults, stored] = await Promise.all([
           loadSavedTheme().catch(() => 'dark' as AppTheme),
           Promise.all(
             PROVIDER_LIST.map(async (p) => {
@@ -102,9 +118,6 @@ export function OptionsApp() {
               }
             }),
           ),
-          messageBus
-            .sendToBackground(MESSAGE_CHANNELS.GET_CONFIGURED_PROVIDERS, undefined)
-            .catch(() => null),
           adapter.getStorage<CrawlConfig>(['crawlLimits']).catch(() => null),
         ]);
 
@@ -117,9 +130,6 @@ export function OptionsApp() {
           setProviderConsents(consents);
           setGlobalConsent(Object.values(consents).some(Boolean));
 
-          if (keyRes?.configuredProviders) {
-            setConfiguredProviders(keyRes.configuredProviders);
-          }
           if (stored?.crawlLimits) {
             setCrawlConfig(stored.crawlLimits);
           }
@@ -171,51 +181,6 @@ export function OptionsApp() {
     }
   };
 
-  // Set API Key
-  const handleSaveApiKey = async () => {
-    const trimmed = apiKeyInput.trim();
-    if (!trimmed) {
-      setKeyFeedback('API key cannot be empty');
-      setTimeout(() => setKeyFeedback(null), 3000);
-      return;
-    }
-
-    try {
-      const res = await messageBus.sendToBackground(MESSAGE_CHANNELS.SET_API_KEY, {
-        provider: selectedProvider,
-        key: trimmed,
-        isSessionOnly: true,
-      });
-
-      if (res.success) {
-        setApiKeyInput('');
-        setKeyFeedback(`API key saved for ${selectedProvider} (Session memory only)`);
-        if (!configuredProviders.includes(selectedProvider)) {
-          setConfiguredProviders([...configuredProviders, selectedProvider]);
-        }
-      } else {
-        setKeyFeedback(res.error || 'Failed to set API key');
-      }
-    } catch (err: any) {
-      setKeyFeedback(err?.message || 'Error saving API key');
-    }
-    setTimeout(() => setKeyFeedback(null), 3000);
-  };
-
-  // Remove API Key
-  const handleRemoveApiKey = async (provider: string) => {
-    try {
-      await messageBus.sendToBackground(MESSAGE_CHANNELS.REMOVE_API_KEY, {
-        provider,
-      });
-      setConfiguredProviders(configuredProviders.filter((p) => p !== provider));
-      setKeyFeedback(`API key removed for ${provider}`);
-    } catch (err: any) {
-      setKeyFeedback('Failed to remove API key');
-    }
-    setTimeout(() => setKeyFeedback(null), 3000);
-  };
-
   // Clamp and save crawl limits
   const handleUpdateCrawlLimit = (field: keyof CrawlConfig, value: number) => {
     setCrawlConfig((prev) => {
@@ -254,18 +219,18 @@ export function OptionsApp() {
   };
 
   return (
-    <div data-theme={theme} className={`min-h-screen bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans p-6 md:p-10 select-none ${theme}`}>
-      <div className="max-w-3xl mx-auto space-y-8">
+    <div data-theme={theme} className={`min-h-screen overflow-y-auto bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans p-4 sm:p-6 md:p-8 select-none ${theme}`}>
+      <div className="max-w-2xl mx-auto space-y-6">
         {/* Header */}
-        <header className="border-b border-zinc-200 dark:border-zinc-800 pb-4 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-2.5">
-            <Shield className="w-6 h-6 text-zinc-900 dark:text-zinc-100" />
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
+        <header className="border-b border-zinc-200 dark:border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <Shield className="w-6 h-6 text-orange-500 shrink-0" />
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
                 SiteRadar Settings
               </h1>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-                Privacy controls, provider consent, session API keys, and crawl boundaries
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+                Privacy controls, intelligence opt-in, and audit boundaries
               </p>
             </div>
           </div>
@@ -273,237 +238,138 @@ export function OptionsApp() {
           <Button
             type="button"
             variant="outline"
-            size="sm"
+            size="icon"
             onClick={handleToggleTheme}
             title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            leftIcon={
-              theme === 'light' ? (
-                <Moon className="w-4 h-4 text-zinc-700" />
-              ) : (
-                <Sun className="w-4 h-4 text-orange-400" />
-              )
-            }
+            aria-label="Toggle theme"
+            className="shrink-0 border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
           >
-            {theme === 'light' ? 'Light Mode' : 'Dark Mode'}
+            {theme === 'light' ? (
+              <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
+            ) : (
+              <Sun className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            )}
           </Button>
         </header>
 
-        {/* Section 1: External Intelligence Consent (Feature 47) */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4 shadow-xs">
-          <div className="flex items-center justify-between border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
+        {/* Section 1: External Intelligence Opt-In */}
+        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
+          <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                <span>External Intelligence Consent</span>
+              <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+                <Shield className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                <span>External Intelligence Opt-In</span>
               </h2>
-              <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-                Local-first inspection executes in-browser. External lookups require explicit user opt-in.
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+                SiteRadar runs 100% locally by default. Enable external lookups for deep network intelligence.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="danger"
-              size="sm"
-              onClick={handleRevokeAllConsent}
-            >
-              Revoke All
-            </Button>
+            {Object.values(providerConsents).some(Boolean) && (
+              <button
+                type="button"
+                onClick={handleRevokeAllConsent}
+                className="text-xs font-semibold text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 transition-colors cursor-pointer shrink-0"
+              >
+                Disable all
+              </button>
+            )}
           </div>
 
-          <div className="space-y-3">
-            {PROVIDER_LIST.map((provider) => {
-              const isGranted = Boolean(providerConsents[provider.id]);
-              const disclosure = consentManager.getDisclosure(provider.id, 'target-example.com');
-              const isDisclosureOpen = expandedDisclosureProviderId === provider.id;
+          {PROVIDER_LIST.map((provider) => {
+            const isGranted = Boolean(providerConsents[provider.id]);
+            const disclosure = consentManager.getDisclosure(provider.id, 'inspected host');
+            const isDisclosureOpen = expandedDisclosureProviderId === provider.id;
 
-              return (
-                <div
-                  key={provider.id}
-                  className="rounded-lg border border-zinc-200/80 dark:border-zinc-800/80 bg-zinc-50 dark:bg-zinc-950/80 p-3 space-y-2.5 transition-colors"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="space-y-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">
-                          {provider.name}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => setExpandedDisclosureProviderId((prev) => prev === provider.id ? null : provider.id)}
-                          className="text-xs font-medium text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 underline cursor-pointer"
-                        >
-                          {isDisclosureOpen ? 'Hide Disclosure' : 'View Disclosure'}
-                        </button>
-                      </div>
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-                        Endpoint: <span className="text-xs text-zinc-700 dark:text-zinc-300 font-mono">{disclosure.providerUrl}</span>
-                      </p>
+            return (
+              <div key={provider.id} className="p-4 space-y-2">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="space-y-1 min-w-0 pr-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
+                        {provider.name}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setExpandedDisclosureProviderId((prev) => (prev === provider.id ? null : provider.id))}
+                        className="text-[11px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer flex items-center gap-0.5"
+                      >
+                        <span>{isDisclosureOpen ? 'Hide' : 'Details'}</span>
+                        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDisclosureOpen ? 'rotate-180' : ''}`} />
+                      </button>
                     </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleToggleProviderConsent(provider.id)}
-                      className={`rounded-md border px-2.5 py-1 text-xs font-semibold transition-colors cursor-pointer shrink-0 ${
-                        isGranted
-                          ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/80 text-orange-700 dark:text-orange-400'
-                          : 'border-zinc-300 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-400 hover:border-zinc-400 dark:hover:border-zinc-700'
-                      }`}
-                    >
-                      {isGranted ? 'Enabled' : 'Disabled'}
-                    </button>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal">
+                      {provider.summary}
+                    </p>
                   </div>
 
-                  {/* Inline Disclosure Accordion */}
-                  {isDisclosureOpen && (
-                    <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-2 text-xs text-zinc-700 dark:text-zinc-300">
-                      <div>
-                        <span className="text-zinc-500 dark:text-zinc-400 font-medium">Endpoint URL: </span>
-                        <span className="text-zinc-900 dark:text-zinc-100 text-xs font-mono break-all">{disclosure.providerUrl}</span>
-                      </div>
-
-                      <div>
-                        <span className="text-zinc-500 dark:text-zinc-400 font-medium">Data Transmitted: </span>
-                        <span className="text-zinc-900 dark:text-zinc-100">{disclosure.dataToSend.join(', ')}</span>
-                      </div>
-
-                      {disclosure.privacyPolicyUrl && (
-                        <div>
-                          <span className="text-zinc-500 dark:text-zinc-400 font-medium">Privacy Policy: </span>
-                          <a
-                            href={disclosure.privacyPolicyUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-1"
-                          >
-                            <span>{disclosure.privacyPolicyUrl}</span>
-                            <ExternalLink className="w-3 h-3" />
-                          </a>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* Section 2: Session-Only API Key Management */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4 shadow-xs">
-          <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <Key className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-              <span>Third-Party API Keys (Session Memory Only)</span>
-            </h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-              API keys are stored transiently in memory for the active session. They are never written to disk or included in reports.
-            </p>
-          </div>
-
-          {/* deslop-ignore-next-line 28 */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                Intelligence Provider
-              </label>
-              <CustomSelect
-                value={selectedProvider}
-                options={[
-                  { value: 'shodan', label: 'Shodan' },
-                  { value: 'virustotal', label: 'VirusTotal' },
-                  { value: 'securitytrails', label: 'SecurityTrails' },
-                  { value: 'censys', label: 'Censys' },
-                  { value: 'custom', label: 'Custom Provider' },
-                ]}
-                onChange={setSelectedProvider}
-                fullWidth
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                API Key
-              </label>
-              <div className="relative">
-                <input
-                  type={showApiKey ? 'text' : 'password'}
-                  value={apiKeyInput}
-                  onChange={(e) => setApiKeyInput(e.target.value)}
-                  placeholder="Enter secret API key..."
-                  className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 pr-8 py-2 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 focus:border-orange-500 focus:outline-none transition-colors"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowApiKey((prev) => !prev)}
-                  className="absolute right-2 top-2.5 text-zinc-500 dark:text-zinc-400 hover:text-zinc-800 dark:hover:text-zinc-200 cursor-pointer"
-                  title={showApiKey ? 'Hide key' : 'Show key'}
-                >
-                  {showApiKey ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
-              {keyFeedback}
-            </span>
-            <Button
-              type="button"
-              variant="primary"
-              size="sm"
-              onClick={handleSaveApiKey}
-            >
-              Save API Key
-            </Button>
-          </div>
-
-          {/* Configured Providers List */}
-          {configuredProviders.length > 0 && (
-            <div className="pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80 space-y-2">
-              <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-300 block">
-                Configured providers in memory:
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {configuredProviders.map((provider) => (
-                  <div
-                    key={provider}
-                    className="flex items-center gap-2 rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-xs text-zinc-800 dark:text-zinc-200"
+                  {/* Modern, accessible toggle switch */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isGranted}
+                    onClick={() => handleToggleProviderConsent(provider.id)}
+                    title={isGranted ? `Disable ${provider.name}` : `Enable ${provider.name}`}
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500/30 active:scale-[0.97] ${
+                      isGranted ? 'bg-orange-500' : 'bg-zinc-300 dark:bg-zinc-700'
+                    }`}
                   >
-                    <span className="capitalize font-medium">{provider}</span>
-                    <Badge size="xs">
-                      Active
-                    </Badge>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveApiKey(provider)}
-                      className="text-zinc-400 hover:text-rose-600 dark:hover:text-rose-400 cursor-pointer"
-                      title="Remove key"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
+                    <span
+                      aria-hidden="true"
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                        isGranted ? 'translate-x-4' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
+
+                {/* Expandable Provider Disclosure */}
+                {isDisclosureOpen && (
+                  <div className="pt-2 text-xs space-y-1 text-zinc-500 dark:text-zinc-400">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-zinc-600 dark:text-zinc-300">Endpoint:</span>
+                      <span className="text-zinc-800 dark:text-zinc-200 font-mono text-[11px] select-all">{provider.endpoint}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-zinc-600 dark:text-zinc-300">Data transmitted:</span>
+                      <span className="text-zinc-800 dark:text-zinc-200">{disclosure.dataToSend.join(', ')}</span>
+                    </div>
+                    {disclosure.privacyPolicyUrl && (
+                      <div className="flex items-center gap-2 pt-0.5">
+                        <span className="font-medium text-zinc-600 dark:text-zinc-300">Privacy Policy:</span>
+                        <a
+                          href={disclosure.privacyPolicyUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-1"
+                        >
+                          <span>{disclosure.providerName}</span>
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                      </div>
+                    )}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          )}
+            );
+          })}
         </section>
 
-        {/* Section 3: Bounded Crawl Limits Configuration */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-5 space-y-4 shadow-xs">
+        {/* Section 2: Bounded Deep Crawl Limits Configuration */}
+        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 space-y-3.5 shadow-xs">
           <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
-            <h2 className="text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <Compass className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-              <span>Bounded Deep Crawl Limits</span>
+            <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
+              <Compass className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+              <span>Deep Crawl Boundaries</span>
             </h2>
-            <p className="text-xs text-zinc-600 dark:text-zinc-400 mt-0.5">
-              Limits safeguard browser performance, battery life, and network bandwidth during deep inspections.
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
+              Protects tab performance, memory, and battery during multi-page link exploration.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                Max Pages (5–200)
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                Max Pages
               </label>
               <input
                 type="number"
@@ -511,13 +377,14 @@ export function OptionsApp() {
                 max={200}
                 value={crawlConfig.maxPages}
                 onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
-                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
               />
+              <span className="text-[10px] text-zinc-400 mt-0.5 block">5–200 pages</span>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                Max Depth (1–5)
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                Max Depth
               </label>
               <input
                 type="number"
@@ -525,13 +392,14 @@ export function OptionsApp() {
                 max={5}
                 value={crawlConfig.maxDepth}
                 onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
-                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
               />
+              <span className="text-[10px] text-zinc-400 mt-0.5 block">1–5 hops</span>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                Concurrency (1–4)
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                Concurrency
               </label>
               <input
                 type="number"
@@ -539,13 +407,14 @@ export function OptionsApp() {
                 max={4}
                 value={crawlConfig.concurrency}
                 onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
-                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
               />
+              <span className="text-[10px] text-zinc-400 mt-0.5 block">1–4 parallel</span>
             </div>
 
             <div>
-              <label className="text-xs font-medium text-zinc-700 dark:text-zinc-400 block mb-1">
-                Timeout (5–60s)
+              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
+                Timeout
               </label>
               <input
                 type="number"
@@ -553,8 +422,9 @@ export function OptionsApp() {
                 max={60}
                 value={crawlConfig.timeoutSeconds}
                 onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
-                className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-2 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
               />
+              <span className="text-[10px] text-zinc-400 mt-0.5 block">5–60 seconds</span>
             </div>
           </div>
 
@@ -571,7 +441,7 @@ export function OptionsApp() {
                 onClick={handleResetCrawlLimits}
                 leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
               >
-                Reset Defaults
+                Reset
               </Button>
 
               <Button
@@ -587,7 +457,7 @@ export function OptionsApp() {
         </section>
 
         {/* Author & Privacy Footer */}
-        <footer className="pt-6 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
+        <footer className="pt-4 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
           <div className="inline-flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             <a
               href="https://tharidulakmal.com"

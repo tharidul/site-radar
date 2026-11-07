@@ -8,4 +8,3 @@ export * from './doh-resolver';
 export * from './asn-lookup';
 export * from './ct-logs';
 export * from './tls-evaluator';
-export * from './api-key-manager';

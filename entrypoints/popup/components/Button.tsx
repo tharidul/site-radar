@@ -55,7 +55,7 @@ export const Button: React.FC<ButtonProps> = ({
     <button
       {...props}
       disabled={isDisabled}
-      className={`inline-flex items-center justify-center transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-orange-500/40 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
+      className={`inline-flex items-center justify-center transition-all duration-150 ease-out active:scale-[0.97] disabled:active:scale-100 focus:outline-none focus:ring-2 focus:ring-orange-500/40 select-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none ${
         VARIANT_STYLES[variant]
       } ${SIZE_STYLES[size]} ${className}`}
     >

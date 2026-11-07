@@ -229,9 +229,18 @@
     transition: background-color 0.15s ease, color 0.15s ease;
   }
 
-  html {
+  html:not(.options-html) {
     border-radius: 16px;
     overflow: hidden;
+  }
+
+  html.options-html,
+  body.options-page {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100%;
+    border-radius: 0;
   }
 
   body:not(.options-page) {

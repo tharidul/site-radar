@@ -123,7 +123,6 @@ export class ConsentManager {
           dataToSend: [targetHost, 'DNS Record Type'],
           privacyPolicyUrl: 'https://www.cloudflare.com/privacypolicy/',
           isPublicService: true,
-          requiresApiKey: false,
         };
       case 'ip-asn':
         return {
@@ -134,7 +133,6 @@ export class ConsentManager {
           dataToSend: ['Target IP Address'],
           privacyPolicyUrl: 'https://ipapi.co/privacy/',
           isPublicService: true,
-          requiresApiKey: false,
         };
       case 'crt-sh':
         return {
@@ -145,7 +143,6 @@ export class ConsentManager {
           dataToSend: [targetHost],
           privacyPolicyUrl: 'https://crt.sh/',
           isPublicService: true,
-          requiresApiKey: false,
         };
       case 'tls':
         return {
@@ -155,7 +152,6 @@ export class ConsentManager {
           targetHost,
           dataToSend: [targetHost, 'Security Response Headers'],
           isPublicService: true,
-          requiresApiKey: false,
         };
       default:
         return {
@@ -165,7 +161,6 @@ export class ConsentManager {
           targetHost,
           dataToSend: [targetHost],
           isPublicService: true,
-          requiresApiKey: false,
         };
     }
   }

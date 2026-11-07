@@ -1,7 +1,7 @@
 /**
  * @file entrypoints/background.ts
  * @description Background service worker orchestrating inspection lifecycles,
- * crawler coordination, external intelligence consent, and API key management.
+ * crawler coordination, and external intelligence consent.
  * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, 8, 9, 10.
  */
 
@@ -9,7 +9,7 @@ import { defineBackground } from 'wxt/utils/define-background';
 import { MESSAGE_CHANNELS } from '../src/types/messaging';
 import { messageBus } from '../src/messaging/bus';
 import { inspectionOrchestrator } from '../src/core/orchestrator';
-import { consentManager, apiKeyManager } from '../src/intelligence';
+import { consentManager } from '../src/intelligence';
 import type { IntelligenceProviderType } from '../src/types/intelligence';
 
 export default defineBackground(() => {
@@ -76,45 +76,16 @@ export default defineBackground(() => {
     return { success: true };
   });
 
-  // Get Configured Providers Channel
-  messageBus.onMessage(MESSAGE_CHANNELS.GET_CONFIGURED_PROVIDERS, async () => {
-    const configuredProviders = apiKeyManager.getConfiguredProviders();
-    return { configuredProviders };
-  });
-
-  // Set API Key Channel
-  messageBus.onMessage(MESSAGE_CHANNELS.SET_API_KEY, async (payload) => {
-    try {
-      if (!payload?.provider || !payload?.key) {
-        return { success: false, error: 'Provider and key are required' };
-      }
-      apiKeyManager.setKey(payload.provider, payload.key, payload.isSessionOnly ?? true);
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err?.message || 'Failed to set API key' };
-    }
-  });
-
-  // Remove API Key Channel
-  messageBus.onMessage(MESSAGE_CHANNELS.REMOVE_API_KEY, async (payload) => {
-    if (payload?.provider) {
-      apiKeyManager.removeKey(payload.provider);
-    }
-    return { success: true };
-  });
-
   // Zero-persistence guarantee: flush all in-memory audit sessions on browser startup & update
   if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
       inspectionOrchestrator.clearSessions();
-      apiKeyManager.clearAllKeys();
     });
   }
 
   if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
     chrome.runtime.onInstalled.addListener(() => {
       inspectionOrchestrator.clearSessions();
-      apiKeyManager.clearAllKeys();
     });
   }
 });

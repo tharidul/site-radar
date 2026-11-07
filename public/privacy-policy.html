@@ -306,9 +306,8 @@
           <tr><th>Information</th><th>Retention</th></tr>
         </thead>
         <tbody>
-          <tr><td>Inspection results, findings, scores</td><td>Temporary RAM only; completely purged when the browser closes, when navigating away, or when clicking "Clear". Never written to disk.</td></tr>
+          <tr><td>Inspection results, findings, scores</td><td>Temporary RAM only; completely purged when the browser closes, when navigating away, or when clicking "Reset". Never written to disk.</td></tr>
           <tr><td>Active tab URL (during inspection)</td><td>Held in temporary RAM during inspection only; discarded when the tab navigates or browser closes.</td></tr>
-          <tr><td>Session API keys (if entered)</td><td>Transient service worker memory only; cleared on browser close, extension reload, or manual removal.</td></tr>
           <tr><td>Theme preference</td><td>chrome.storage.local (Dark / Light preference only) until changed or uninstalled.</td></tr>
           <tr><td>Crawl limit configuration</td><td>chrome.storage.local (User-configured limits only) until changed or uninstalled.</td></tr>
           <tr><td>Exported JSON / HTML reports</td><td>Saved to your local Downloads folder only when you explicitly click "Export"; completely controlled by you.</td></tr>
@@ -320,10 +319,9 @@
     <ul>
       <li><strong>Automatic deletion on browser close:</strong> When your browser is closed, all in-memory audit results, URLs, and session data are immediately erased by design.</li>
       <li><strong>Automatic deletion on navigation:</strong> When you navigate to a different website, previous audit data is cleared and never displayed on the new site.</li>
-      <li><strong>Manual clear:</strong> Click the "Clear" button in the Extension header at any time to instantly flush all in-memory audit results.</li>
-      <li><strong>Reset crawl configuration:</strong> Click "Reset Defaults" in Extension Settings.</li>
-      <li><strong>Revoke all external consent:</strong> Click "Revoke All" in Settings &gt; External Intelligence Consent.</li>
-      <li><strong>Remove an API key:</strong> Click the trash icon next to the provider name in Settings.</li>
+      <li><strong>Manual reset:</strong> Click the reset icon button in the Extension header at any time to instantly flush all in-memory audit results.</li>
+      <li><strong>Reset crawl configuration:</strong> Click "Reset" in Extension Settings.</li>
+      <li><strong>Revoke external consent:</strong> Click "Disable all" in Settings &gt; External Intelligence Opt-In.</li>
       <li><strong>Remove all Extension data:</strong> Uninstall the Extension. This completely removes the extension and all stored preferences.</li>
     </ul>
 

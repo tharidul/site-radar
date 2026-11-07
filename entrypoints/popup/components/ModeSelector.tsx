@@ -90,7 +90,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             <div
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className={`rounded-xl p-3.5 transition-all duration-150 cursor-pointer select-none shadow-xs border ${
+              className={`rounded-xl p-3.5 transition-all duration-150 ease-out active:scale-[0.98] cursor-pointer select-none shadow-xs border ${
                 isSelected
                   ? 'bg-white dark:bg-zinc-900 border-orange-500 ring-2 ring-orange-500/20'
                   : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'

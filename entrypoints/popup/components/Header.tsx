@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Settings, Trash2, AlertTriangle, Globe, Sun, Moon, X } from 'lucide-react';
+import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X } from 'lucide-react';
 import { Button } from './Button';
 
 interface HeaderProps {
@@ -68,13 +68,13 @@ export const Header: React.FC<HeaderProps> = ({
             <Button
               type="button"
               variant="outline"
-              size="sm"
+              size="icon"
               onClick={onClearResults}
-              title="Clear in-memory results"
-              leftIcon={<Trash2 className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-300" />}
-              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+              title="Reset inspection"
+              aria-label="Reset inspection"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white group"
             >
-              Clear
+              <RotateCcw className="w-4 h-4 text-zinc-600 dark:text-zinc-300 group-hover:rotate-[-45deg] transition-transform duration-200" />
             </Button>
           )}
 
