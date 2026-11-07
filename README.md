@@ -73,8 +73,8 @@ Export complete audit results at any time:
 ### Setup
 
 ```bash
-git clone https://github.com/your-username/website-intelligence.git
-cd website-intelligence
+git clone https://github.com/tharidul/site-radar.git
+cd site-radar
 pnpm install
 ```
 

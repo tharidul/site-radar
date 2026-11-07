@@ -167,7 +167,7 @@ The extension strictly avoids persistent content scripts and broad host permissi
 
 1. Copy `privacy-policy.html` from the project root to your publishing platform.
 2. Options (all free):
-   - **GitHub Pages:** Push to a `gh-pages` branch or `docs/` folder in your repo. URL will be `https://yourusername.github.io/your-repo/privacy-policy.html`
+   - **GitHub Pages:** Push to a `gh-pages` branch or `docs/` folder in your repo. URL will be `https://tharidul.github.io/site-radar/privacy-policy.html`
    - **Netlify Drop:** Drag the file to `netlify.com/drop`. Get an instant URL.
    - **Vercel:** `npx vercel` in a folder containing the file.
 3. Verify the URL returns HTTP 200 before submitting.
@@ -186,8 +186,8 @@ The extension strictly avoids persistent content scripts and broad host permissi
 
 **Publisher Name:** [REQUIRED — YOUR NAME OR COMPANY NAME]
 **Contact Email:** [REQUIRED — YOUR PUBLIC CONTACT EMAIL]
-**Support URL:** [RECOMMENDED — GitHub Issues URL or support email]
-**Homepage URL:** [OPTIONAL]
+**Support URL:** https://github.com/tharidul/site-radar/issues
+**Homepage URL:** https://github.com/tharidul/site-radar
 
 ---
 
