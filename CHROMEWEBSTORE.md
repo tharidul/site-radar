@@ -13,30 +13,71 @@ SiteRadar
 Audit any website for security, speed, SEO, and accessibility. Local-first checks, scores, and downloadable reports.
 
 **Detailed Description**
-SiteRadar audits the security, performance, SEO, and accessibility of any web page directly inside your browser. No website data ever leaves your device.
+SiteRadar inspects web pages for security flaws, accessibility issues, performance bottlenecks, and SEO defects directly in your browser. It runs entirely on your machine. No page content, source code, or browsing history is sent to remote servers.
 
-Open the extension on any tab, pick an audit depth, and get concrete findings with actionable steps to fix each issue.
+Open the popup on any tab and run an audit. SiteRadar inspects the active document, tests security headers, runs accessibility evaluations with axe-core, measures Core Web Vitals, and fingerprints technologies used on the page. Each finding includes the affected DOM element or HTTP header, severity level, and specific remediation instructions.
 
-Key Features:
 
-• Security Checks: Detects missing HTTPS, absent CSP headers, missing HSTS, frame protection gaps, mixed content, and unverified CDN scripts without Subresource Integrity (SRI) hashes.
+AUDIT MODULES
 
-• Speed & Web Vitals: Surfaces render-blocking scripts, unoptimized images, caching headers, and visible Core Web Vitals (LCP, CLS, TTFB) from the active document.
+Security
+• HTTP security headers: Content-Security-Policy (CSP), Strict-Transport-Security (HSTS), X-Frame-Options, X-Content-Type-Options, Referrer-Policy, and Permissions-Policy.
+• Transport security: TLS enforcement, certificate expiration status, and mixed content detection.
+• Resource integrity: Subresource Integrity (SRI) attributes on external scripts and stylesheets.
+• Form security: Insecure submission targets (HTTP actions on HTTPS pages) and unencrypted password fields.
+• Information disclosure: Server header banners, runtime framework signatures, and insecure cookie flags (missing Secure, HttpOnly, or SameSite).
 
-• SEO & Social Metadata: Reviews title and description lengths, Open Graph tags, Twitter cards, canonical URLs, robots directives, and sitemap availability.
+Accessibility (WCAG 2.1 & 2.2 Level A/AA)
+• Built-in axe-core engine (v4.14) runs directly against the live DOM.
+• Color contrast ratios for text and graphical interface elements.
+• Missing alt text on images and missing labels on form inputs.
+• ARIA landmark roles, heading structure hierarchy (h1 through h6), and duplicate element IDs.
+• Keyboard focus visibility and touch target dimensions.
 
-• Accessibility (WCAG 2.1): Runs automated checks for color contrast, image alt attributes, ARIA landmarks, keyboard accessibility, and form labels using axe-core.
+Performance and Core Web Vitals
+• Real-user performance timings from Navigation Timing and Paint Timing APIs.
+• Largest Contentful Paint (LCP), Cumulative Layout Shift (CLS), First Contentful Paint (FCP), and Time to First Byte (TTFB).
+• Render-blocking scripts, unoptimized web fonts, missing image dimensions, and uncompressed assets.
 
-• Tech Stack Detection: Identifies frameworks and libraries (Next.js, React, Tailwind CSS, Vue, WordPress, etc.) and versions directly from DOM and runtime globals.
+SEO and Metadata
+• Title tags, meta descriptions, canonical link verification, and viewport configuration.
+• Open Graph and Twitter Card preview tags.
+• Structured data validation for JSON-LD, Microdata, and RDFa schemas.
+• Robots directives (meta robots, X-Robots-Tag), robots.txt availability, and sitemap detection.
 
-• Asset Inventory: Browse all scripts, stylesheets, images, and external origins loaded by the page, with inline previews and direct links to inspect each asset.
+Technology Detection and Asset Inventory
+• Identifies web servers, frameworks (React, Next.js, Vue, WordPress), CSS utilities, and third-party scripts from DOM structures and runtime globals.
+• Lists every external script, stylesheet, image, font, and third-party origin loaded by the active document.
 
-• Deep Crawl Mode: Crawls linked same-origin pages to catch site-wide broken links, missing meta tags, and robots.txt issues across up to 50 pages.
 
-• Offline Reports: Export the complete audit as a self-contained HTML file or a structured JSON report to share with clients or your team.
+INSPECTION DEPTHS
 
-Local and Private:
-All audits run locally in your browser session. The extension collects no browsing history, runs no analytics, and does not upload your page content. Optional network lookups (DNS, IP intelligence, and certificate logs) require your explicit consent in Settings and remain off by default.
+• Quick Scan (< 1s): Checks HTTP response headers, TLS configuration, basic page metadata, and resource counts.
+• Full Page Audit (2-4s): Performs complete DOM analysis, form inspection, structured data verification, technology fingerprinting, and automated axe-core accessibility tests.
+• Deep Inspection (10-30s): Runs the full page audit and crawls up to 50 same-origin links (depth 3) to identify broken links, missing meta tags, and orphan pages across the site.
+
+
+REPORTS AND EXPORTS
+
+• Standalone HTML: A single-file HTML report with embedded styles and findings. It has no external CDN dependencies and opens in any browser.
+• Sanitized JSON: Machine-readable JSON output for automated pipelines, documentation, or issue trackers.
+• Automatic secret redaction: In-memory filters mask API keys (Stripe, AWS, Slack), bearer tokens, passwords, and sensitive form inputs before reports are generated or displayed.
+
+
+PRIVACY BY DESIGN
+
+• Local processing: All audits run in your browser session. SiteRadar does not collect browsing history, run analytics, or transmit inspected page content.
+• Ephemeral storage: Results exist only in memory during your active session. Closing the tab or clicking Clear immediately wipes all audit data.
+• Intranet protection: Requests to internal network addresses (RFC 1918), loopback addresses (127.0.0.1, localhost), and link-local ranges are blocked to prevent internal network scanning.
+• Optional external lookups: DNS-over-HTTPS, IP/ASN lookup, and Certificate Transparency log searches are turned off by default. They run only if you explicitly enable them in Settings.
+
+
+PERMISSIONS
+
+SiteRadar requests only three permissions:
+• activeTab: Accesses the URL and tab ID of the current tab only when you open the popup and click inspect.
+• scripting: Injects the auditing scripts into the active tab on demand during an inspection. No scripts run automatically in the background while you browse.
+• storage: Saves your local display preferences (dark or light mode) and crawler page limits. It never stores audit logs or page data.
 
 **Category**
 Developer Tools
