@@ -83,13 +83,12 @@ Show the downloaded standalone HTML report open in a browser tab, displaying the
 
 | Permission | Type | Justification |
 |------------|------|---------------|
-| `activeTab` | permissions | Required to identify the specific tab the user wants to audit. When the user clicks "Start Inspection," the extension reads the URL and tab ID of the currently active tab to target the inspection. Without this permission, the extension cannot determine which website to audit. |
-| `scripting` | permissions | Required to run inspection code in the main JavaScript execution context of the page. Some framework detection (React, Vue, Angular, Next.js, etc.) requires accessing window-level globals only visible from the page's main world. This permission enables that targeted, user-initiated script execution. |
-| `storage` | permissions | Required to remember two user preferences between sessions: (1) the user's chosen color theme (dark/light), and (2) custom deep-crawl limit settings (maximum pages, crawl depth, concurrency). No audit data, browsing history, or website content is ever written to storage. |
-| `optional_host_permissions: *://*/*` | host_permissions | Requested only when needed, not granted by default. Enables two specific features the user deliberately activates: (1) fetching HTTP response headers from the target website to check security headers, and (2) crawling additional pages of the same website in Deep inspection mode. The extension accesses only the specific website the user is inspecting. |
+| `activeTab` | permissions | Required to identify the specific tab the user explicitly requests to audit. When the user opens the popup and clicks "Start Inspection," the extension reads the URL and tab ID of the currently active tab. Access is temporary, isolated to user gesture, and grants no persistent background monitoring. |
+| `scripting` | permissions | Required to dynamically inject the auditing collectors (`content-scripts/content.js`) and execute main-world inspection routines only on the active tab when an audit is initiated by the user. Prevents running any scripts on non-audited pages. |
+| `storage` | permissions | Required to remember user preferences across sessions: (1) color theme preference (dark/light), and (2) custom deep-crawl limits (maximum pages, crawl depth). No audit logs, browsing history, or website content is ever written to storage. |
 
-**Content Script Match (`<all_urls>`) Justification:**
-The content script is registered with `<all_urls>` so the extension can respond when the user inspects any website they choose to audit. The script is completely passive — it performs no actions, reads no data, and makes no network requests until it receives an explicit inspection request from the user via the popup. Without a universal match, users would be unable to audit arbitrary websites.
+**On-Demand Dynamic Injection Architecture:**
+The extension strictly avoids persistent content scripts and broad host permissions. No code is injected automatically into pages during regular browsing. When a user explicitly initiates an inspection from the popup, the extension uses `chrome.scripting.executeScript` to dynamically inject the collector script into the active tab under the temporary authorization granted by `activeTab`. This ensures strict adherence to Chrome Web Store Minimum Permissions requirements.
 
 ---
 
@@ -155,7 +154,7 @@ The content script is registered with `<all_urls>` so the extension can respond 
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 0.1.0 | 2026-11-06 | Initial submission | Draft |
+| 0.1.0 | 2026-11-07 | Transitioned to on-demand dynamic script injection architecture (`activeTab` + `scripting`); eliminated `<all_urls>` persistent content script injection and redundant broad permissions to ensure strict compliance with Chrome Web Store Minimum Permissions policy. | Ready for packaging |
 
 ---
 

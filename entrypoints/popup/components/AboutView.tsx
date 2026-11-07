@@ -6,6 +6,7 @@
 
 import React from 'react';
 import { ExternalLink, ShieldCheck } from 'lucide-react';
+import lkmlLogo from '../../../assets/lkml.png';
 
 function openLink(url: string) {
   if (!url) return;
@@ -61,7 +62,7 @@ export const AboutView: React.FC = () => {
             title="Visit tharidulakmal.com"
           >
             <img
-              src="/lkml.png"
+              src={lkmlLogo}
               alt="LKML"
               className="h-5 w-auto object-contain invert dark:invert-0"
             />

@@ -31,9 +31,6 @@ export default defineConfig({
       'scripting',
       'storage',
     ],
-    optional_host_permissions: [
-      '*://*/*',
-    ],
     ...(env.browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {

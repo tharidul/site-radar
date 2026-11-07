@@ -10,8 +10,7 @@ import { PAGE_COLLECTORS } from '../src/collectors/page';
 import { redactSecrets } from '../src/security/secret-redactor';
 
 export default defineContentScript({
-  matches: ['<all_urls>'],
-  runAt: 'document_idle',
+  registration: 'runtime',
   main() {
     // 1. Handshake Ping Handler
     messageBus.onMessage(
