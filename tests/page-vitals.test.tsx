@@ -110,7 +110,7 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
     expect(html).toContain('Load Event');
   });
 
-  it('OverviewDashboard renders direct Copy JSON button next to Export JSON and Export HTML', () => {
+  it('OverviewDashboard renders unified Export dropdown eliminating button spam', () => {
     const mockInspection: WebsiteInspection = {
       id: 'copy-btn-test-id',
       mode: 'quick',
@@ -134,13 +134,10 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
       />
     );
 
-    // Verify Copy JSON button is present with correct labeling and title
-    expect(html).toContain('Copy JSON');
-    expect(html).toContain('Copy sanitized JSON audit report directly to clipboard');
-
-    // Verify Export JSON and Export HTML buttons are also preserved
-    expect(html).toContain('Export JSON');
-    expect(html).toContain('Export HTML');
+    // Verify Export dropdown trigger is rendered with proper accessible attributes
+    expect(html).toContain('Export');
+    expect(html).toContain('title="Export or copy audit report"');
+    expect(html).toContain('aria-haspopup="menu"');
   });
 
   it('copyJsonReport copies sanitized JSON report using clipboard or textarea fallback', async () => {
@@ -175,5 +172,126 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
     expect(success).toBe(true);
     expect(clipboardText).toContain('website-intelligence-json');
     expect(clipboardText).toContain('https://example.com/');
+  });
+
+  it('PageVitalsCard renders both initial and scrolled full page data usage side-by-side', () => {
+    const scrolledInspection: WebsiteInspection = {
+      id: 'scrolled-id',
+      mode: 'quick',
+      startedAt: Date.now(),
+      target: {
+        url: 'https://example.com/',
+        origin: 'https://example.com',
+        hostname: 'example.com',
+        inspectedAt: Date.now(),
+      },
+      browser: { name: 'chrome' },
+      summary: { completedModules: 1, partialModules: 0, failedModules: 0, totalFindings: 0 },
+      findings: [],
+      modules: {
+        performance: {
+          module: 'performance',
+          status: 'completed',
+          collectedAt: Date.now(),
+          data: {
+            resourceCount: 20,
+            transferSizeApprox: 400 * 1024, // 400 KB initial
+            scrolledResourceCount: 65,
+            scrolledTransferSizeApprox: 1800 * 1024, // 1.8 MB full page
+          },
+          coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+          limitations: [],
+          errors: [],
+          sources: ['PerformanceCollector'],
+        },
+      },
+    };
+
+    const html = renderToString(<PageVitalsCard inspection={scrolledInspection} />);
+
+    // Initial usage
+    expect(html).toContain('Data Usage:');
+    expect(html).toContain('400 KB');
+    expect(html).toContain('Initial');
+
+    // Full page scrolled usage
+    expect(html).toContain('Full Page:');
+    expect(html).toContain('1.8 MB');
+    expect(html).toContain('Scrolled');
+    expect(html).toContain('65');
+    expect(html).toContain('lazy');
+  });
+
+  it('PageVitalsCard provides option to scroll and measure full page when unmeasured', () => {
+    const unscrolledInspection: WebsiteInspection = {
+      id: 'unscrolled-id',
+      mode: 'quick',
+      startedAt: Date.now(),
+      target: {
+        url: 'https://example.com/',
+        origin: 'https://example.com',
+        hostname: 'example.com',
+        inspectedAt: Date.now(),
+      },
+      browser: { name: 'chrome' },
+      summary: { completedModules: 1, partialModules: 0, failedModules: 0, totalFindings: 0 },
+      findings: [],
+      modules: {
+        performance: {
+          module: 'performance',
+          status: 'completed',
+          collectedAt: Date.now(),
+          data: {
+            resourceCount: 15,
+            transferSizeApprox: 300 * 1024,
+          },
+          coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+          limitations: [],
+          errors: [],
+          sources: ['PerformanceCollector'],
+        },
+      },
+    };
+
+    const html = renderToString(<PageVitalsCard inspection={unscrolledInspection} />);
+    expect(html).toContain('Scroll &amp; measure full page');
+  });
+
+  it('PageVitalsCard displays Infinite Feed (Bounded) badge when infinite scroll is detected', () => {
+    const infiniteInspection: WebsiteInspection = {
+      id: 'infinite-id',
+      mode: 'quick',
+      startedAt: Date.now(),
+      target: {
+        url: 'https://unsplash.com/',
+        origin: 'https://unsplash.com',
+        hostname: 'unsplash.com',
+        inspectedAt: Date.now(),
+      },
+      browser: { name: 'chrome' },
+      summary: { completedModules: 1, partialModules: 0, failedModules: 0, totalFindings: 0 },
+      findings: [],
+      modules: {
+        performance: {
+          module: 'performance',
+          status: 'completed',
+          collectedAt: Date.now(),
+          data: {
+            resourceCount: 20,
+            transferSizeApprox: 500 * 1024,
+            scrolledResourceCount: 90,
+            scrolledTransferSizeApprox: 4500 * 1024,
+            isInfiniteScrollDetected: true,
+          },
+          coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+          limitations: [],
+          errors: [],
+          sources: ['PerformanceCollector'],
+        },
+      },
+    };
+
+    const html = renderToString(<PageVitalsCard inspection={infiniteInspection} />);
+    expect(html).toContain('Infinite Feed (Bounded)');
   });
 });

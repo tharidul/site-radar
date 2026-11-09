@@ -42,7 +42,7 @@ export const Header: React.FC<HeaderProps> = ({
           <img
             src="/icon/128.png"
             alt="SiteRadar Logo"
-            className="w-9 h-9 rounded-xl object-contain shrink-0"
+            className="w-9 h-9 rounded-lg object-contain shrink-0"
           />
           <div>
             <h1 className="text-base font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Embedded Target Site URL Strip matching screenshot */}
-      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
           <span

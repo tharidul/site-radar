@@ -90,15 +90,15 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             <div
               key={mode.id}
               onClick={() => onSelectMode(mode.id)}
-              className={`rounded-xl p-3.5 transition-all duration-150 ease-out active:scale-[0.98] cursor-pointer select-none shadow-xs border ${
+              className={`rounded-md p-3.5 transition-all duration-150 ease-out active:scale-[0.98] cursor-pointer select-none shadow-xs ${
                 isSelected
-                  ? 'bg-white dark:bg-zinc-900 border-[#CEFF52] ring-2 ring-[#CEFF52]/30'
-                  : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
+                  ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52]'
+                  : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-[#CEFF52] text-[#152E40]' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
+                  <div className={`p-1.5 rounded-md ${isSelected ? 'bg-[#CEFF52] text-[#152E40]' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>

@@ -310,7 +310,7 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(exportRoot.className).toContain('dark:bg-zinc-950');
     });
 
-    it('ModeSelector options display crisp card borders in light mode', () => {
+    it('ModeSelector options display clean surface styling with active state indicator in light mode', () => {
       const div = renderComponent(
         <ModeSelector
           selectedMode="quick"
@@ -319,12 +319,12 @@ describe('Light Theme Contrast & Style Integrity', () => {
           disabled={false}
         />,
       );
-      const options = div.querySelectorAll('.rounded-xl.p-3\\.5');
+      const options = div.querySelectorAll('.rounded-md.p-3\\.5');
       expect(options.length).toBe(3);
-      // Unselected options must have border-zinc-200/80 in light mode
+      // Unselected options must have clean surfaces in light mode
       const unselectedOption = options[1];
-      expect(unselectedOption?.className).toContain('border-zinc-200/80');
-      expect(unselectedOption?.className).toContain('dark:border-zinc-800');
+      expect(unselectedOption?.className).toContain('bg-white');
+      expect(unselectedOption?.className).toContain('dark:bg-zinc-900');
     });
 
     it('OptionsApp supports light theme across root container, sections, and controls', () => {
@@ -340,16 +340,14 @@ describe('Light Theme Contrast & Style Integrity', () => {
       sections.forEach((sec) => {
         expect(sec.className).toContain('bg-white');
         expect(sec.className).toContain('dark:bg-zinc-900/60');
-        expect(sec.className).toContain('border-zinc-200');
-        expect(sec.className).toContain('dark:border-zinc-800');
+        expect(sec.className).toContain('rounded-md');
       });
     });
 
-    it('Card renders crisp light border and background with dark mode preservation', () => {
+    it('Card renders clean surface planes and background with dark mode preservation', () => {
       const div = renderComponent(<Card>Test Card Content</Card>);
       const cardEl = div.firstElementChild as HTMLElement;
-      expect(cardEl.className).toContain('border-zinc-200/70');
-      expect(cardEl.className).toContain('dark:border-zinc-800');
+      expect(cardEl.className).toContain('rounded-md');
       expect(cardEl.className).toContain('bg-white');
       expect(cardEl.className).toContain('dark:bg-zinc-900');
     });
@@ -434,22 +432,19 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // Verify category cards have crisp borders and distinct contrast
+      // Verify category cards have clean surfaces and distinct contrast
       const categoryCards = div.querySelectorAll('.grid.grid-cols-5 button');
       expect(categoryCards.length).toBe(5);
       categoryCards.forEach((card) => {
-        expect(card.className).toContain('border-zinc-200/80');
-        expect(card.className).toContain('dark:border-zinc-800');
+        expect(card.className).toContain('rounded-md');
         expect(card.className).toContain('bg-white');
         expect(card.className).toContain('dark:bg-zinc-900');
       });
 
-      // Verify tech card has crisp border in light mode
+      // Verify tech card has clean background in light mode
       const techCards = div.querySelectorAll('[title^="Detected via"]');
       expect(techCards.length).toBeGreaterThan(0);
       techCards.forEach((card) => {
-        expect(card.className).toContain('border-zinc-200/80');
-        expect(card.className).toContain('dark:border-zinc-800');
         expect(card.className).toContain('bg-zinc-50');
         expect(card.className).toContain('dark:bg-zinc-800/40');
       });
@@ -639,16 +634,16 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       const div = renderComponent(<ResourcesView inspection={mockInspection} />);
 
-      // Filter tab buttons have crisp borders in light mode
+      // Filter tab buttons have clean surfaces in light mode
       const tabButtons = div.querySelectorAll('.grid.grid-cols-4 button');
       expect(tabButtons.length).toBe(4);
-      expect(tabButtons[1]?.className).toContain('border-zinc-200/80');
-      expect(tabButtons[1]?.className).toContain('dark:border-zinc-800/80');
+      expect(tabButtons[1]?.className).toContain('bg-white');
+      expect(tabButtons[1]?.className).toContain('dark:bg-zinc-900');
 
-      // Technology container has crisp light border
-      const techContainer = div.querySelector('.rounded-xl.p-4.space-y-2\\.5');
-      expect(techContainer?.className).toContain('border-zinc-200/80');
-      expect(techContainer?.className).toContain('dark:border-zinc-800/60');
+      // Technology container has clean surface in light mode
+      const techContainer = div.querySelector('.rounded-md.p-4.space-y-2\\.5');
+      expect(techContainer?.className).toContain('bg-white');
+      expect(techContainer?.className).toContain('dark:bg-zinc-900');
 
       // Resource path subtext has high-contrast text
       const pathSubtext = div.querySelector('span.text-\\[10px\\]');
@@ -696,10 +691,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(div.textContent).not.toContain('developer');
       expect(div.textContent).not.toContain('Developer');
 
-      // Card has crisp borders in light and dark modes
-      const card = div.querySelector('.rounded-xl.p-4');
-      expect(card?.className).toContain('border-zinc-200/80');
-      expect(card?.className).toContain('dark:border-zinc-800');
+      // Card has clean surface planes in light and dark modes
+      const card = div.querySelector('.rounded-md.p-4');
       expect(card?.className).toContain('bg-white');
       expect(card?.className).toContain('dark:bg-zinc-900');
     });

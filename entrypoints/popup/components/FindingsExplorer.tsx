@@ -22,6 +22,8 @@ import {
   Info,
   HelpCircle,
   Copy,
+  Sparkles,
+  Bot,
 } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
@@ -46,6 +48,8 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   security: Shield,
   performance: Zap,
   seo: Search,
+  aeo: Sparkles,
+  ago: Bot,
   accessibility: UserCheck,
   'best-practices': Layers,
 };
@@ -194,8 +198,19 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       }
 
       // Category filter (derived from activeCategoryFilter prop: rerender-derived-state-no-effect)
-      if (activeCategoryFilter !== 'all' && f.category?.toLowerCase() !== activeCategoryFilter.toLowerCase()) {
-        return false;
+      if (activeCategoryFilter !== 'all') {
+        const cat = activeCategoryFilter.toLowerCase();
+        if (cat === 'aeo') {
+          if (!f.ruleId.startsWith('aeo-')) return false;
+        } else if (cat === 'ago') {
+          if (!f.ruleId.startsWith('ago-')) return false;
+        } else if (cat === 'seo') {
+          if (f.category?.toLowerCase() !== 'seo' || f.ruleId.startsWith('aeo-')) return false;
+        } else if (cat === 'accessibility') {
+          if (f.category?.toLowerCase() !== 'accessibility' || f.ruleId.startsWith('ago-')) return false;
+        } else if (f.category?.toLowerCase() !== cat) {
+          return false;
+        }
       }
 
       // Status filter
@@ -241,7 +256,10 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
   // Category Dropdown Options
   const categoryOptions = useMemo(() => {
-    return [
+    const hasAeo = findings.some((f) => f.ruleId.startsWith('aeo-'));
+    const hasAgo = findings.some((f) => f.ruleId.startsWith('ago-'));
+
+    const baseOptions = [
       { value: 'all', label: 'All Categories' },
       ...categories.map((cat) => ({
         value: cat,
@@ -249,11 +267,87 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         icon: CATEGORY_ICONS[cat.toLowerCase()] || Layers,
       })),
     ];
-  }, [categories]);
+
+    if (hasAeo) {
+      baseOptions.push({
+        value: 'aeo',
+        label: 'AEO (Answer Engine)',
+        icon: Sparkles,
+      });
+    }
+
+    if (hasAgo) {
+      baseOptions.push({
+        value: 'ago',
+        label: 'AGO (Agentic Engine)',
+        icon: Bot,
+      });
+    }
+
+    return baseOptions;
+  }, [categories, findings]);
 
   // Category Score Data for Banner (derived during render: rerender-derived-state-no-effect)
-  const currentCategoryScore =
-    activeCategoryFilter !== 'all' && scores ? scores[activeCategoryFilter.toLowerCase()] : undefined;
+  const currentCategoryScore = useMemo(() => {
+    if (!activeCategoryFilter || activeCategoryFilter === 'all') return undefined;
+    const cat = activeCategoryFilter.toLowerCase();
+    if (scores && scores[cat]) return scores[cat];
+
+    if (cat === 'aeo') {
+      const aeoFindings = findings.filter((f) => f.ruleId.startsWith('aeo-'));
+      if (aeoFindings.length === 0) return undefined;
+      const passed = aeoFindings.filter((f) => f.status === 'passed').length;
+      const failed = aeoFindings.filter((f) => f.status === 'failed').length;
+      const warnings = aeoFindings.filter((f) => f.status === 'warning').length;
+      const unavailable = aeoFindings.filter((f) => f.status === 'not-available' || f.status === 'not-applicable').length;
+      let points = 0;
+      aeoFindings.forEach((f) => {
+        if (f.status === 'passed') points += 100;
+        else if (f.status === 'info') points += 85;
+        else if (f.status === 'warning') points += 50;
+        else points += 10;
+      });
+      return {
+        category: 'aeo',
+        score: Math.round(points / aeoFindings.length),
+        totalChecks: aeoFindings.length,
+        passed,
+        failed,
+        warnings,
+        unavailable,
+        coveragePercent: 100,
+        weight: 1,
+      };
+    }
+
+    if (cat === 'ago') {
+      const agoFindings = findings.filter((f) => f.ruleId.startsWith('ago-'));
+      if (agoFindings.length === 0) return undefined;
+      const passed = agoFindings.filter((f) => f.status === 'passed').length;
+      const failed = agoFindings.filter((f) => f.status === 'failed').length;
+      const warnings = agoFindings.filter((f) => f.status === 'warning').length;
+      const unavailable = agoFindings.filter((f) => f.status === 'not-available' || f.status === 'not-applicable').length;
+      let points = 0;
+      agoFindings.forEach((f) => {
+        if (f.status === 'passed') points += 100;
+        else if (f.status === 'warning') points += 55;
+        else points += 15;
+      });
+      return {
+        category: 'ago',
+        score: Math.round(points / agoFindings.length),
+        totalChecks: agoFindings.length,
+        passed,
+        failed,
+        warnings,
+        unavailable,
+        coveragePercent: 100,
+        weight: 1,
+      };
+    }
+
+    return undefined;
+  }, [activeCategoryFilter, scores, findings]);
   const CategoryIcon =
     (activeCategoryFilter !== 'all' && CATEGORY_ICONS[activeCategoryFilter.toLowerCase()]) || Layers;
 
@@ -285,7 +379,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
             {/* Category Pill */}
             {selectedFinding.category && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                 <FindingCategoryIcon className="w-3 h-3" />
                 <span>{selectedFinding.category}</span>
               </span>
@@ -297,7 +391,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               selectedFinding.status !== 'not-applicable' &&
               selectedFinding.severity && (
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase tracking-wider ${
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider ${
                     selectedFinding.severity === 'critical'
                       ? 'bg-rose-500/15 text-[#dc2626] dark:text-[#f87171] border border-rose-500/30'
                       : selectedFinding.severity === 'high'
@@ -400,15 +494,15 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
       {/* Category Overview Card (visible when filtered to a specific category) */}
       {currentCategoryScore && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2 border border-zinc-200/60 dark:border-zinc-800">
+        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+              <div className="p-1.5 rounded-md bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
                 <CategoryIcon className="w-4 h-4" />
               </div>
               <div>
                 <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                  {activeCategoryFilter} Audit
+                  {activeCategoryFilter.toUpperCase()} Audit
                 </h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
                   <span className="tabular-nums">{currentCategoryScore.totalChecks}</span> checks evaluated · <span className="tabular-nums">{currentCategoryScore.coveragePercent ?? 100}</span>% coverage
@@ -427,26 +521,26 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           {/* Quick Metrics Strip */}
           <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
             {currentCategoryScore.failed > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
                 <X className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.failed}</span> Failed</span>
               </span>
             )}
 
             {currentCategoryScore.warnings > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold">
                 <AlertTriangle className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.warnings}</span> Warnings</span>
               </span>
             )}
 
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
               <CheckCircle2 className="w-3 h-3" />
               <span><span className="tabular-nums">{currentCategoryScore.passed}</span> Passed</span>
             </span>
 
             {(currentCategoryScore.unavailable ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
                 <HelpCircle className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.unavailable}</span> Unobservable</span>
               </span>
@@ -455,7 +549,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
           {/* Context note: Shown when all evaluated checks passed cleanly */}
           {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
-            <div className="text-[11px] rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
+            <div className="text-[11px] rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>
                 All evaluated checks passed cleanly.{(currentCategoryScore.unavailable ?? 0) > 0 ? ' Network headers require background inspection.' : ''}

@@ -159,10 +159,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             setActiveTab('scripts');
             setSearchQuery('');
           }}
-          className={`rounded-xl p-3 text-center transition-all cursor-pointer ${
+          className={`rounded-md p-3 text-center transition-all cursor-pointer ${
             activeTab === 'scripts'
-              ? 'bg-white dark:bg-zinc-900 border-2 border-[#CEFF52] shadow-sm ring-2 ring-[#CEFF52]/30'
-              : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] shadow-sm'
+              : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs'
           }`}
           title="Click to view loaded scripts"
         >
@@ -187,10 +187,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             setActiveTab('stylesheets');
             setSearchQuery('');
           }}
-          className={`rounded-xl p-3 text-center transition-all cursor-pointer ${
+          className={`rounded-md p-3 text-center transition-all cursor-pointer ${
             activeTab === 'stylesheets'
-              ? 'bg-white dark:bg-zinc-900 border-2 border-[#CEFF52] shadow-sm ring-2 ring-[#CEFF52]/30'
-              : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] shadow-sm'
+              : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs'
           }`}
           title="Click to view loaded stylesheets"
         >
@@ -217,10 +217,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             setActiveTab('images');
             setSearchQuery('');
           }}
-          className={`rounded-xl p-3 text-center transition-all cursor-pointer ${
+          className={`rounded-md p-3 text-center transition-all cursor-pointer ${
             activeTab === 'images'
-              ? 'bg-white dark:bg-zinc-900 border-2 border-[#CEFF52] shadow-sm ring-2 ring-[#CEFF52]/30'
-              : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] shadow-sm'
+              : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs'
           }`}
           title="Click to view image assets"
         >
@@ -245,10 +245,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             setActiveTab('origins');
             setSearchQuery('');
           }}
-          className={`rounded-xl p-3 text-center transition-all cursor-pointer ${
+          className={`rounded-md p-3 text-center transition-all cursor-pointer ${
             activeTab === 'origins'
-              ? 'bg-white dark:bg-zinc-900 border-2 border-[#CEFF52] shadow-sm ring-2 ring-[#CEFF52]/30'
-              : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] shadow-sm'
+              : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 shadow-xs'
           }`}
           title="Click to view third-party origins"
         >
@@ -269,7 +269,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
       </div>
 
       {/* Active Resource Details Explorer Card */}
-      <div className="rounded-xl bg-white dark:bg-zinc-900 p-3.5 shadow-xs border border-zinc-200/80 dark:border-zinc-800/80 space-y-3">
+      <div className="rounded-md bg-white dark:bg-zinc-900 p-3.5 shadow-xs space-y-3">
         {/* Header & Filter Search Input */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -528,7 +528,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
 
       {/* Detected Technologies Card */}
       {technologies.length > 0 && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2.5 border border-zinc-200/80 dark:border-zinc-800/60">
+        <div className="rounded-md bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2.5">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
@@ -551,7 +551,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {technologies.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex flex-col justify-between p-2.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-colors"
+                className="flex flex-col justify-between p-2.5 rounded-md bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center justify-between gap-1.5 min-w-0">

@@ -530,6 +530,10 @@ export interface PerformanceData {
   transferSizeApprox?: number;
   decodedSizeApprox?: number;
   resourceTypes?: Record<string, number>;
+  scrolledTransferSizeApprox?: number;
+  scrolledResourceCount?: number;
+  scrolledDecodedSizeApprox?: number;
+  isInfiniteScrollDetected?: boolean;
 }
 
 /** Security headers and signals collector payload */

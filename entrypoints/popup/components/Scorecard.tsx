@@ -160,7 +160,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
           return (
             <div
               key={catKey}
-              className="rounded-lg border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-2.5 space-y-1.5 shadow-xs"
+              className="rounded-md bg-white dark:bg-zinc-900 p-2.5 space-y-1.5 shadow-xs"
             >
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold capitalize text-zinc-800 dark:text-zinc-200">

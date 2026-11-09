@@ -253,7 +253,7 @@ export function OptionsApp() {
         </header>
 
         {/* Section 1: External Intelligence Opt-In */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
+        <section className="rounded-md bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
           <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
             <div>
               <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
@@ -355,7 +355,7 @@ export function OptionsApp() {
         </section>
 
         {/* Section 2: Bounded Deep Crawl Limits Configuration */}
-        <section className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/60 p-4 sm:p-5 space-y-3.5 shadow-xs">
+        <section className="rounded-md bg-white dark:bg-zinc-900/60 p-4 sm:p-5 space-y-3.5 shadow-xs">
           <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
             <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
               <Compass className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />

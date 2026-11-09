@@ -30,6 +30,7 @@ export const MESSAGE_CHANNELS = {
   // Content script execution
   EXECUTE_COLLECTOR: 'COLLECTOR_EXECUTE',
   PING_CONTENT_SCRIPT: 'CONTENT_SCRIPT_PING',
+  MEASURE_SCROLLED_PAGE: 'PAGE_MEASURE_SCROLLED',
 
   // Consent & Provider settings
   CHECK_EXTERNAL_CONSENT: 'CONSENT_CHECK',
@@ -133,6 +134,18 @@ export interface MessageProtocol {
       pong: boolean;
       url: string;
       readyState: string;
+    };
+  };
+
+  [MESSAGE_CHANNELS.MEASURE_SCROLLED_PAGE]: {
+    request: void;
+    response: {
+      success: boolean;
+      scrolledResourceCount?: number;
+      scrolledTransferSizeApprox?: number;
+      scrolledDecodedSizeApprox?: number;
+      isInfiniteScroll?: boolean;
+      error?: string;
     };
   };
 

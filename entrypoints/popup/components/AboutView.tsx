@@ -53,7 +53,7 @@ export const AboutView: React.FC = () => {
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* Author Card */}
-      <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs">
+      <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs">
         <div className="flex items-center justify-between">
           <button
             type="button"
@@ -83,7 +83,7 @@ export const AboutView: React.FC = () => {
       </div>
 
       {/* Privacy & Security Card */}
-      <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-2">
+      <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />

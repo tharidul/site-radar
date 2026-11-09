@@ -16,17 +16,14 @@ import {
   XCircle,
   AlertTriangle,
   Info,
-  FileCode,
-  FileText,
   ArrowRight,
-  Check,
   Cpu,
-  Copy,
 } from 'lucide-react';
 import type { WebsiteInspection, AuditFinding, Severity, CategoryScore, TechnologyData } from '@/types/inspection';
-import { downloadJsonReport, downloadHtmlReport, copyJsonReport } from '../../../src/export/download';
 import { Button } from './Button';
 import { PageVitalsCard } from './PageVitalsCard';
+import { OptimizationMatrixCard } from './OptimizationMatrixCard';
+import { ExportDropdown } from './ExportDropdown';
 
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
@@ -37,9 +34,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   inspection,
   onNavigateToIssues,
 }) => {
-  const [downloadedType, setDownloadedType] = useState<'json' | 'html' | null>(null);
-  const [isCopiedJson, setIsCopiedJson] = useState(false);
-
   const findings = inspection.findings || [];
   const scores = inspection.scores || {};
   const techData = (inspection.modules?.technology?.data as TechnologyData | undefined)?.technologies || [];
@@ -183,31 +177,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     },
   ], [scores]);
 
-  // Handlers for exporting and copying (useCallback)
-  const handleCopyJson = useCallback(async () => {
-    const success = await copyJsonReport(inspection, { includeRawModules: false, pretty: true });
-    if (success) {
-      setIsCopiedJson(true);
-      setTimeout(() => setIsCopiedJson(false), 2000);
-    }
-  }, [inspection]);
-
-  const handleExportJson = useCallback(() => {
-    downloadJsonReport(inspection, { includeRawModules: false, pretty: true });
-    setDownloadedType('json');
-    setTimeout(() => setDownloadedType(null), 2000);
-  }, [inspection]);
-
-  const handleExportHtml = useCallback(() => {
-    downloadHtmlReport(inspection);
-    setDownloadedType('html');
-    setTimeout(() => setDownloadedType(null), 2000);
-  }, [inspection]);
-
   return (
-    <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      {/* 1. Hero Overall Score Card matching exact design */}
-      <div className="rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-5 shadow-xs flex items-center justify-between gap-4">
+    <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
+        {/* 1. Hero Overall Score Card matching exact design */}
+      <div className="rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xs flex items-center justify-between gap-4">
         {/* Left: Overall Circular Gauge + Text */}
         <div className="flex items-center gap-4 min-w-0">
           <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
@@ -249,7 +224,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <h2 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">
                 Overall Health
               </h2>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs">
                 Grade {grade}
               </span>
             </div>
@@ -319,7 +294,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               key={cat.key}
               type="button"
               onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-1.5 py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-50 dark:hover:bg-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
+              className="rounded-md bg-white dark:bg-zinc-900 px-1.5 py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
               title={`View ${cat.label} findings (${cat.score})`}
             >
               {/* Circular Progress Gauge with Score in Middle */}
@@ -364,9 +339,16 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         })}
       </div>
 
+      {/* 2.2 Modern AI & Search Optimization Matrix (The O's: SEO, AEO, AGO) */}
+      <OptimizationMatrixCard
+        findings={findings}
+        scores={scores}
+        onNavigateToIssues={onNavigateToIssues}
+      />
+
       {/* 2.5 Detected Frameworks & Tech Stack */}
       {techData.length > 0 && (
-        <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs border border-zinc-200/80 dark:border-zinc-800/60">
+        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
               <Cpu className="w-3.5 h-3.5 text-[#CEFF52]" />
@@ -384,7 +366,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {techData.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded-lg bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98]"
+                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98]"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -408,86 +390,26 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
       {/* 2.7 Page Performance and Data Usage */}
       <PageVitalsCard inspection={inspection} />
-
-      {/* 4. Bottom Action Footer Bar */}
-      <div className="flex items-center justify-between pt-2 border-t border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
-          {/* Copy JSON Button */}
-          <Button
-            type="button"
-            variant="outline"
-            size="md"
-            onClick={handleCopyJson}
-            title="Copy sanitized JSON audit report directly to clipboard without downloading"
-            className={`transition-all duration-200 ${
-              isCopiedJson
-                ? 'border-[#CEFF52]/60 text-[#152E40] dark:text-[#CEFF52] bg-[#CEFF52]/10 ring-2 ring-[#CEFF52]/40'
-                : 'hover:text-[#152E40] dark:hover:text-[#CEFF52]'
-            }`}
-            leftIcon={
-              isCopiedJson ? (
-                <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
-              ) : (
-                <Copy className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-              )
-            }
-          >
-            {isCopiedJson ? 'JSON Copied!' : 'Copy JSON'}
-          </Button>
-
-          {/* Export JSON Button */}
-          <Button
-            type="button"
-            variant="primary"
-            size="md"
-            onClick={handleExportJson}
-            title="Download sanitized, schema-compliant JSON report"
-            className={downloadedType === 'json' ? 'animate-pulse ring-2 ring-[#CEFF52]/50' : ''}
-            leftIcon={
-              downloadedType === 'json' ? (
-                <Check className="w-4 h-4 text-[#152E40]" />
-              ) : (
-                <FileCode className="w-4 h-4 text-[#152E40]" />
-              )
-            }
-          >
-            {downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}
-          </Button>
-
-          {/* Export HTML Button */}
-          <Button
-            type="button"
-            variant="secondary"
-            size="md"
-            onClick={handleExportHtml}
-            title="Download standalone HTML report with zero external CDN calls"
-            className={downloadedType === 'html' ? 'animate-pulse ring-2 ring-[#CEFF52]/50' : ''}
-            leftIcon={
-              downloadedType === 'html' ? (
-                <Check className="w-4 h-4 text-zinc-900 dark:text-zinc-100" />
-              ) : (
-                <FileText className="w-4 h-4 text-zinc-700 dark:text-zinc-300" />
-              )
-            }
-          >
-            {downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}
-          </Button>
-        </div>
-
-        {/* View Details Button */}
-        <Button
-          type="button"
-          variant="outline"
-          size="md"
-          onClick={() => onNavigateToIssues()}
-          title="Open complete Findings &amp; Issues list"
-          rightIcon={<ArrowRight className="w-3.5 h-3.5 text-current" />}
-          className="font-bold text-[#152E40] dark:text-[#CEFF52]"
-        >
-          View Details
-        </Button>
-      </div>
     </div>
-  );
+
+    {/* 4. Static Bottom Action Footer Bar (Pinned, non-scrolling) */}
+    <div className="shrink-0 relative z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">
+      <ExportDropdown inspection={inspection} direction="up" align="left" />
+
+      {/* View Details Button */}
+      <Button
+        type="button"
+        variant="outline"
+        size="md"
+        onClick={() => onNavigateToIssues()}
+        title="Open complete Findings &amp; Issues list"
+        rightIcon={<ArrowRight className="w-3.5 h-3.5 text-current" />}
+        className="font-bold text-[#152E40] dark:text-[#CEFF52]"
+      >
+        View Details
+      </Button>
+    </div>
+  </div>
+);
 };
 
