@@ -58,7 +58,7 @@ export const AboutView: React.FC = () => {
           <button
             type="button"
             onClick={() => openLink('https://tharidulakmal.com')}
-            className="flex items-center gap-1.5 cursor-pointer opacity-90 hover:opacity-100 transition-opacity"
+            className="flex items-center gap-1.5 cursor-pointer text-zinc-700 dark:text-zinc-300 hover:text-[#152E40] dark:hover:text-[#CEFF52] transition-colors"
             title="Visit tharidulakmal.com"
           >
             <img
@@ -67,7 +67,7 @@ export const AboutView: React.FC = () => {
               className="h-5 w-auto object-contain invert dark:invert-0"
             />
             <span className="sr-only">LKML</span>
-            <ExternalLink className="w-3 h-3 text-zinc-400 dark:text-zinc-500 opacity-60" />
+            <ExternalLink className="w-3 h-3 text-zinc-400 dark:text-zinc-500" />
           </button>
 
           <button
@@ -77,7 +77,7 @@ export const AboutView: React.FC = () => {
           >
             <GithubIcon className="w-3.5 h-3.5" />
             <span>GitHub</span>
-            <ExternalLink className="w-3 h-3 opacity-60" />
+            <ExternalLink className="w-3 h-3 text-zinc-400 dark:text-zinc-500" />
           </button>
         </div>
       </div>
@@ -86,7 +86,7 @@ export const AboutView: React.FC = () => {
       <div className="rounded-xl p-4 bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <ShieldCheck className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
               Privacy &amp; Security
             </h3>
@@ -94,10 +94,10 @@ export const AboutView: React.FC = () => {
           <button
             type="button"
             onClick={openPrivacyPolicy}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
           >
             <span>Read Policy</span>
-            <ExternalLink className="w-3 h-3 opacity-70" />
+            <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
           </button>
         </div>
         <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">

@@ -1,6 +1,6 @@
 /**
  * @file entrypoints/popup/components/Header.tsx
- * @description Extension header with deep dark crimson wave gradient, brand identity,
+ * @description Extension header with brand identity,
  * quick controls (Clear, Theme, Settings, Close), and the embedded Target URL strip.
  * Exactly matches the design provided by the user.
  */
@@ -35,15 +35,7 @@ export const Header: React.FC<HeaderProps> = ({
   onClose,
 }) => {
   return (
-    <header className="relative bg-white dark:bg-[#161616] px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
-      {/* Subtle deep red crimson background wave accent matching screenshot (only visible in dark mode) */}
-      <div
-        className="pointer-events-none absolute right-0 top-0 bottom-0 w-3/5 opacity-0 dark:opacity-80 transition-opacity"
-        style={{
-          background: 'radial-gradient(ellipse at 85% 15%, rgba(106, 14, 19, 0.75) 0%, rgba(200, 48, 30, 0.35) 45%, transparent 75%)', /* deslop-ignore 06 */
-        }}
-      />
-
+    <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
       <div className="relative z-10 flex items-center justify-between">
         {/* Brand Shield & Title */}
         <div className="flex items-center gap-3">
@@ -91,7 +83,7 @@ export const Header: React.FC<HeaderProps> = ({
               {theme === 'light' ? (
                 <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
               ) : (
-                <Sun className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+                <Sun className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
               )}
             </Button>
           )}

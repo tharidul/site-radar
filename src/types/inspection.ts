@@ -299,6 +299,12 @@ export interface DomSemanticData {
   hasMultipleH1?: boolean;
   headingOrderValid?: boolean;
   customElementTags?: string[];
+  tablesCount?: number;
+  listsCount?: number;
+  definitionListsCount?: number;
+  nonSemanticClickableCount?: number;
+  nativeButtonsCount?: number;
+  nonSemanticClickableSamples?: string[];
 }
 
 /** SEO and metadata collector payload */
@@ -307,6 +313,8 @@ export interface SeoData {
   titleLength: number;
   description?: string;
   descriptionLength: number;
+  keywords?: string;
+  keywordsList?: string[];
   generator?: string;
   metaRobots?: string;
   metaRobotsDirectives?: string[] | {
@@ -321,6 +329,12 @@ export interface SeoData {
   openGraph: Record<string, string>;
   twitterCards: Record<string, string>;
   structuredDataCount: number;
+  author?: string;
+  articlePublishedTime?: string;
+  articleModifiedTime?: string;
+  hasNoAiDirective?: boolean;
+  hasLlmsTxtLink?: boolean;
+  llmsTxtUrl?: string;
 }
 
 /** Structured data individual item */
@@ -487,6 +501,10 @@ export interface FormsData {
   forms: FormDetails[];
   containsUnencryptedSubmissions: boolean;
   hasPasswordForms?: boolean;
+  totalInputCount?: number;
+  unlabeledInputCount?: number;
+  autocompleteInputCount?: number;
+  unlabeledInputSamples?: string[];
 }
 
 /** Performance metrics collector payload */
@@ -510,6 +528,7 @@ export interface PerformanceData {
   };
   resourceCount: number;
   transferSizeApprox?: number;
+  decodedSizeApprox?: number;
   resourceTypes?: Record<string, number>;
 }
 

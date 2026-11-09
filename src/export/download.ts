@@ -5,7 +5,7 @@
  * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 13.
  */
 
-import type { WebsiteInspection } from '@/types/inspection';
+import type { WebsiteInspection, AuditFinding } from '@/types/inspection';
 import { exportToJson, type JsonExportOptions } from './json.exporter';
 import { exportToHtml } from './html.exporter';
 
@@ -81,6 +81,81 @@ export function downloadJsonReport(
     inspection.target?.inspectedAt || Date.now(),
   );
   triggerBlobDownload(json, filename, 'application/json;charset=utf-8');
+}
+
+/**
+ * Copies the sanitized JSON audit report directly to the system clipboard without triggering a file download.
+ */
+export async function copyJsonReport(
+  inspection: WebsiteInspection,
+  options?: JsonExportOptions,
+): Promise<boolean> {
+  const json = exportToJson(inspection, options);
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(json);
+      return true;
+    }
+  } catch (err) {
+    console.warn('navigator.clipboard.writeText failed, using textarea fallback:', err);
+  }
+
+  // Fallback for browser extension contexts where navigator.clipboard might be restricted
+  try {
+    if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.value = json;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return successful;
+    }
+  } catch (err) {
+    console.error('Fallback copy to clipboard failed:', err);
+  }
+
+  return false;
+}
+
+/**
+ * Copies a single audit finding / issue directly to the clipboard as formatted JSON.
+ */
+export async function copyFindingJson(finding: AuditFinding): Promise<boolean> {
+  const json = JSON.stringify(finding, null, 2);
+  try {
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(json);
+      return true;
+    }
+  } catch (err) {
+    console.warn('navigator.clipboard.writeText failed, using textarea fallback:', err);
+  }
+
+  // Fallback for browser extension contexts where navigator.clipboard might be restricted
+  try {
+    if (typeof document !== 'undefined') {
+      const textarea = document.createElement('textarea');
+      textarea.value = json;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      return successful;
+    }
+  } catch (err) {
+    console.error('Fallback copy to clipboard failed:', err);
+  }
+
+  return false;
 }
 
 /**

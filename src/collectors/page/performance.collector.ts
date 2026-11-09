@@ -19,6 +19,8 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
     let webVitals: PerformanceData['webVitals'] = undefined;
     let resourceCount = 0;
     let transferSizeApprox = 0;
+    let decodedSizeApprox = 0;
+    const resourceTypes: Record<string, number> = {};
 
     if (perf && typeof perf.getEntriesByType === 'function') {
       try {
@@ -39,6 +41,12 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
             domLoadMs: domLoad,
             fullLoadMs: fullLoad,
           };
+
+          if (nav.transferSize) {
+            transferSizeApprox += nav.transferSize;
+          } else if (nav.encodedBodySize) {
+            transferSizeApprox += nav.encodedBodySize;
+          }
         } else if (perf.timing) {
           // Legacy PerformanceTiming fallback
           const t = perf.timing;
@@ -70,8 +78,15 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
         resourceCount = resources.length;
         resources.forEach((entry) => {
           const res = entry as PerformanceResourceTiming;
+          const type = res.initiatorType || 'other';
+          resourceTypes[type] = (resourceTypes[type] || 0) + 1;
           if (res.transferSize) {
             transferSizeApprox += res.transferSize;
+          } else if (res.encodedBodySize) {
+            transferSizeApprox += res.encodedBodySize;
+          }
+          if (res.decodedBodySize) {
+            decodedSizeApprox += res.decodedBodySize;
           }
         });
 
@@ -174,6 +189,8 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
       webVitals,
       resourceCount,
       transferSizeApprox: transferSizeApprox > 0 ? transferSizeApprox : undefined,
+      decodedSizeApprox: decodedSizeApprox > 0 ? decodedSizeApprox : undefined,
+      resourceTypes: Object.keys(resourceTypes).length > 0 ? resourceTypes : undefined,
     };
 
     const hasNav = navigationTiming !== undefined;

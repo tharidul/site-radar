@@ -56,7 +56,7 @@ class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundary
     if (this.state.hasError) {
       return (
         <div className="p-8 text-center space-y-3">
-          <div className="text-rose-500 font-bold text-sm">Failed to render this view</div>
+          <div className="text-[#152E40] dark:text-[#CEFF52] font-bold text-sm">Failed to render this view</div>
           <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto font-mono">
             {this.state.error?.message || 'An unexpected rendering error occurred.'}
           </p>
@@ -66,7 +66,7 @@ class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundary
               this.setState({ hasError: false, error: undefined });
               this.props.fallbackTab?.();
             }}
-            className="px-3 py-1.5 rounded-lg bg-orange-500 text-white text-xs font-semibold hover:bg-orange-600 transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-[#CEFF52] text-[#152E40] text-xs font-bold hover:bg-[#bbf03e] transition-colors cursor-pointer"
           >
             Back to Overview
           </button>
@@ -392,7 +392,7 @@ export function App() {
         {scanStatus === 'cancelled' && (
           <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
             <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-              <span className="text-orange-500 font-bold mr-1.5">•</span>
+              <span className="text-[#CEFF52] font-bold mr-1.5">•</span>
               Inspection was cancelled.
             </span>
             <button
@@ -409,7 +409,7 @@ export function App() {
         {scanStatus === 'failed' && (
           <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
             <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <span className="text-rose-500 font-bold">•</span>
+              <span className="text-[#CEFF52] font-bold">•</span>
               <span>Inspection Failed</span>
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">{errorMessage || 'An unknown error occurred.'}</p>

@@ -92,13 +92,13 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               onClick={() => onSelectMode(mode.id)}
               className={`rounded-xl p-3.5 transition-all duration-150 ease-out active:scale-[0.98] cursor-pointer select-none shadow-xs border ${
                 isSelected
-                  ? 'bg-white dark:bg-zinc-900 border-orange-500 ring-2 ring-orange-500/20'
+                  ? 'bg-white dark:bg-zinc-900 border-[#CEFF52] ring-2 ring-[#CEFF52]/30'
                   : 'bg-white dark:bg-zinc-900 border-zinc-200/80 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800'
               }`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-orange-500 text-white' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
+                  <div className={`p-1.5 rounded-lg ${isSelected ? 'bg-[#CEFF52] text-[#152E40]' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400'}`}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div>
@@ -126,7 +126,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           size="lg"
           disabled={disabled}
           onClick={onStartInspection}
-          leftIcon={<Play className="w-4 h-4 fill-current" />}
+          leftIcon={<Play className="w-4 h-4 fill-current ml-0.5" />}
           className="w-full py-3"
         >
           {disabled
@@ -146,7 +146,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               window.open('https://tharidulakmal.com', '_blank');
             }
           }}
-          className="inline-flex items-center gap-1 text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors cursor-pointer"
+          className="inline-flex items-center gap-1 text-zinc-500 hover:text-[#152E40] dark:text-zinc-400 dark:hover:text-[#CEFF52] transition-colors cursor-pointer"
         >
           <span className="font-semibold text-zinc-700 dark:text-zinc-200">LKML</span>
           <ExternalLink className="w-3 h-3 opacity-70" />
@@ -157,7 +157,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         <button
           type="button"
           onClick={openPrivacyPolicy}
-          className="text-zinc-500 hover:text-orange-600 dark:text-zinc-400 dark:hover:text-orange-400 transition-colors cursor-pointer hover:underline"
+          className="text-zinc-500 hover:text-[#152E40] dark:text-zinc-400 dark:hover:text-[#CEFF52] transition-colors cursor-pointer hover:underline"
         >
           Privacy Policy
         </button>

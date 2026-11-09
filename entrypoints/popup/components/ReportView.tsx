@@ -4,9 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { FileCode, FileText, Check, ShieldCheck, Clock, Globe } from 'lucide-react';
+import { FileCode, FileText, Check, ShieldCheck, Clock, Globe, Copy } from 'lucide-react';
 import type { WebsiteInspection } from '@/types/inspection';
-import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
+import { downloadJsonReport, downloadHtmlReport, copyJsonReport } from '../../../src/export/download';
 import { Button } from './Button';
 import { Card } from './Card';
 
@@ -16,6 +16,15 @@ interface ReportViewProps {
 
 export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
   const [downloadedType, setDownloadedType] = useState<'json' | 'html' | null>(null);
+  const [isCopiedJson, setIsCopiedJson] = useState(false);
+
+  const handleCopyJson = async () => {
+    const success = await copyJsonReport(inspection, { includeRawModules: false, pretty: true });
+    if (success) {
+      setIsCopiedJson(true);
+      setTimeout(() => setIsCopiedJson(false), 2000);
+    }
+  };
 
   const handleExportJson = () => {
     downloadJsonReport(inspection, { includeRawModules: false, pretty: true });
@@ -47,7 +56,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-              <Globe className="w-3.5 h-3.5 text-orange-500" />
+              <Globe className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
               <span>Target URL:</span>
             </span>
             <div className="font-medium text-zinc-800 dark:text-zinc-200 truncate mt-0.5">
@@ -57,7 +66,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
 
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-orange-500" />
+              <Clock className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
               <span>Audit Time:</span>
             </span>
             <div className="text-zinc-800 dark:text-zinc-200 mt-0.5">
@@ -75,7 +84,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
           <div>
             <span className="text-zinc-500 dark:text-zinc-400">Total Findings:</span>
             <div className="font-bold text-zinc-800 dark:text-zinc-200 mt-0.5 tabular-nums">
-              {inspection.findings?.length || 0} findings evaluated
+              {inspection.findings?.length || 0}
             </div>
           </div>
         </div>
@@ -92,7 +101,25 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-3 gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="md"
+            onClick={handleCopyJson}
+            className="w-full py-2.5 font-semibold"
+            title="Copy sanitized JSON audit report directly to clipboard"
+            leftIcon={
+              isCopiedJson ? (
+                <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              ) : (
+                <Copy className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              )
+            }
+          >
+            {isCopiedJson ? 'Copied!' : 'Copy JSON'}
+          </Button>
+
           <Button
             type="button"
             variant="primary"
@@ -101,13 +128,13 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
             className="w-full py-2.5"
             leftIcon={
               downloadedType === 'json' ? (
-                <Check className="w-4 h-4 text-white" />
+                <Check className="w-4 h-4 text-[#152E40]" />
               ) : (
-                <FileCode className="w-4 h-4 text-white" />
+                <FileCode className="w-4 h-4 text-[#152E40]" />
               )
             }
           >
-            {downloadedType === 'json' ? 'JSON Downloaded' : 'Export JSON Report'}
+            {downloadedType === 'json' ? 'Downloaded' : 'Export JSON'}
           </Button>
 
           <Button
@@ -124,7 +151,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
               )
             }
           >
-            {downloadedType === 'html' ? 'HTML Downloaded' : 'Export HTML Report'}
+            {downloadedType === 'html' ? 'Downloaded' : 'Export HTML'}
           </Button>
         </div>
       </Card>

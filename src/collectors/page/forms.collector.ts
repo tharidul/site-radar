@@ -97,11 +97,77 @@ export class FormsCollector implements PageCollector<FormsData> {
 
     const hasPasswordForms = forms.some((f) => f.hasPasswordField);
 
+    // Inspect all form input elements across document (including standalone search/login inputs)
+    const allInputElements = doc.querySelectorAll('input, textarea, select');
+    let totalInputCount = 0;
+    let labeledInputCount = 0;
+    let autocompleteInputCount = 0;
+    const unlabeledInputSamples: string[] = [];
+
+    allInputElements.forEach((el) => {
+      const type = (el.getAttribute('type') || el.tagName.toLowerCase()).toLowerCase();
+      // Skip non-data-entry types
+      if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image') {
+        return;
+      }
+
+      totalInputCount++;
+
+      // Check label association (<label for>, enclosing <label>, aria-label, aria-labelledby, title)
+      let hasLabel = false;
+      const inputId = el.getAttribute('id');
+      if (inputId) {
+        try {
+          const matchingLabel = doc.querySelector(`label[for="${CSS.escape(inputId)}"]`);
+          if (matchingLabel && (matchingLabel.textContent || '').trim().length > 0) {
+            hasLabel = true;
+          }
+        } catch {
+          // ignore selector errors
+        }
+      }
+
+      if (!hasLabel && el.closest('label')) {
+        hasLabel = true;
+      }
+      if (!hasLabel && (el.getAttribute('aria-label') || '').trim().length > 0) {
+        hasLabel = true;
+      }
+      if (!hasLabel && (el.getAttribute('aria-labelledby') || '').trim().length > 0) {
+        hasLabel = true;
+      }
+      if (!hasLabel && (el.getAttribute('title') || '').trim().length > 0) {
+        hasLabel = true;
+      }
+
+      if (hasLabel) {
+        labeledInputCount++;
+      } else {
+        if (unlabeledInputSamples.length < 5) {
+          const name = el.getAttribute('name') ? `[name="${el.getAttribute('name')}"]` : '';
+          const id = inputId ? `#${inputId}` : '';
+          unlabeledInputSamples.push(`${el.tagName.toLowerCase()}${id}${name}`);
+        }
+      }
+
+      // Check autocomplete attribute
+      const auto = el.getAttribute('autocomplete');
+      if (auto && auto.toLowerCase() !== 'off') {
+        autocompleteInputCount++;
+      }
+    });
+
+    const unlabeledInputCount = totalInputCount - labeledInputCount;
+
     const data: FormsData = {
       formCount,
       forms,
       containsUnencryptedSubmissions,
       hasPasswordForms,
+      totalInputCount,
+      unlabeledInputCount,
+      autocompleteInputCount,
+      unlabeledInputSamples,
     };
 
     return createCollectionResult<FormsData>({

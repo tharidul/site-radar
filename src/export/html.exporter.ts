@@ -109,12 +109,12 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       const scoreVal = Math.round(score.score);
       const color =
         scoreVal >= 90
-          ? '#f3f1f1'
+          ? '#CEFF52'
           : scoreVal >= 70
-          ? '#e88438'
+          ? 'rgba(206, 255, 82, 0.75)'
           : scoreVal >= 50
-          ? '#e88438'
-          : '#c8301e';
+          ? 'rgba(206, 255, 82, 0.50)'
+          : 'rgba(206, 255, 82, 0.30)';
 
       return `
         <div class="score-card">
@@ -158,10 +158,10 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       const sources = mod?.sources || [];
       const errors = mod?.errors || [];
 
-      let statusColor = '#7f7c7c';
-      if (status === 'completed') statusColor = '#f3f1f1';
-      else if (status === 'partial') statusColor = '#e88438';
-      else if (status === 'failed' || status === 'blocked') statusColor = '#c8301e';
+      let statusColor = 'rgba(206, 255, 82, 0.4)';
+      if (status === 'completed') statusColor = '#CEFF52';
+      else if (status === 'partial') statusColor = 'rgba(206, 255, 82, 0.75)';
+      else if (status === 'failed' || status === 'blocked') statusColor = 'rgba(206, 255, 82, 0.35)';
 
       const limitationsHtml =
         limitations.length > 0
@@ -289,32 +289,34 @@ export function exportToHtml(inspection: WebsiteInspection): string {
   <title>SiteRadar Report &mdash; ${hostname}</title>
   <style>
     :root {
-      --color-1: #e88438;
-      --color-2: #c8301e;
-      --color-3: #6a0e13;
-      --color-4: #f3f1f1;
-      --color-5: #161616;
+      --color-1: #CEFF52;
+      --color-2: #CEFF52;
+      --color-3: #152E40;
+      --color-4: #ffffff;
+      --color-5: #080b0e;
+      --brand-dark: #152E40;
+      --brand-lime: #CEFF52;
 
-      --bg: #09090b;             /* zinc-950 */
-      --surface: #18181b;        /* zinc-900 */
-      --surface-hover: #27272a;  /* zinc-800 */
-      --border: #27272a;         /* zinc-800 */
-      --border-muted: #3f3f46;   /* zinc-700 */
-      --text: #f4f4f5;           /* zinc-100 */
-      --text-muted: #a1a1aa;     /* zinc-400 */
-      --text-dim: #71717a;       /* zinc-500 */
-      --crit: var(--color-2);
-      --crit-bg: var(--color-3);
+      --bg: #080b0e;             /* Jet Black main canvas */
+      --surface: #152E40;        /* Card surface #152E40 */
+      --surface-hover: #1b3a51;  /* Card surface hover */
+      --border: #234b66;         /* Card border */
+      --border-muted: #1c3c54;
+      --text: #ffffff;           /* Crisp white */
+      --text-muted: #b5c9d6;     /* Readable muted text */
+      --text-dim: #88a8be;
+      --crit: var(--color-1);
+      --crit-bg: rgba(206, 255, 82, 0.15);
       --high: var(--color-1);
-      --high-bg: #3c1a10;
+      --high-bg: rgba(206, 255, 82, 0.12);
       --med: var(--color-1);
-      --med-bg: #30170a;
-      --low: var(--color-4);
-      --low-bg: #272727;
-      --info: #9c9a9a;
-      --info-bg: #222222;
-      --pass: var(--color-4);
-      --pass-bg: #282828;
+      --med-bg: rgba(206, 255, 82, 0.10);
+      --low: #b5c9d6;
+      --low-bg: rgba(21, 46, 64, 0.4);
+      --info: #88a8be;
+      --info-bg: rgba(21, 46, 64, 0.3);
+      --pass: #CEFF52;
+      --pass-bg: rgba(206, 255, 82, 0.15);
       --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
@@ -337,8 +339,8 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     }
     .hero-badge {
       display: inline-block;
-      font-family: var(--font-mono);
       font-size: 11px;
+      font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       padding: 2px 10px;
@@ -355,6 +357,13 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       margin-bottom: 6px;
       font-family: var(--font-mono);
       word-break: break-all;
+      text-wrap: balance;
+    }
+    h2, h3 {
+      text-wrap: balance;
+    }
+    p {
+      text-wrap: pretty;
     }
     .hero-sub {
       color: var(--text-muted);
@@ -380,14 +389,14 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       text-align: center;
     }
     .sev-box-count {
-      font-family: var(--font-mono);
       font-size: 18px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
       display: block;
     }
     .sev-box-label {
-      font-family: var(--font-mono);
       font-size: 10px;
+      font-weight: 600;
       text-transform: uppercase;
       color: var(--text-dim);
       letter-spacing: 0.05em;
@@ -400,8 +409,8 @@ export function exportToHtml(inspection: WebsiteInspection): string {
 
     /* Scores Grid */
     .section-title {
-      font-family: var(--font-mono);
       font-size: 13px;
+      font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--text-muted);
@@ -429,15 +438,14 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       margin-bottom: 8px;
     }
     .score-cat {
-      font-family: var(--font-mono);
       font-size: 11px;
       font-weight: 600;
       color: var(--text-muted);
     }
     .score-val {
-      font-family: var(--font-mono);
       font-size: 18px;
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
     .score-max { font-size: 11px; color: var(--text-dim); }
     .score-bar-bg {
@@ -449,8 +457,8 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     }
     .score-bar-fill { height: 100%; border-radius: 9999px; }
     .score-stats {
-      font-family: var(--font-mono);
       font-size: 10px;
+      font-variant-numeric: tabular-nums;
       color: var(--text-dim);
     }
     .stat-p { color: var(--pass); }
@@ -472,7 +480,6 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-family: var(--font-mono);
       font-size: 12px;
       user-select: none;
       background: var(--surface);
@@ -630,13 +637,19 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     footer.report-footer {
       padding-top: 18px;
       border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--text-dim);
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>

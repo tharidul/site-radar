@@ -4,20 +4,32 @@
  * Eliminates nested card containers in favor of high-contrast typographic hierarchy.
  */
 
-import React from 'react';
-import { ExternalLink, ShieldAlert } from 'lucide-react';
+import React, { useState } from 'react';
+import { ExternalLink, ShieldAlert, Copy, Check } from 'lucide-react';
 import type { AuditFinding } from '@/types/inspection';
 import { sanitizeHref } from '../../../src/export/html.exporter';
+import { copyFindingJson } from '../../../src/export/download';
 
 export interface FindingDetailInspectorProps {
   finding: AuditFinding;
   onCollapse?: () => void;
+  onBack?: () => void;
 }
 
 export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
   finding,
   onCollapse,
+  onBack,
 }) => {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    const success = await copyFindingJson(finding);
+    if (success) {
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    }
+  };
   const formatEvidenceValue = (val: unknown): string => {
     if (val === undefined || val === null) return '';
     if (typeof val === 'string') return val;
@@ -138,8 +150,40 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {onCollapse && (
-        <div className="pt-2 flex justify-end">
+      <div className="pt-2 flex items-center justify-between border-t border-zinc-200/70 dark:border-zinc-800/80">
+        <button
+          type="button"
+          onClick={handleCopy}
+          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border transition-all duration-150 cursor-pointer ${
+            isCopied
+              ? 'border-emerald-500/40 dark:border-[#CEFF52]/50 text-emerald-600 dark:text-[#CEFF52] bg-emerald-500/10 dark:bg-[#CEFF52]/10 ring-1 ring-emerald-500/20 dark:ring-[#CEFF52]/30'
+              : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white'
+          }`}
+          title={isCopied ? 'Copied issue JSON!' : 'Copy issue JSON'}
+          aria-label="Copy issue JSON"
+        >
+          {isCopied ? (
+            <>
+              <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-[#CEFF52] stroke-[2.5]" />
+              <span>Issue Copied!</span>
+            </>
+          ) : (
+            <>
+              <Copy className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400" />
+              <span>Copy Issue JSON</span>
+            </>
+          )}
+        </button>
+
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-[#CEFF52] cursor-pointer transition-colors"
+          >
+            ← Back to Issues
+          </button>
+        ) : onCollapse ? (
           <button
             type="button"
             onClick={onCollapse}
@@ -147,8 +191,8 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
           >
             Collapse details ↑
           </button>
-        </div>
-      )}
+        ) : null}
+      </div>
     </div>
   );
 };

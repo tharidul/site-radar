@@ -55,16 +55,17 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
       description: 'Evaluates Largest Contentful Paint against Google Core Web Vitals targets.',
       severity: 'high',
       status: 'not-available',
-      weight: 15,
       confidence: 1.0,
       evidence: [],
+      source: 'test',
       references: [],
     };
 
     const html = renderToString(
       <FindingsExplorer
         findings={[mockFinding]}
-        totalRulesEvaluated={1}
+        activeSeverityFilter="all"
+        onSelectSeverityFilter={() => {}}
       />
     );
 
@@ -83,16 +84,17 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
       description: 'All images have descriptive alt attributes.',
       severity: 'low',
       status: 'passed',
-      weight: 10,
       confidence: 1.0,
       evidence: [],
+      source: 'test',
       references: [],
     };
 
     const html = renderToString(
       <FindingsExplorer
         findings={[passedFinding]}
-        totalRulesEvaluated={1}
+        activeSeverityFilter="all"
+        onSelectSeverityFilter={() => {}}
       />
     );
 
@@ -110,13 +112,15 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
         url: 'https://www.apple.com/',
         origin: 'https://www.apple.com',
         hostname: 'www.apple.com',
-        scheme: 'https',
+        inspectedAt: Date.now(),
       },
       mode: 'quick',
       modules: {
         performance: {
           module: 'performance',
           status: 'completed',
+          collectedAt: Date.now(),
+          errors: [],
           data: {
             resourceCount: 10,
             webVitals: undefined, // Browser had no recorded LCP
@@ -137,10 +141,10 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
 
   it('ModuleAccordions resolves collector key aliases (metadata->seo, security->securityHeaders, dom->content) so completed modules are not marked SKIPPED', () => {
     const modules = {
-      identity: { module: 'identity', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
-      metadata: { module: 'metadata', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
-      security: { module: 'security', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
-      dom: { module: 'dom', status: 'completed' as const, data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      identity: { module: 'identity', status: 'completed' as const, collectedAt: Date.now(), errors: [], data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      metadata: { module: 'metadata', status: 'completed' as const, collectedAt: Date.now(), errors: [], data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      security: { module: 'security', status: 'completed' as const, collectedAt: Date.now(), errors: [], data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
+      dom: { module: 'dom', status: 'completed' as const, collectedAt: Date.now(), errors: [], data: {}, coverage: { expected: 1, collected: 1, unavailable: 0, supported: true }, limitations: [], sources: [] },
     };
 
     const html = renderToString(<ModuleAccordions modules={modules} />);

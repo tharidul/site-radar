@@ -224,7 +224,7 @@ export function OptionsApp() {
         {/* Header */}
         <header className="border-b border-zinc-200 dark:border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Shield className="w-6 h-6 text-orange-500 shrink-0" />
+            <Shield className="w-6 h-6 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
             <div className="min-w-0">
               <h1 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
                 SiteRadar Settings
@@ -247,7 +247,7 @@ export function OptionsApp() {
             {theme === 'light' ? (
               <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
             ) : (
-              <Sun className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+              <Sun className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             )}
           </Button>
         </header>
@@ -268,7 +268,7 @@ export function OptionsApp() {
               <button
                 type="button"
                 onClick={handleRevokeAllConsent}
-                className="text-xs font-semibold text-zinc-500 hover:text-rose-600 dark:text-zinc-400 dark:hover:text-rose-400 transition-colors cursor-pointer shrink-0"
+                className="text-xs font-semibold text-zinc-500 hover:text-[#152E40] dark:text-zinc-400 dark:hover:text-[#CEFF52] transition-colors cursor-pointer shrink-0"
               >
                 Disable all
               </button>
@@ -309,13 +309,13 @@ export function OptionsApp() {
                     aria-checked={isGranted}
                     onClick={() => handleToggleProviderConsent(provider.id)}
                     title={isGranted ? `Disable ${provider.name}` : `Enable ${provider.name}`}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-orange-500/30 active:scale-[0.97] ${
-                      isGranted ? 'bg-orange-500' : 'bg-zinc-300 dark:bg-zinc-700'
+                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#CEFF52]/50 active:scale-[0.97] ${
+                      isGranted ? 'bg-[#CEFF52]' : 'bg-zinc-300 dark:bg-zinc-700'
                     }`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-xs ring-0 transition duration-200 ease-in-out ${
+                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full ${isGranted ? 'bg-[#152E40]' : 'bg-white'} shadow-xs ring-0 transition duration-200 ease-in-out ${
                         isGranted ? 'translate-x-4' : 'translate-x-0'
                       }`}
                     />
@@ -340,7 +340,7 @@ export function OptionsApp() {
                           href={disclosure.privacyPolicyUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-orange-600 dark:text-orange-400 hover:underline inline-flex items-center gap-1"
+                          className="text-[#152E40] dark:text-[#CEFF52] hover:underline inline-flex items-center gap-1"
                         >
                           <span>{disclosure.providerName}</span>
                           <ExternalLink className="w-3 h-3" />
@@ -377,7 +377,7 @@ export function OptionsApp() {
                 max={200}
                 value={crawlConfig.maxPages}
                 onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
               <span className="text-[10px] text-zinc-400 mt-0.5 block">5–200 pages</span>
             </div>
@@ -392,7 +392,7 @@ export function OptionsApp() {
                 max={5}
                 value={crawlConfig.maxDepth}
                 onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
               <span className="text-[10px] text-zinc-400 mt-0.5 block">1–5 hops</span>
             </div>
@@ -407,7 +407,7 @@ export function OptionsApp() {
                 max={4}
                 value={crawlConfig.concurrency}
                 onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
               <span className="text-[10px] text-zinc-400 mt-0.5 block">1–4 parallel</span>
             </div>
@@ -422,14 +422,14 @@ export function OptionsApp() {
                 max={60}
                 value={crawlConfig.timeoutSeconds}
                 onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-orange-500 focus:outline-none transition-colors"
+                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
               <span className="text-[10px] text-zinc-400 mt-0.5 block">5–60 seconds</span>
             </div>
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
-            <span className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+            <span className="text-xs text-[#152E40] dark:text-[#CEFF52] font-semibold">
               {crawlFeedback}
             </span>
 
@@ -463,7 +463,7 @@ export function OptionsApp() {
               href="https://tharidulakmal.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-orange-600 dark:hover:text-orange-400 transition-colors"
+              className="inline-flex items-center gap-1.5 hover:text-[#152E40] dark:hover:text-[#CEFF52] transition-colors"
             >
               <span className="font-semibold text-zinc-700 dark:text-zinc-200">LKML</span>
               <ExternalLink className="w-3 h-3 opacity-70" />
@@ -473,7 +473,7 @@ export function OptionsApp() {
               href="privacy-policy.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-orange-600 dark:hover:text-orange-400 transition-colors hover:underline"
+              className="hover:text-[#152E40] dark:hover:text-[#CEFF52] transition-colors hover:underline"
             >
               Privacy Policy
             </a>

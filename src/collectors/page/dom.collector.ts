@@ -97,6 +97,43 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       calculateDepth(doc.documentElement, 1);
     }
 
+    // 5. Citable Content Structures (AEO & LLM extraction signals)
+    const tablesCount = doc.querySelectorAll('table').length;
+    const listsCount = doc.querySelectorAll('ul, ol').length;
+    const definitionListsCount = doc.querySelectorAll('dl').length;
+
+    // 6. Interactive Elements & Agent Action Targets (AGO signals)
+    const nativeButtonsCount = doc.querySelectorAll(
+      'button, a[href], input[type="button" i], input[type="submit" i]'
+    ).length;
+
+    const nonSemanticMatches = doc.querySelectorAll(
+      'div[onclick], span[onclick], i[onclick], div[tabindex="0"], span[tabindex="0"]'
+    );
+    const nonSemanticClickableSamples: string[] = [];
+    let nonSemanticClickableCount = 0;
+
+    nonSemanticMatches.forEach((el) => {
+      const role = (el.getAttribute('role') || '').toLowerCase();
+      if (
+        role !== 'button' &&
+        role !== 'link' &&
+        role !== 'tab' &&
+        role !== 'menuitem' &&
+        role !== 'checkbox'
+      ) {
+        nonSemanticClickableCount++;
+        if (nonSemanticClickableSamples.length < 5) {
+          const id = el.id ? `#${el.id}` : '';
+          const cls =
+            el.className && typeof el.className === 'string'
+              ? `.${el.className.trim().split(/\s+/)[0]}`
+              : '';
+          nonSemanticClickableSamples.push(`${el.tagName.toLowerCase()}${id}${cls}`);
+        }
+      }
+    });
+
     const data: DomSemanticData = {
       elementCount,
       headingHierarchy,
@@ -108,6 +145,12 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       hasMultipleH1: h1Count > 1,
       headingOrderValid,
       customElementTags: [],
+      tablesCount,
+      listsCount,
+      definitionListsCount,
+      nonSemanticClickableCount,
+      nativeButtonsCount,
+      nonSemanticClickableSamples,
     };
 
     return createCollectionResult<DomSemanticData>({

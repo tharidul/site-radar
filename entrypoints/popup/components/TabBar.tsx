@@ -54,28 +54,28 @@ export const TabBar: React.FC<TabBarProps> = ({
                 onClick={() => onSelectTab(tab.id)}
                 className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer ${
                   isActive
-                    ? 'text-orange-600 dark:text-orange-400'
-                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 hover:bg-zinc-200/40 dark:hover:bg-zinc-900/60 rounded-md'
+                    ? 'text-[#152E40] dark:text-[#CEFF52]'
+                    : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/40 dark:hover:bg-zinc-800/60 rounded-md'
                 }`}
               >
-                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-orange-600 dark:text-orange-400' : 'text-zinc-500 dark:text-zinc-400'}`} />
+                <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-[#152E40] dark:text-[#CEFF52]' : 'text-zinc-500 dark:text-zinc-400'}`} />
                 <span>{tab.label}</span>
                 {badge !== undefined ? (
                   <span
                     className={`ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-md tabular-nums ${
                       isActive
-                        ? 'bg-orange-100 dark:bg-orange-950/80 text-orange-700 dark:text-orange-400 border border-orange-200 dark:border-orange-800'
-                        : 'bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900'
+                        ? 'bg-[#CEFF52] text-[#152E40] border border-[#CEFF52]'
+                        : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700'
                     }`}
                   >
                     {badge}
                   </span>
                 ) : null}
               </button>
-              {/* Active Tab Underline Indicator - only keep underline */}
+              {/* Active Tab Underline Indicator */}
               <div
                 className={`h-0.5 -mb-px rounded-full w-full transition-all duration-200 ease-out ${
-                  isActive ? 'bg-orange-500 dark:bg-orange-400 opacity-100 scale-x-100' : 'bg-transparent opacity-0 scale-x-75'
+                  isActive ? 'bg-[#152E40] dark:bg-[#CEFF52] opacity-100 scale-x-100' : 'bg-transparent opacity-0 scale-x-75'
                 }`}
               />
             </div>

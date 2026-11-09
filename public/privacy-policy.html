@@ -38,8 +38,8 @@
     }
     .badge {
       display: inline-block;
-      font-family: var(--font-mono);
       font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.06em;
       padding: 3px 12px;
@@ -54,11 +54,11 @@
       color: var(--text);
       line-height: 1.25;
       margin-bottom: 10px;
+      text-wrap: balance;
     }
     .meta {
       font-size: 13px;
       color: var(--text-dim);
-      font-family: var(--font-mono);
     }
     h2 {
       font-size: 17px;
@@ -67,16 +67,19 @@
       margin: 36px 0 12px;
       padding-bottom: 8px;
       border-bottom: 1px solid var(--border);
+      text-wrap: balance;
     }
     h3 {
       font-size: 14px;
       font-weight: 600;
       color: var(--text);
       margin: 24px 0 8px;
+      text-wrap: balance;
     }
     p {
       color: var(--text-muted);
       margin-bottom: 14px;
+      text-wrap: pretty;
     }
     ul {
       list-style: none;
@@ -153,13 +156,19 @@
       margin-top: 56px;
       padding-top: 24px;
       border-top: 1px solid var(--border);
-      font-family: var(--font-mono);
       font-size: 11px;
       color: var(--text-dim);
       display: flex;
       justify-content: space-between;
       flex-wrap: wrap;
       gap: 8px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+      }
     }
   </style>
 </head>

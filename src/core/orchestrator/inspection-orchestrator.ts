@@ -12,6 +12,7 @@ import type {
   AuditFinding,
   InspectionSummary,
   CategoryScore,
+  TechnologyData,
 } from '../../types/inspection';
 import type { ScanProgressEvent } from '../../types/messaging';
 import type { CrawlLimits } from '../../types/crawler';
@@ -89,6 +90,7 @@ export class InspectionOrchestrator {
     if (tabId !== undefined || url) {
       for (let i = sessions.length - 1; i >= 0; i--) {
         const s = sessions[i];
+        if (!s) continue;
         if (tabId !== undefined && s.tabId !== tabId) {
           continue;
         }
@@ -426,7 +428,7 @@ export class InspectionOrchestrator {
               const backendTech = detectBackendFromHeaders(headersMap);
               if (backendTech.length > 0) {
                 const currentList = techData.technologies || [];
-                const existingNames = new Set(currentList.map((t) => t.name.toLowerCase()));
+                const existingNames = new Set(currentList.map((t: any) => t.name.toLowerCase()));
 
                 for (const b of backendTech) {
                   const key = b.name.toLowerCase();
@@ -434,7 +436,7 @@ export class InspectionOrchestrator {
                     currentList.push(b);
                     existingNames.add(key);
                   } else {
-                    const existing = currentList.find((t) => t.name.toLowerCase() === key);
+                    const existing = currentList.find((t: any) => t.name.toLowerCase() === key);
                     if (existing) {
                       if (!existing.version && b.version) existing.version = b.version;
                       if (b.confidence > existing.confidence) {
@@ -447,7 +449,7 @@ export class InspectionOrchestrator {
 
                 techData.technologies = currentList;
                 const catSet = new Set(techData.categoriesFound || []);
-                currentList.forEach((t) => {
+                currentList.forEach((t: any) => {
                   if (t.category) catSet.add(t.category);
                 });
                 techData.categoriesFound = Array.from(catSet);

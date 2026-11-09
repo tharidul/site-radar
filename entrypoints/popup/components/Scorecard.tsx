@@ -167,7 +167,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                   {catKey}
                 </span>
                 <span className={`text-xs font-bold tabular-nums ${textColor}`}>
-                  {hasScore ? `${rawScore}/100` : 'N/A'}
+                  {hasScore ? rawScore : 'N/A'}
                 </span>
               </div>
 

@@ -5,12 +5,12 @@
  * Eliminates "too much card" visual clutter (Feature 45).
  */
 
-import React, { useState, useMemo, useDeferredValue } from 'react';
+import React, { useState, useMemo, useDeferredValue, useEffect } from 'react';
 import {
   Search,
   X,
   ChevronRight,
-  ChevronDown,
+  ArrowLeft,
   CheckCircle2,
   Check,
   Minus,
@@ -21,13 +21,14 @@ import {
   Layers,
   Info,
   HelpCircle,
+  Copy,
 } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
 import { FindingDetailInspector } from './FindingDetailInspector';
 import { CustomSelect } from './CustomSelect';
-import { Badge } from './Badge';
 import { Card } from './Card';
 import { sortFindingsByPriority } from '../../../src/analyzers';
+import { copyFindingJson } from '../../../src/export/download';
 
 interface FindingsExplorerProps {
   findings: AuditFinding[];
@@ -37,6 +38,7 @@ interface FindingsExplorerProps {
   onSelectCategoryFilter?: (category: string) => void;
   onSelectFinding?: (finding: AuditFinding) => void;
   initialExpandedFindingId?: string | null;
+  initialSelectedFindingId?: string | null;
   scores?: Record<string, CategoryScore>;
 }
 
@@ -58,6 +60,69 @@ const STATUS_OPTIONS = [
   { value: 'passed', label: 'Passed' },
 ];
 
+function renderFindingStatusIcon(finding: AuditFinding) {
+  const { status, severity } = finding;
+
+  if (status === 'passed') {
+    return (
+      <span
+        data-status="passed"
+        title="Check passed"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#10b981] text-white shrink-0 select-none shadow-2xs"
+      >
+        <Check className="w-3 h-3 stroke-[3] text-white" />
+      </span>
+    );
+  }
+
+  if (status === 'failed') {
+    return (
+      <span
+        data-status="failed"
+        title={`Failed${severity ? ` • ${severity.toUpperCase()}` : ''}`}
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ef4444] text-white shrink-0 select-none shadow-2xs"
+      >
+        <X className="w-3 h-3 stroke-[3] text-white" />
+      </span>
+    );
+  }
+
+  if (status === 'warning') {
+    return (
+      <span
+        data-status="warning"
+        title={`Warning${severity ? ` • ${severity.toUpperCase()}` : ''}`}
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#f59e0b] text-white shrink-0 select-none shadow-2xs"
+      >
+        <AlertTriangle className="w-3 h-3 stroke-[2.5] text-white" />
+      </span>
+    );
+  }
+
+  if (status === 'info') {
+    return (
+      <span
+        data-status="info"
+        title="Info"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0ea5e9] text-white shrink-0 select-none shadow-2xs"
+      >
+        <Info className="w-3 h-3 stroke-[2.5] text-white" />
+      </span>
+    );
+  }
+
+  // not-applicable / not-available
+  return (
+    <span
+      data-status="not-available"
+      title={status === 'not-available' ? 'Not Available' : 'Not Applicable'}
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-400 dark:bg-zinc-600 text-white shrink-0 select-none shadow-2xs"
+    >
+      <Minus className="w-2.5 h-2.5 stroke-[3] text-white" />
+    </span>
+  );
+}
+
 export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   findings,
   activeSeverityFilter = 'all',
@@ -66,15 +131,46 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   onSelectCategoryFilter,
   onSelectFinding,
   initialExpandedFindingId,
+  initialSelectedFindingId,
   scores,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredQuery = useDeferredValue(searchQuery);
   const [statusFilter, setStatusFilter] = useState<FindingStatus | 'all'>('all');
-  const [expandedFindingId, setExpandedFindingId] = useState<string | null>(initialExpandedFindingId || null);
+  const [selectedFindingId, setSelectedFindingId] = useState<string | null>(
+    initialSelectedFindingId || null,
+  );
+  const [copiedFindingId, setCopiedFindingId] = useState<string | null>(null);
 
-  const toggleFinding = (id: string) => {
-    setExpandedFindingId((prev) => (prev === id ? null : id));
+  // Return to list when Escape key is pressed
+  useEffect(() => {
+    if (!selectedFindingId) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setSelectedFindingId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [selectedFindingId]);
+
+  // Lookup active finding for dedicated view
+  const selectedFinding = useMemo(() => {
+    if (!selectedFindingId) return null;
+    return findings.find((f) => f.id === selectedFindingId) || null;
+  }, [findings, selectedFindingId]);
+
+  const handleCopyFinding = async (finding: AuditFinding, e?: React.MouseEvent) => {
+    if (e) {
+      e.stopPropagation();
+    }
+    const success = await copyFindingJson(finding);
+    if (success) {
+      setCopiedFindingId(finding.id);
+      setTimeout(() => {
+        setCopiedFindingId((prev) => (prev === finding.id ? null : prev));
+      }, 2000);
+    }
   };
 
   // Discover distinct categories
@@ -167,6 +263,98 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return filteredFindings.findIndex((f) => f.status !== 'failed' && f.status !== 'warning');
   }, [filteredFindings, actualIssuesInFiltered]);
 
+  // Dedicated Finding Detail View: Transitions cleanly without inline accordion repaints
+  if (selectedFinding) {
+    const FindingCategoryIcon =
+      (selectedFinding.category && CATEGORY_ICONS[selectedFinding.category.toLowerCase()]) || Layers;
+
+    return (
+      <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in-0 duration-150">
+        {/* Top Navigation Bar: Back button + Badges */}
+        <div className="flex items-center justify-between gap-2">
+          <button
+            type="button"
+            onClick={() => setSelectedFindingId(null)}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-[#CEFF52] transition-colors shadow-2xs cursor-pointer"
+            title="Return to issues list (Escape)"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>Back to Issues</span>
+          </button>
+
+          <div className="flex items-center gap-1.5 flex-wrap shrink-0">
+            {/* Category Pill */}
+            {selectedFinding.category && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                <FindingCategoryIcon className="w-3 h-3" />
+                <span>{selectedFinding.category}</span>
+              </span>
+            )}
+
+            {/* Severity Pill */}
+            {selectedFinding.status !== 'passed' &&
+              selectedFinding.status !== 'not-available' &&
+              selectedFinding.status !== 'not-applicable' &&
+              selectedFinding.severity && (
+                <span
+                  className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-bold font-mono uppercase tracking-wider ${
+                    selectedFinding.severity === 'critical'
+                      ? 'bg-rose-500/15 text-[#dc2626] dark:text-[#f87171] border border-rose-500/30'
+                      : selectedFinding.severity === 'high'
+                      ? 'bg-orange-500/15 text-[#ea580c] dark:text-[#fb923c] border border-orange-500/30'
+                      : selectedFinding.severity === 'medium'
+                      ? 'bg-amber-500/15 text-[#d97706] dark:text-[#fbbf24] border border-amber-500/30'
+                      : selectedFinding.severity === 'info'
+                      ? 'bg-sky-500/15 text-[#0284c7] dark:text-[#38bdf8] border border-sky-500/30'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  {selectedFinding.severity}
+                </span>
+              )}
+          </div>
+        </div>
+
+        {/* Dedicated Finding Card Container */}
+        <Card padding="md" className="space-y-4 shadow-xs">
+          {/* Finding Header */}
+          <div className="space-y-2 border-b border-zinc-200/80 dark:border-zinc-800 pb-3.5">
+            <div className="flex items-start gap-2.5">
+              <div className="mt-0.5 shrink-0">
+                {renderFindingStatusIcon(selectedFinding)}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
+                  {selectedFinding.title}
+                </h2>
+                <div className="flex items-center gap-2 mt-1">
+                  <span className="text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80">
+                    rule: {selectedFinding.ruleId}
+                  </span>
+                  {selectedFinding.source && (
+                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                      source: {selectedFinding.source}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-600 dark:text-zinc-300 leading-relaxed pt-1">
+              {selectedFinding.description}
+            </p>
+          </div>
+
+          {/* Full Inspector Body */}
+          <FindingDetailInspector
+            finding={selectedFinding}
+            onBack={() => setSelectedFindingId(null)}
+          />
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* Streamlined Filter Toolbar (Single Row: Search + Category + Status) */}
@@ -178,7 +366,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search issues, rules..."
-            className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-orange-500 focus:outline-none transition-colors shadow-2xs"
+            className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#CEFF52] focus:outline-none transition-colors shadow-2xs"
           />
           {searchQuery.length > 0 ? (
             <button
@@ -215,7 +403,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         <div className="rounded-xl bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2 border border-zinc-200/60 dark:border-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400">
+              <div className="p-1.5 rounded-lg bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
                 <CategoryIcon className="w-4 h-4" />
               </div>
               <div>
@@ -223,7 +411,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   {activeCategoryFilter} Audit
                 </h3>
                 <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
-                  {currentCategoryScore.totalChecks} checks evaluated · {currentCategoryScore.coveragePercent ?? 100}% coverage
+                  <span className="tabular-nums">{currentCategoryScore.totalChecks}</span> checks evaluated · <span className="tabular-nums">{currentCategoryScore.coveragePercent ?? 100}</span>% coverage
                 </p>
               </div>
             </div>
@@ -241,26 +429,26 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             {currentCategoryScore.failed > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
                 <X className="w-3 h-3" />
-                <span>{currentCategoryScore.failed} Failed</span>
+                <span><span className="tabular-nums">{currentCategoryScore.failed}</span> Failed</span>
               </span>
             )}
 
             {currentCategoryScore.warnings > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold">
                 <AlertTriangle className="w-3 h-3" />
-                <span>{currentCategoryScore.warnings} Warnings</span>
+                <span><span className="tabular-nums">{currentCategoryScore.warnings}</span> Warnings</span>
               </span>
             )}
 
             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
               <CheckCircle2 className="w-3 h-3" />
-              <span>{currentCategoryScore.passed} Passed</span>
+              <span><span className="tabular-nums">{currentCategoryScore.passed}</span> Passed</span>
             </span>
 
             {(currentCategoryScore.unavailable ?? 0) > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
                 <HelpCircle className="w-3 h-3" />
-                <span>{currentCategoryScore.unavailable} Unobservable</span>
+                <span><span className="tabular-nums">{currentCategoryScore.unavailable}</span> Unobservable</span>
               </span>
             )}
           </div>
@@ -282,7 +470,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         <span>
           Showing <span className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{filteredFindings.length}</span> checks{' '}
           <span className="text-zinc-400 dark:text-zinc-500">
-            ({actualIssuesInFiltered.length} {actualIssuesInFiltered.length === 1 ? 'issue' : 'issues'})
+            (<span className="tabular-nums">{actualIssuesInFiltered.length}</span> {actualIssuesInFiltered.length === 1 ? 'issue' : 'issues'})
           </span>
         </span>
 
@@ -290,7 +478,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           <button
             type="button"
             onClick={resetFilters}
-            className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
+            className="text-xs font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
           >
             Clear Filters
           </button>
@@ -306,7 +494,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               <button
                 type="button"
                 onClick={resetFilters}
-                className="text-xs text-orange-600 dark:text-orange-400 font-semibold underline cursor-pointer"
+                className="text-xs text-[#152E40] dark:text-[#CEFF52] font-semibold underline cursor-pointer"
               >
                 Reset all filters
               </button>
@@ -314,7 +502,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </div>
         ) : (
           filteredFindings.map((finding, idx) => {
-            const isExpanded = expandedFindingId === finding.id;
             const isFirstNonIssue = idx === firstNonIssueIndex;
 
             return (
@@ -331,68 +518,68 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   {/* Unified Row Item */}
                   <div
                     onClick={() => {
-                      toggleFinding(finding.id);
+                      setSelectedFindingId(finding.id);
                       if (onSelectFinding) onSelectFinding(finding);
                     }}
-                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-all duration-150 ease-out active:scale-[0.995] cursor-pointer select-none"
+                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-all duration-150 ease-out active:scale-[0.995] cursor-pointer select-none group"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                        {finding.status === 'passed' ? (
-                          <span
-                            title="Check passed"
-                            className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 shrink-0 select-none"
-                          >
-                            <Check className="w-3 h-3 stroke-[2.5]" />
-                          </span>
-                        ) : finding.status === 'not-available' || finding.status === 'not-applicable' ? (
-                          <span
-                            data-status="not-available"
-                            title={finding.status === 'not-available' ? 'Not Available' : 'Not Applicable'}
-                            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase px-1.5 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 shrink-0 select-none"
-                          >
-                            <Minus className="w-2.5 h-2.5 text-zinc-400" />
-                            <span>N/A</span>
-                          </span>
-                        ) : (
-                          <>
-                            <Badge variant="severity" severity={finding.severity} status={finding.status}>
+                    <div className="flex items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-2 min-w-0">
+                        {renderFindingStatusIcon(finding)}
+
+                        {finding.status !== 'passed' &&
+                          finding.status !== 'not-available' &&
+                          finding.status !== 'not-applicable' &&
+                          finding.severity && (
+                            <span
+                              className={`text-[10px] font-bold font-mono uppercase tracking-wider shrink-0 ${
+                                finding.severity === 'critical'
+                                  ? 'text-[#dc2626] dark:text-[#f87171]'
+                                  : finding.severity === 'high'
+                                  ? 'text-[#ea580c] dark:text-[#fb923c]'
+                                  : finding.severity === 'medium'
+                                  ? 'text-[#d97706] dark:text-[#fbbf24]'
+                                  : finding.severity === 'info'
+                                  ? 'text-[#0284c7] dark:text-[#38bdf8]'
+                                  : 'text-zinc-500 dark:text-zinc-400'
+                              }`}
+                            >
                               {finding.severity}
-                            </Badge>
-                            <Badge variant="status" status={finding.status}>
-                              {finding.status}
-                            </Badge>
-                          </>
-                        )}
-                        <span className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
-                          {finding.category ? `${finding.category} · ` : ''}{finding.ruleId}
-                        </span>
+                            </span>
+                          )}
+
+                        <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
+                          {finding.title}
+                        </h4>
                       </div>
 
-                      {isExpanded ? (
-                        <ChevronDown className="w-4 h-4 text-orange-500 shrink-0 mt-0.5 transition-transform duration-200 ease-out" />
-                      ) : (
-                        <ChevronRight className="w-4 h-4 text-zinc-500 dark:text-zinc-400 shrink-0 mt-0.5 transition-transform duration-200 ease-out" />
-                      )}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={(e) => handleCopyFinding(finding, e)}
+                          title={copiedFindingId === finding.id ? 'Copied issue JSON!' : 'Copy issue JSON'}
+                          aria-label={`Copy JSON for issue ${finding.ruleId}`}
+                          className={`p-1 rounded-md transition-all duration-150 cursor-pointer ${
+                            copiedFindingId === finding.id
+                              ? 'text-emerald-600 dark:text-[#CEFF52] bg-emerald-500/15 dark:bg-[#CEFF52]/15'
+                              : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-[#CEFF52] hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                          }`}
+                        >
+                          {copiedFindingId === finding.id ? (
+                            <Check className="w-3.5 h-3.5 stroke-[2.5]" />
+                          ) : (
+                            <Copy className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+
+                        <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+                      </div>
                     </div>
 
-                    <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 mt-1 line-clamp-1">
-                      {finding.title}
-                    </h4>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 line-clamp-1 leading-relaxed">
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 line-clamp-1 leading-relaxed">
                       {finding.description}
                     </p>
                   </div>
-
-                  {/* Inline Clean Expanded Detail Panel - Rule 1 (Ease-out for entrances), Rule 13 (No bounce) */}
-                  {isExpanded && (
-                    <div className="border-t border-zinc-200 dark:border-zinc-800 p-4 bg-zinc-50/60 dark:bg-zinc-950/50 transition-all duration-200 ease-out animate-in fade-in-0 slide-in-from-top-1">
-                      <FindingDetailInspector
-                        finding={finding}
-                        onCollapse={() => toggleFinding(finding.id)}
-                      />
-                    </div>
-                  )}
                 </div>
               </React.Fragment>
             );

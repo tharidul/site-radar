@@ -83,9 +83,9 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
     it('verifies light mode defines zinc-900 as deep dark charcoal, NOT faint off-white', () => {
       expect(cssContent).toContain('.light, [data-theme=\'light\']');
-      // In light mode, zinc-900 must be dark (var(--color-5) = #161616)
+      // In light mode, zinc-900 must be dark (var(--color-3) = #152E40)
       const lightSection = cssContent.slice(cssContent.indexOf(".light, [data-theme='light']"));
-      expect(lightSection).toMatch(/--color-zinc-900:\s*var\(--color-5\)/);
+      expect(lightSection).toMatch(/--color-zinc-900:\s*var\(--color-3\)/);
       expect(lightSection).not.toMatch(/--color-zinc-900:\s*var\(--color-4\)/);
     });
 
@@ -93,10 +93,10 @@ describe('Light Theme Contrast & Style Integrity', () => {
       const whiteRgb: [number, number, number] = [255, 255, 255];
       const pageBgRgb: [number, number, number] = hexToRgb('#f8f8fa');
 
-      // Zinc-900 (#161616)
-      const zinc900Rgb = hexToRgb('#161616');
+      // Zinc-900 (#152E40)
+      const zinc900Rgb = hexToRgb('#152E40');
       const contrast900 = getContrastRatio(zinc900Rgb, whiteRgb);
-      expect(contrast900).toBeGreaterThan(15.0); // AAA requires 7.0:1
+      expect(contrast900).toBeGreaterThan(14.0); // AAA requires 7.0:1
 
       // Zinc-800 (#26262b)
       const zinc800Rgb = hexToRgb('#26262b');
@@ -114,7 +114,7 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(contrast600).toBeGreaterThan(5.5); // AA requires 4.5:1
 
       // Contrast against off-white page background (#f8f8fa)
-      expect(getContrastRatio(zinc900Rgb, pageBgRgb)).toBeGreaterThan(14.0);
+      expect(getContrastRatio(zinc900Rgb, pageBgRgb)).toBeGreaterThan(13.0); // Far exceeds AAA 7.0:1
       expect(getContrastRatio(zinc700Rgb, pageBgRgb)).toBeGreaterThan(6.5);
     });
 
@@ -190,7 +190,7 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(outBtn?.className).toContain('dark:text-zinc-300');
     });
 
-    it('Header renders adaptive theme styling across header container, crimson wave accent, brand typography, action controls, and target site bar', () => {
+    it('Header renders adaptive theme styling across header container, brand typography, action controls, and target site bar', () => {
       const div = renderComponent(
         <Header
           tabUrl="https://example.com"
@@ -208,14 +208,13 @@ describe('Light Theme Contrast & Style Integrity', () => {
       // 1. Header container has adaptive light/dark backgrounds and borders
       const headerEl = div.querySelector('header');
       expect(headerEl?.className).toContain('bg-white');
-      expect(headerEl?.className).toContain('dark:bg-[#161616]');
+      expect(headerEl?.className).toContain('dark:bg-zinc-950');
       expect(headerEl?.className).toContain('border-zinc-200');
       expect(headerEl?.className).toContain('dark:border-zinc-800');
 
-      // 2. Crimson wave accent is hidden in light mode and visible in dark mode
+      // 2. Decorative gradient overlay is removed
       const waveEl = div.querySelector('.pointer-events-none.absolute');
-      expect(waveEl?.className).toContain('opacity-0');
-      expect(waveEl?.className).toContain('dark:opacity-80');
+      expect(waveEl).toBeNull();
 
       // 3. Brand title and subtitle have crisp dark text in light mode
       const titleEl = div.querySelector('h1');
@@ -371,8 +370,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       const buttons = div.querySelectorAll('button');
       // Overview (active)
-      expect(buttons[0]?.className).toContain('text-orange-600');
-      expect(buttons[0]?.className).toContain('dark:text-orange-400');
+      expect(buttons[0]?.className).toContain('text-[#152E40]');
+      expect(buttons[0]?.className).toContain('dark:text-[#CEFF52]');
       // Issues (inactive with badge)
       expect(buttons[1]?.className).toContain('text-zinc-600');
       expect(buttons[1]?.className).toContain('dark:text-zinc-400');
@@ -516,15 +515,49 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(scoreDenominator?.className).toContain('text-zinc-500');
       expect(scoreDenominator?.className).toContain('dark:text-zinc-400');
 
-      // Category/ruleId subtext has legible contrast
-      const ruleText = div.querySelector('span.truncate.text-\\[11px\\]');
-      expect(ruleText?.className).toContain('text-zinc-600');
-      expect(ruleText?.className).toContain('dark:text-zinc-400');
+      // Issue description has legible contrast
+      const issueDesc = div.querySelector('p.text-xs');
+      expect(issueDesc?.className).toContain('text-zinc-500');
+      expect(issueDesc?.className).toContain('dark:text-zinc-400');
 
-      // Expanded finding panel has crisp top border
-      const expandedPanel = div.querySelector('.border-t.p-4');
-      expect(expandedPanel?.className).toContain('border-zinc-200');
-      expect(expandedPanel?.className).toContain('dark:border-zinc-800');
+      // Individual issue has dedicated copy icon button
+      const copyIssueBtn = div.querySelector('button[aria-label="Copy JSON for issue csp-missing"]');
+      expect(copyIssueBtn).not.toBeNull();
+    });
+
+    it('FindingsExplorer transitions to dedicated detail view when an issue is selected', () => {
+      const mockFindings = [
+        {
+          id: 'test-finding-1',
+          ruleId: 'csp-missing',
+          category: 'security',
+          severity: 'critical' as const,
+          status: 'failed' as const,
+          title: 'Content Security Policy (CSP) Not Enforced',
+          description: 'No Content-Security-Policy response header was observed.',
+          recommendation: 'Configure a strict CSP.',
+          evidence: [{ label: 'Header', value: 'missing', source: 'headers', observedAt: Date.now() }],
+          source: 'securityHeaders',
+        },
+      ];
+
+      const div = renderComponent(
+        <FindingsExplorer
+          findings={mockFindings}
+          activeSeverityFilter="all"
+          activeCategoryFilter="security"
+          onSelectSeverityFilter={() => {}}
+          initialSelectedFindingId="test-finding-1"
+        />,
+      );
+
+      // Back to Issues button is rendered
+      const backBtn = div.querySelector('button[title*="Return to issues"], button[title*="Back to issues"]');
+      expect(backBtn).not.toBeNull();
+
+      // Rule ID badge is displayed
+      expect(div.textContent).toContain('rule: csp-missing');
+      expect(div.textContent).toContain('Recommended Remediation');
     });
 
     it('FindingDetailInspector renders high-contrast evidence tables and action controls', () => {
@@ -556,10 +589,15 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(tbody?.className).toContain('divide-zinc-200/80');
       expect(tbody?.className).toContain('dark:divide-zinc-800/60');
 
-      // Collapse button has high-contrast text
-      const collapseBtn = div.querySelector('button');
+      // Action buttons have high-contrast text and borders
+      const buttons = Array.from(div.querySelectorAll('button'));
+      const collapseBtn = buttons.find((b) => b.textContent?.includes('Collapse'));
       expect(collapseBtn?.className).toContain('text-zinc-600');
       expect(collapseBtn?.className).toContain('dark:text-zinc-400');
+
+      const copyBtn = buttons.find((b) => b.textContent?.includes('Copy'));
+      expect(copyBtn?.className).toContain('text-zinc-700');
+      expect(copyBtn?.className).toContain('dark:text-zinc-300');
     });
 
     it('ResourcesView renders crisp filter tabs and high-contrast resource rows', () => {
@@ -638,11 +676,11 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(rootEl.className).toContain('text-zinc-900');
       expect(rootEl.className).toContain('dark:text-zinc-100');
 
-      // Export buttons are rendered
+      // Export and copy buttons are rendered
       const buttons = div.querySelectorAll('button');
-      expect(buttons.length).toBe(2);
-      expect(buttons[0]?.className).toContain('bg-orange-500');
-      expect(buttons[1]?.className).toContain('bg-zinc-100');
+      expect(buttons.length).toBe(3);
+      expect(buttons[1]?.className).toContain('bg-[#CEFF52]');
+      expect(buttons[2]?.className).toContain('bg-zinc-100');
     });
 
     it('AboutView renders clean author card and brand identity for LKML', () => {
@@ -679,8 +717,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       // 5th tab is About and active
       expect(buttons[4]?.textContent).toContain('About');
-      expect(buttons[4]?.className).toContain('text-orange-600');
-      expect(buttons[4]?.className).toContain('dark:text-orange-400');
+      expect(buttons[4]?.className).toContain('text-[#152E40]');
+      expect(buttons[4]?.className).toContain('dark:text-[#CEFF52]');
     });
   });
 });

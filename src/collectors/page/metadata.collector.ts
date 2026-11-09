@@ -26,6 +26,14 @@ export class MetadataCollector implements PageCollector<SeoData> {
     const description = rawDesc ? redactSecretsFromString(rawDesc.trim()) : undefined;
     const descriptionLength = description ? description.length : 0;
 
+    // Keywords
+    const keywordsMeta = doc.querySelector('meta[name="keywords" i]');
+    const rawKeywords = keywordsMeta?.getAttribute('content') || undefined;
+    const keywords = rawKeywords ? redactSecretsFromString(rawKeywords.trim()) : undefined;
+    const keywordsList = keywords
+      ? keywords.split(',').map((k) => k.trim()).filter(Boolean)
+      : undefined;
+
     // Meta Robots
     const robotsMeta = doc.querySelector('meta[name="robots" i], meta[name="googlebot" i]');
     const metaRobots = robotsMeta?.getAttribute('content') || undefined;
@@ -35,6 +43,25 @@ export class MetadataCollector implements PageCollector<SeoData> {
     if (robotsContent.includes('nofollow')) metaRobotsDirectives.push('nofollow');
     if (robotsContent.includes('noarchive')) metaRobotsDirectives.push('noarchive');
     if (robotsContent.includes('nosnippet')) metaRobotsDirectives.push('nosnippet');
+
+    // Author and Published Date (E-E-A-T & AEO attribution)
+    const authorMeta = doc.querySelector('meta[name="author" i], meta[property="article:author" i], meta[name="creator" i]');
+    const author = authorMeta?.getAttribute('content')?.trim() ? redactSecretsFromString(authorMeta.getAttribute('content')!.trim()) : undefined;
+
+    const publishedMeta = doc.querySelector('meta[property="article:published_time" i], meta[name="publish-date" i]');
+    const articlePublishedTime = publishedMeta?.getAttribute('content')?.trim() || undefined;
+
+    const modifiedMeta = doc.querySelector('meta[property="article:modified_time" i], meta[name="revised" i]');
+    const articleModifiedTime = modifiedMeta?.getAttribute('content')?.trim() || undefined;
+
+    // AI crawler / scraper directives (noai, noimageai)
+    const noAiMeta = doc.querySelector('meta[name="robots" i][content*="noai" i], meta[name="google-extended" i][content*="none" i], meta[name="gptbot" i][content*="none" i]');
+    const hasNoAiDirective = !!noAiMeta || robotsContent.includes('noai') || robotsContent.includes('noimageai');
+
+    // LLMs.txt Discovery (link[rel="llms-txt"], link[href*="llms.txt"], a[href*="llms.txt"])
+    const llmsLink = doc.querySelector('link[rel="llms-txt" i], link[href*="llms.txt" i], a[href*="llms.txt" i]');
+    const hasLlmsTxtLink = !!llmsLink;
+    const llmsTxtUrl = llmsLink?.getAttribute('href') || undefined;
 
     // Canonical
     const canonicalEl = doc.querySelector('link[rel="canonical" i]');
@@ -101,6 +128,8 @@ export class MetadataCollector implements PageCollector<SeoData> {
       titleLength,
       description,
       descriptionLength,
+      keywords,
+      keywordsList,
       metaRobots,
       metaRobotsDirectives: metaRobotsDirectives.length > 0 ? metaRobotsDirectives : undefined,
       canonicalUrl,
@@ -109,11 +138,18 @@ export class MetadataCollector implements PageCollector<SeoData> {
       openGraph,
       twitterCards,
       structuredDataCount,
+      author,
+      articlePublishedTime,
+      articleModifiedTime,
+      hasNoAiDirective,
+      hasLlmsTxtLink,
+      llmsTxtUrl,
     };
 
     let collectedCount = 0;
     if (title) collectedCount++;
     if (description) collectedCount++;
+    if (keywords) collectedCount++;
     if (metaRobots) collectedCount++;
     if (canonicalUrl) collectedCount++;
     if (hreflangTags.length > 0) collectedCount++;

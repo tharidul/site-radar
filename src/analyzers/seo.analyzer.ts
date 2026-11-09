@@ -243,6 +243,154 @@ export class SeoAnalyzer implements Analyzer {
       );
     }
 
+    // 7. AEO: FAQ & Q&A Schema Markup (aeo-faq-schema)
+    const schemas = sdRes.data?.schemas || [];
+    const faqOrQASchemas = schemas.filter((s) => {
+      const t = (s.schemaType || '').toLowerCase();
+      return t.includes('faqpage') || t.includes('qapage') || t.includes('howto');
+    });
+
+    if (faqOrQASchemas.length > 0) {
+      findings.push(
+        new FindingBuilder('aeo-faq-schema')
+          .setStatus('passed')
+          .setConfidence(1.0)
+          .addEvidence('Schema Types', faqOrQASchemas.map((s) => s.schemaType || s.type).join(', '))
+          .addEvidence('Valid Schemas', faqOrQASchemas.filter((s) => s.valid).length)
+          .build(),
+      );
+    } else if (schemas.length > 0) {
+      findings.push(
+        new FindingBuilder('aeo-faq-schema')
+          .setStatus('info')
+          .setSeverity('low')
+          .setConfidence(0.9)
+          .addEvidence('Existing Schemas', schemas.map((s) => s.schemaType || s.type).join(', '))
+          .setExpectedBehavior('Add FAQPage or QAPage schema markup alongside existing schemas.')
+          .setExplanation('While general structured data exists, explicit FAQPage/QAPage schemas provide direct question-answer pairs for AI engine citation.')
+          .setRecommendation('Add Schema.org FAQPage JSON-LD markup to provide direct answers for AI citations.')
+          .build(),
+      );
+    } else {
+      findings.push(
+        new FindingBuilder('aeo-faq-schema')
+          .setStatus('warning')
+          .setSeverity('low')
+          .setConfidence(0.85)
+          .addEvidence('Q&A Schemas', 'None declared')
+          .setExpectedBehavior('Include FAQPage or HowTo JSON-LD schema for LLM direct-answer citation.')
+          .setExplanation('AI search engines (Perplexity, ChatGPT, Gemini) prioritize pages declaring structured FAQ/Q&A data for rich answer cards.')
+          .setRecommendation('Add Schema.org FAQPage markup with top user questions and concise answers.')
+          .build(),
+      );
+    }
+
+    // 8. AEO: LLMs.txt Context Standard (aeo-llms-txt)
+    const hasLlms = Boolean(seoData?.hasLlmsTxtLink);
+    if (hasLlms) {
+      findings.push(
+        new FindingBuilder('aeo-llms-txt')
+          .setStatus('passed')
+          .setConfidence(1.0)
+          .addEvidence('LLMs.txt Declared', true)
+          .addEvidence('Target Link', seoData?.llmsTxtUrl || '/llms.txt')
+          .build(),
+      );
+    } else {
+      findings.push(
+        new FindingBuilder('aeo-llms-txt')
+          .setStatus('info')
+          .setSeverity('info')
+          .setConfidence(0.85)
+          .addEvidence('Standard', '/llms.txt standard manifest not declared in document head')
+          .setExpectedBehavior('Provide an /llms.txt markdown standard file at domain root or link rel="llms-txt".')
+          .setExplanation('The /llms.txt standard helps LLM agents and AI search tools discover clean markdown representations of key site content.')
+          .setRecommendation('Publish an /llms.txt file at your website root with concise summaries and links to documentation.')
+          .build(),
+      );
+    }
+
+    // 9. AEO: AI Model & Crawler Access (aeo-ai-crawlers)
+    const hasNoAi = Boolean(seoData?.hasNoAiDirective);
+    const robotsDirectives = seoData?.metaRobotsDirectives;
+    const isNoIndex = Array.isArray(robotsDirectives)
+      ? robotsDirectives.includes('noindex')
+      : Boolean(robotsDirectives?.noindex);
+
+    if (hasNoAi) {
+      findings.push(
+        new FindingBuilder('aeo-ai-crawlers')
+          .setStatus('warning')
+          .setSeverity('medium')
+          .setConfidence(1.0)
+          .addEvidence('AI Directive', 'noai or blocking crawler directive declared')
+          .setExpectedBehavior('Page allows AI search crawlers unless content is intentionally restricted.')
+          .setExplanation('The page includes a "noai" or AI-crawler blocking directive, preventing ChatGPT, Gemini, and Claude from referencing this page.')
+          .setRecommendation('Remove "noai" or crawler exclusions if you want content featured in AI summaries.')
+          .build(),
+      );
+    } else if (isNoIndex) {
+      findings.push(
+        new FindingBuilder('aeo-ai-crawlers')
+          .setStatus('info')
+          .setSeverity('low')
+          .setConfidence(0.9)
+          .addEvidence('Robots Directive', 'noindex')
+          .setExplanation('Page declares noindex, which implicitly blocks search retrieval and AI citation engines.')
+          .build(),
+      );
+    } else {
+      findings.push(
+        new FindingBuilder('aeo-ai-crawlers')
+          .setStatus('passed')
+          .setConfidence(1.0)
+          .addEvidence('AI Crawlers Allowed', true)
+          .addEvidence('Retrieval Status', 'Open to LLM indexers (GPTBot, ClaudeBot, Google-Extended)')
+          .build(),
+      );
+    }
+
+    // 10. AEO: Conversational Question Headings (aeo-question-headings)
+    if (domRes.data?.headingHierarchy) {
+      const headings = domRes.data.headingHierarchy;
+      const questionRegex = /^(what|how|why|who|where|when|can|is|does|are|which|top|best|should)\b/i;
+      const questionHeadings = headings.filter(
+        (h) => questionRegex.test(h.text.trim()) || h.text.trim().endsWith('?')
+      );
+
+      if (questionHeadings.length >= 2) {
+        findings.push(
+          new FindingBuilder('aeo-question-headings')
+            .setStatus('passed')
+            .setConfidence(1.0)
+            .addEvidence('Question Headings Count', questionHeadings.length)
+            .addEvidence('Sample Queries', questionHeadings.slice(0, 3).map((h) => `H${h.level}: ${h.text}`).join(' • '))
+            .build(),
+        );
+      } else if (questionHeadings.length === 1 && questionHeadings[0]) {
+        findings.push(
+          new FindingBuilder('aeo-question-headings')
+            .setStatus('passed')
+            .setConfidence(0.9)
+            .addEvidence('Question Headings Count', 1)
+            .addEvidence('Heading', questionHeadings[0].text)
+            .build(),
+        );
+      } else {
+        findings.push(
+          new FindingBuilder('aeo-question-headings')
+            .setStatus('info')
+            .setSeverity('low')
+            .setConfidence(0.85)
+            .addEvidence('Question Headings Found', 0)
+            .setExpectedBehavior('Include 1–2 natural query headings (e.g. "What is...", "How to...") to target AI conversational search.')
+            .setExplanation('Natural question-formatted headings help AI Overviews and answer engines pinpoint direct extractable snippets.')
+            .setRecommendation('Format relevant subheadings as conversational questions matching common user search queries.')
+            .build(),
+        );
+      }
+    }
+
     return findings;
   }
 }

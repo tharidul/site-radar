@@ -5,9 +5,9 @@
  */
 
 import React, { useState } from 'react';
-import { FileCode, FileText, Check } from 'lucide-react';
+import { FileCode, FileText, Check, Copy } from 'lucide-react';
 import type { WebsiteInspection } from '@/types/inspection';
-import { downloadJsonReport, downloadHtmlReport } from '../../../src/export/download';
+import { downloadJsonReport, downloadHtmlReport, copyJsonReport } from '../../../src/export/download';
 import { Button } from './Button';
 
 interface ExportBarProps {
@@ -16,6 +16,15 @@ interface ExportBarProps {
 
 export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
   const [downloadedType, setDownloadedType] = useState<'json' | 'html' | null>(null);
+  const [isCopiedJson, setIsCopiedJson] = useState(false);
+
+  const handleCopyJson = async () => {
+    const success = await copyJsonReport(inspection, { includeRawModules: false, pretty: true });
+    if (success) {
+      setIsCopiedJson(true);
+      setTimeout(() => setIsCopiedJson(false), 2000);
+    }
+  };
 
   const handleExportJson = () => {
     downloadJsonReport(inspection, { includeRawModules: false, pretty: true });
@@ -36,11 +45,29 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           Export Report
         </span>
         <span className="text-xs text-zinc-500 dark:text-zinc-400">
-          Client-side download
+          Copy or download
         </span>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-3 gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          size="md"
+          onClick={handleCopyJson}
+          className="w-full py-2.5 font-semibold text-zinc-800 dark:text-zinc-200"
+          title="Copy sanitized JSON audit report directly to clipboard"
+          leftIcon={
+            isCopiedJson ? (
+              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+            ) : (
+              <Copy className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+            )
+          }
+        >
+          {isCopiedJson ? 'Copied!' : 'Copy JSON'}
+        </Button>
+
         <Button
           type="button"
           variant="outline"
@@ -50,13 +77,13 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           title="Export sanitized, schema-compliant JSON report"
           leftIcon={
             downloadedType === 'json' ? (
-              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             ) : (
-              <FileCode className="w-4 h-4 text-orange-500" />
+              <FileCode className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             )
           }
         >
-          {downloadedType === 'json' ? 'JSON Exported' : 'Export JSON'}
+          {downloadedType === 'json' ? 'Exported' : 'Export JSON'}
         </Button>
 
         <Button
@@ -68,13 +95,13 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           title="Export self-contained standalone HTML report with zero external CDN calls"
           leftIcon={
             downloadedType === 'html' ? (
-              <Check className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             ) : (
-              <FileText className="w-4 h-4 text-orange-500" />
+              <FileText className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
             )
           }
         >
-          {downloadedType === 'html' ? 'HTML Exported' : 'Export HTML'}
+          {downloadedType === 'html' ? 'Exported' : 'Export HTML'}
         </Button>
       </div>
     </div>
