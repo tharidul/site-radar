@@ -347,6 +347,14 @@ export interface FormsData {
   unlabeledInputSamples?: string[];
 }
 
+export interface ResourceCategoryMetrics {
+  count: number;
+  wireBytes: number;
+  decodedBytes: number;
+  cacheHitCount: number;
+  opaqueCount: number;
+}
+
 export interface PerformanceData {
   navigationTiming?: {
     dnsLookupMs: number;
@@ -366,12 +374,28 @@ export interface PerformanceData {
     inpMs?: number;
   };
   resourceCount: number;
+  // Backward compatibility fields
   transferSizeApprox?: number;
   decodedSizeApprox?: number;
+  // Enhanced byte metrics
+  wireTransferBytes?: number;
+  decodedBytes?: number;
+  // Cache & Opaque tracking
+  cacheHitCount?: number;
+  cacheHitBytes?: number;
+  opaqueResourceCount?: number;
+  opaqueResourceOrigins?: string[];
   resourceTypes?: Record<string, number>;
-  scrolledTransferSizeApprox?: number;
+  categoryBreakdown?: Record<string, ResourceCategoryMetrics>;
+  // Scrolled full-page metrics
   scrolledResourceCount?: number;
+  scrolledTransferSizeApprox?: number;
   scrolledDecodedSizeApprox?: number;
+  scrolledWireTransferBytes?: number;
+  scrolledDecodedBytes?: number;
+  scrolledCacheHitCount?: number;
+  scrolledCacheHitBytes?: number;
+  scrolledOpaqueResourceCount?: number;
   isInfiniteScrollDetected?: boolean;
 }
 

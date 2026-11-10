@@ -295,8 +295,8 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       --info-bg: rgba(21, 46, 64, 0.3);
       --pass: #CEFF52;
       --pass-bg: rgba(206, 255, 82, 0.15);
-      --font-sans: "Inter", sans-serif;
-      --font-mono: ui-monospace, monospace;
+      --font-sans: "Roboto", sans-serif;
+      --font-mono: "Roboto", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {

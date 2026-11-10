@@ -117,6 +117,11 @@ export interface MessageProtocol {
       scrolledResourceCount?: number;
       scrolledTransferSizeApprox?: number;
       scrolledDecodedSizeApprox?: number;
+      scrolledWireTransferBytes?: number;
+      scrolledDecodedBytes?: number;
+      scrolledCacheHitCount?: number;
+      scrolledCacheHitBytes?: number;
+      scrolledOpaqueResourceCount?: number;
       isInfiniteScroll?: boolean;
       error?: string;
     };

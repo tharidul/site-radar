@@ -425,9 +425,14 @@ export class InspectionOrchestrator {
             const perfModule = inspection.modules['performance'];
             if (perfModule && perfModule.data) {
               const perfData = perfModule.data as PerformanceData;
-              perfData.scrolledTransferSizeApprox = scrollRes.scrolledTransferSizeApprox;
               perfData.scrolledResourceCount = scrollRes.scrolledResourceCount;
+              perfData.scrolledTransferSizeApprox = scrollRes.scrolledTransferSizeApprox;
               perfData.scrolledDecodedSizeApprox = scrollRes.scrolledDecodedSizeApprox;
+              perfData.scrolledWireTransferBytes = scrollRes.scrolledWireTransferBytes;
+              perfData.scrolledDecodedBytes = scrollRes.scrolledDecodedBytes;
+              perfData.scrolledCacheHitCount = scrollRes.scrolledCacheHitCount;
+              perfData.scrolledCacheHitBytes = scrollRes.scrolledCacheHitBytes;
+              perfData.scrolledOpaqueResourceCount = scrollRes.scrolledOpaqueResourceCount;
               perfData.isInfiniteScrollDetected = scrollRes.isInfiniteScroll;
             }
           }

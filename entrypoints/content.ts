@@ -3,6 +3,7 @@ import { defineContentScript } from 'wxt/utils/define-content-script';
 import { MESSAGE_CHANNELS } from '../src/types/messaging';
 import { messageBus } from '../src/messaging/bus';
 import { PAGE_COLLECTORS } from '../src/collectors/page';
+import { aggregateResourceMetrics } from '../src/collectors/page/resource-aggregator';
 import { redactSecrets } from '../src/security/secret-redactor';
 
 function smoothScrollTo(
@@ -181,37 +182,21 @@ export default defineContentScript({
             await smoothScrollTo(origY, origX, scrollUpDuration);
           }
 
-          let scrolledTransferSize = 0;
-          let scrolledDecodedSize = 0;
-          const resources = performance.getEntriesByType('resource');
-
-          resources.forEach((entry) => {
-            const res = entry as PerformanceResourceTiming;
-            if (res.transferSize) {
-              scrolledTransferSize += res.transferSize;
-            } else if (res.encodedBodySize) {
-              scrolledTransferSize += res.encodedBodySize;
-            }
-            if (res.decodedBodySize) {
-              scrolledDecodedSize += res.decodedBodySize;
-            }
-          });
-
+          const resources = (performance.getEntriesByType('resource') || []) as PerformanceResourceTiming[];
           const navEntries = performance.getEntriesByType('navigation');
-          if (navEntries.length > 0) {
-            const nav = navEntries[0] as PerformanceNavigationTiming;
-            if (nav.transferSize) {
-              scrolledTransferSize += nav.transferSize;
-            } else if (nav.encodedBodySize) {
-              scrolledTransferSize += nav.encodedBodySize;
-            }
-          }
+          const navEntry = navEntries.length > 0 ? (navEntries[0] as PerformanceNavigationTiming) : undefined;
+          const aggregated = aggregateResourceMetrics(resources, navEntry, window.location.href);
 
           return {
             success: true,
-            scrolledResourceCount: resources.length,
-            scrolledTransferSizeApprox: scrolledTransferSize,
-            scrolledDecodedSizeApprox: scrolledDecodedSize,
+            scrolledResourceCount: aggregated.totalRequests,
+            scrolledTransferSizeApprox: aggregated.wireTransferBytes,
+            scrolledDecodedSizeApprox: aggregated.decodedBytes,
+            scrolledWireTransferBytes: aggregated.wireTransferBytes,
+            scrolledDecodedBytes: aggregated.decodedBytes,
+            scrolledCacheHitCount: aggregated.cacheHitCount,
+            scrolledCacheHitBytes: aggregated.cacheHitBytes,
+            scrolledOpaqueResourceCount: aggregated.opaqueResourceCount,
             isInfiniteScroll,
           };
         } catch (err: any) {

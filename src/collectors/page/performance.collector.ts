@@ -1,6 +1,7 @@
 
 import type { PerformanceData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
+import { aggregateResourceMetrics, type AggregatedMetrics } from './resource-aggregator';
 
 export class PerformanceCollector implements PageCollector<PerformanceData> {
   readonly id = 'performance';
@@ -13,16 +14,25 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
     let navigationTiming: PerformanceData['navigationTiming'] = undefined;
     let paintTiming: PerformanceData['paintTiming'] = undefined;
     let webVitals: PerformanceData['webVitals'] = undefined;
-    let resourceCount = 0;
-    let transferSizeApprox = 0;
-    let decodedSizeApprox = 0;
-    const resourceTypes: Record<string, number> = {};
+    let aggregated: AggregatedMetrics = {
+      totalRequests: 0,
+      wireTransferBytes: 0,
+      decodedBytes: 0,
+      cacheHitCount: 0,
+      cacheHitBytes: 0,
+      opaqueResourceCount: 0,
+      opaqueResourceOrigins: [],
+      resourceTypes: {},
+      categoryBreakdown: {},
+    };
 
     if (perf && typeof perf.getEntriesByType === 'function') {
       try {
+        let navEntry: PerformanceNavigationTiming | undefined;
         const navEntries = perf.getEntriesByType('navigation');
         if (navEntries.length > 0) {
           const nav = navEntries[0] as PerformanceNavigationTiming;
+          navEntry = nav;
           const dnsLookup = Math.max(0, Math.round(nav.domainLookupEnd - nav.domainLookupStart));
           const tcpConnect = Math.max(0, Math.round(nav.connectEnd - nav.connectStart));
           const ttfb = Math.max(0, Math.round(nav.responseStart - nav.requestStart));
@@ -36,12 +46,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
             domLoadMs: domLoad,
             fullLoadMs: fullLoad,
           };
-
-          if (nav.transferSize) {
-            transferSizeApprox += nav.transferSize;
-          } else if (nav.encodedBodySize) {
-            transferSizeApprox += nav.encodedBodySize;
-          }
         } else if (perf.timing) {
           const t = perf.timing;
           const start = t.navigationStart || t.fetchStart;
@@ -66,21 +70,12 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
           });
         }
 
-        const resources = perf.getEntriesByType('resource');
-        resourceCount = resources.length;
-        resources.forEach((entry) => {
-          const res = entry as PerformanceResourceTiming;
-          const type = res.initiatorType || 'other';
-          resourceTypes[type] = (resourceTypes[type] || 0) + 1;
-          if (res.transferSize) {
-            transferSizeApprox += res.transferSize;
-          } else if (res.encodedBodySize) {
-            transferSizeApprox += res.encodedBodySize;
-          }
-          if (res.decodedBodySize) {
-            decodedSizeApprox += res.decodedBodySize;
-          }
-        });
+        const resources = (perf.getEntriesByType('resource') || []) as PerformanceResourceTiming[];
+        aggregated = aggregateResourceMetrics(
+          resources,
+          navEntry,
+          context.url || win?.location?.href,
+        );
 
         try {
           let lcpEntries: any[] = [];
@@ -175,15 +170,22 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
       navigationTiming,
       paintTiming,
       webVitals,
-      resourceCount,
-      transferSizeApprox: transferSizeApprox > 0 ? transferSizeApprox : undefined,
-      decodedSizeApprox: decodedSizeApprox > 0 ? decodedSizeApprox : undefined,
-      resourceTypes: Object.keys(resourceTypes).length > 0 ? resourceTypes : undefined,
+      resourceCount: aggregated.totalRequests,
+      transferSizeApprox: aggregated.wireTransferBytes,
+      decodedSizeApprox: aggregated.decodedBytes,
+      wireTransferBytes: aggregated.wireTransferBytes,
+      decodedBytes: aggregated.decodedBytes,
+      cacheHitCount: aggregated.cacheHitCount,
+      cacheHitBytes: aggregated.cacheHitBytes,
+      opaqueResourceCount: aggregated.opaqueResourceCount,
+      opaqueResourceOrigins: aggregated.opaqueResourceOrigins,
+      resourceTypes: aggregated.resourceTypes,
+      categoryBreakdown: aggregated.categoryBreakdown,
     };
 
     const hasNav = navigationTiming !== undefined;
     const hasPaint = paintTiming !== undefined;
-    const hasResources = resourceCount > 0;
+    const hasResources = aggregated.totalRequests > 0;
 
     let collectedCount = 0;
     if (hasNav) collectedCount++;
