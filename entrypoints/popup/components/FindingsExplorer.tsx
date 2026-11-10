@@ -355,7 +355,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
             {selectedFinding.category && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                 <FindingCategoryIcon className="w-3 h-3" />
                 <span>{selectedFinding.category}</span>
               </span>
@@ -366,7 +366,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               selectedFinding.status !== 'not-applicable' &&
               selectedFinding.severity && (
                 <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono uppercase tracking-wider ${
+                  className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-bold font-mono uppercase tracking-wider ${
                     selectedFinding.severity === 'critical'
                       ? 'bg-rose-500/15 text-[#dc2626] dark:text-[#f87171] border border-rose-500/30'
                       : selectedFinding.severity === 'high'
@@ -395,11 +395,11 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   {selectedFinding.title}
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-[10px] font-mono font-medium text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80">
+                  <span className="text-2xs font-mono font-medium text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80">
                     rule: {selectedFinding.ruleId}
                   </span>
                   {selectedFinding.source && (
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                    <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                       source: {selectedFinding.source}
                     </span>
                   )}
@@ -472,7 +472,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                 <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
                   {activeCategoryFilter.toUpperCase()} Audit
                 </h3>
-                <p className="text-[11px] text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   <span className="tabular-nums">{currentCategoryScore.totalChecks}</span> checks evaluated · <span className="tabular-nums">{currentCategoryScore.coveragePercent ?? 100}</span>% coverage
                 </p>
               </div>
@@ -482,11 +482,11 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               <span className="text-xl font-black text-zinc-900 dark:text-zinc-100 tabular-nums">
                 {Math.round(currentCategoryScore.score)}
               </span>
-              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">/100</span>
+              <span className="text-xs font-semibold text-zinc-500 dark:text-zinc-400">/100</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
+          <div className="flex items-center gap-1.5 flex-wrap text-xs">
             {currentCategoryScore.failed > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
                 <X className="w-3 h-3" />
@@ -515,7 +515,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </div>
 
           {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
-            <div className="text-[11px] rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
+            <div className="text-xs rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>
                 All evaluated checks passed cleanly.{(currentCategoryScore.unavailable ?? 0) > 0 ? ' Network headers require background inspection.' : ''}
@@ -565,7 +565,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             return (
               <React.Fragment key={finding.id}>
                 {isFirstNonIssue && (
-                  <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                     Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
                   </div>
                 )}
@@ -589,7 +589,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                           finding.status !== 'not-applicable' &&
                           finding.severity && (
                             <span
-                              className={`text-[10px] font-bold font-mono uppercase tracking-wider shrink-0 ${
+                              className={`text-2xs font-bold font-mono uppercase tracking-wider shrink-0 ${
                                 finding.severity === 'critical'
                                   ? 'text-[#dc2626] dark:text-[#f87171]'
                                   : finding.severity === 'high'

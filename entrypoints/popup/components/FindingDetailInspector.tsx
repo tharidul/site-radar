@@ -52,7 +52,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
       {finding.expectedBehavior && (
         <div className="space-y-0.5">
-          <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
+          <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
             Expected Behavior
           </span>
           <p className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed">
@@ -63,7 +63,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
       {finding.explanation && (
         <div className="space-y-0.5">
-          <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
+          <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
             Technical Explanation
           </span>
           <p className="text-xs text-zinc-800 dark:text-zinc-200 leading-relaxed">
@@ -83,13 +83,13 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
       {finding.evidence && finding.evidence.length > 0 && (
         <div className="space-y-1.5 pt-1">
-          <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
+          <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
             Observed Evidence (Sanitized)
           </span>
           <div className="overflow-x-auto border-t border-b border-zinc-200/90 dark:border-zinc-800">
             <table className="w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-zinc-200/70 dark:border-zinc-800 text-[11px] text-zinc-500 dark:text-zinc-400">
+                <tr className="border-b border-zinc-200/70 dark:border-zinc-800 text-2xs uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                   <th className="py-1.5 pr-3 font-semibold">Label</th>
                   <th className="py-1.5 pr-3 font-semibold">Value</th>
                   <th className="py-1.5 font-semibold">Source</th>
@@ -101,10 +101,10 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
                     <td className="py-1.5 pr-3 font-medium text-zinc-800 dark:text-zinc-300 align-top whitespace-nowrap">
                       {ev.label}
                     </td>
-                    <td className="py-1.5 pr-3 font-mono text-[11px] text-orange-600 dark:text-orange-400 break-all whitespace-pre-wrap">
+                    <td className="py-1.5 pr-3 font-mono text-xs text-orange-600 dark:text-orange-400 break-all whitespace-pre-wrap">
                       {formatEvidenceValue(ev.value)}
                     </td>
-                    <td className="py-1.5 text-zinc-500 dark:text-zinc-400 text-[11px] align-top whitespace-nowrap">
+                    <td className="py-1.5 text-zinc-500 dark:text-zinc-400 text-xs align-top whitespace-nowrap">
                       {ev.source || 'DOM'}
                     </td>
                   </tr>
@@ -117,7 +117,7 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
       {finding.references && finding.references.length > 0 && (
         <div className="space-y-1 pt-1">
-          <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
+          <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 block">
             Documentation References
           </span>
           <ul className="space-y-0.5 text-xs">

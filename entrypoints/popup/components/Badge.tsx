@@ -84,7 +84,7 @@ export const Badge: React.FC<BadgeProps> = ({
     }
   }
 
-  const sizeClasses = size === 'xs' ? 'text-[10px] px-1.5 py-0.5 rounded-md' : 'text-xs px-2 py-0.5 rounded-md';
+  const sizeClasses = size === 'xs' ? 'text-2xs px-1.5 py-0.5 rounded-md' : 'text-xs px-2 py-0.5 rounded-md';
 
   return (
     <span

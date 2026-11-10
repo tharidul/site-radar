@@ -107,7 +107,7 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
             direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           } ${align === 'right' ? 'right-0' : 'left-0'}`}
         >
-          <div className="px-2.5 py-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+          <div className="px-2.5 py-1 text-2xs font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
             Report Actions
           </div>
 
@@ -123,12 +123,12 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
                 <span className="font-semibold text-zinc-900 dark:text-zinc-100 block">
                   Copy JSON
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   Direct to clipboard
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
+            <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
               JSON
             </span>
           </button>
@@ -145,12 +145,12 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
                 <span className="font-semibold text-zinc-900 dark:text-zinc-100 block">
                   Export JSON
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   Full inspection data
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
+            <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
               .json
             </span>
           </button>
@@ -167,12 +167,12 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
                 <span className="font-semibold text-zinc-900 dark:text-zinc-100 block">
                   Export HTML
                 </span>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   Standalone executive report
                 </span>
               </div>
             </div>
-            <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
+            <span className="text-2xs font-mono px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400 shrink-0">
               .html
             </span>
           </button>

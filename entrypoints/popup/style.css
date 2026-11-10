@@ -10,6 +10,38 @@
   --color-5: #080b0e;
   --brand-dark: #152E40;
   --brand-lime: #CEFF52;
+
+  /* ==========================================================================
+     SiteRadar Unified Typography Scale
+     Design tokens for font sizes and line heights across the extension UI.
+     Zero hard-coded arbitrary pixel values allowed in components.
+     ========================================================================== */
+  --font-size-2xs: 10px;      /* Micro: pills, compact badges, tag chips, shortcuts */
+  --line-height-2xs: 14px;
+
+  --font-size-xs: 12px;       /* UI Standard / Compact: buttons, inputs, labels, body, tables, captions */
+  --line-height-xs: 16px;
+
+  --font-size-sm: 14px;       /* Subheadings: card titles, section headers, prominent labels */
+  --line-height-sm: 20px;
+
+  --font-size-base: 15px;     /* Content: readable copy, modal descriptions */
+  --line-height-base: 22px;
+
+  --font-size-lg: 16px;       /* Heading: panel headers, page titles */
+  --line-height-lg: 24px;
+
+  --font-size-xl: 18px;       /* Metric: large stat numbers, subsection heroes */
+  --line-height-xl: 26px;
+
+  --font-size-2xl: 20px;      /* Display: major KPI highlights */
+  --line-height-2xl: 28px;
+
+  --font-size-3xl: 24px;      /* Score: scorecard big numbers */
+  --line-height-3xl: 32px;
+
+  --font-size-4xl: 32px;      /* Hero: primary radar score display */
+  --line-height-4xl: 40px;
 }
 
 @theme {
@@ -23,6 +55,70 @@
   --color-c5: var(--color-5);
   --color-brand-dark: #152E40;
   --color-brand-lime: #CEFF52;
+
+  --text-2xs: var(--font-size-2xs);
+  --text-2xs--line-height: var(--line-height-2xs);
+
+  --text-xs: var(--font-size-xs);
+  --text-xs--line-height: var(--line-height-xs);
+
+  --text-sm: var(--font-size-sm);
+  --text-sm--line-height: var(--line-height-sm);
+
+  --text-base: var(--font-size-base);
+  --text-base--line-height: var(--line-height-base);
+
+  --text-lg: var(--font-size-lg);
+  --text-lg--line-height: var(--line-height-lg);
+
+  --text-xl: var(--font-size-xl);
+  --text-xl--line-height: var(--line-height-xl);
+
+  --text-2xl: var(--font-size-2xl);
+  --text-2xl--line-height: var(--line-height-2xl);
+
+  --text-3xl: var(--font-size-3xl);
+  --text-3xl--line-height: var(--line-height-3xl);
+
+  --text-4xl: var(--font-size-4xl);
+  --text-4xl--line-height: var(--line-height-4xl);
+}
+
+@utility text-2xs {
+  font-size: var(--font-size-2xs);
+  line-height: var(--line-height-2xs);
+}
+@utility text-xs {
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-xs);
+}
+@utility text-sm {
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-sm);
+}
+@utility text-base {
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+@utility text-lg {
+  font-size: var(--font-size-lg);
+  line-height: var(--line-height-lg);
+}
+@utility text-xl {
+  font-size: var(--font-size-xl);
+  line-height: var(--line-height-xl);
+}
+@utility text-2xl {
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-2xl);
+}
+@utility text-3xl {
+  font-size: var(--font-size-3xl);
+  line-height: var(--line-height-3xl);
+}
+@utility text-4xl {
+  font-size: var(--font-size-4xl);
+  line-height: var(--line-height-4xl);
 }
 
 @layer base {
@@ -209,8 +305,8 @@
     background-color: var(--bg-page, var(--color-zinc-950));
     color: var(--text-page, var(--color-zinc-100));
     font-family: var(--font-sans);
-    font-size: 13.5px;
-    line-height: 1.5;
+    font-size: var(--font-size-xs);
+    line-height: var(--line-height-xs);
     letter-spacing: -0.011em;
     margin: 0;
     padding: 0;

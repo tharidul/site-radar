@@ -485,7 +485,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             ) : (
               <div className="p-8 text-center space-y-3">
                 <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">No findings collected yet</div>
-                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
                   Run an inspection from the Overview tab to detect security, SEO, performance, and accessibility issues.
                 </p>
                 <button
@@ -505,7 +505,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             ) : (
               <div className="p-8 text-center space-y-3">
                 <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Rules &amp; Standards</div>
-                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
                   Run an audit from the Overview tab to view evaluated rules and specifications.
                 </p>
                 <button
@@ -525,7 +525,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             ) : (
               <div className="p-8 text-center space-y-3">
                 <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Resource Inventory</div>
-                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
                   Run an audit from the Overview tab to inspect network payloads, scripts, and stylesheets.
                 </p>
                 <button

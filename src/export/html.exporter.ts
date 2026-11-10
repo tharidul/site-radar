@@ -238,12 +238,12 @@ export function exportToHtml(inspection: WebsiteInspection): string {
           <p class="finding-desc">${escapeHtml(f.description)}</p>
           ${
             f.expectedBehavior
-              ? `<div class="finding-expected"><span class="expected-label" style="font-size: 11px; font-weight: 700; color: var(--text-muted);">EXPECTED:</span> ${escapeHtml(f.expectedBehavior)}</div>`
+              ? `<div class="finding-expected"><span class="expected-label">EXPECTED:</span> ${escapeHtml(f.expectedBehavior)}</div>`
               : ''
           }
           ${
             f.explanation
-              ? `<div class="finding-expl"><span class="expl-label" style="font-size: 11px; font-weight: 700; color: var(--text-muted);">EXPLANATION:</span> ${escapeHtml(f.explanation)}</div>`
+              ? `<div class="finding-expl"><span class="expl-label">EXPLANATION:</span> ${escapeHtml(f.explanation)}</div>`
               : ''
           }
           ${
@@ -297,13 +297,23 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       --pass-bg: rgba(206, 255, 82, 0.15);
       --font-sans: "Roboto", sans-serif;
       --font-mono: "Roboto", monospace;
+
+      /* Unified Typography Scale */
+      --font-size-2xs: 10px;
+      --font-size-xs: 11px;
+      --font-size-sm: 12px;
+      --font-size-base: 13px;
+      --font-size-md: 14px;
+      --font-size-lg: 16px;
+      --font-size-xl: 18px;
+      --font-size-2xl: 22px;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
       color: var(--text);
       font-family: var(--font-sans);
-      font-size: 13px;
+      font-size: var(--font-size-base);
       line-height: 1.5;
       padding: 32px 20px;
     }
@@ -317,7 +327,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     }
     .hero-badge {
       display: inline-block;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -329,7 +339,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       margin-bottom: 12px;
     }
     h1.hero-title {
-      font-size: 22px;
+      font-size: var(--font-size-2xl);
       font-weight: 700;
       color: var(--text);
       margin-bottom: 6px;
@@ -345,7 +355,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     }
     .hero-sub {
       color: var(--text-muted);
-      font-size: 12px;
+      font-size: var(--font-size-sm);
     }
     .hero-sub a { color: var(--color-1); text-decoration: none; }
     .hero-sub a:hover { text-decoration: underline; }
@@ -367,13 +377,13 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       text-align: center;
     }
     .sev-box-count {
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
       display: block;
     }
     .sev-box-label {
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       font-weight: 600;
       text-transform: uppercase;
       color: var(--text-dim);
@@ -387,7 +397,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
 
     /* Scores Grid */
     .section-title {
-      font-size: 13px;
+      font-size: var(--font-size-base);
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -416,16 +426,16 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       margin-bottom: 8px;
     }
     .score-cat {
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       font-weight: 600;
       color: var(--text-muted);
     }
     .score-val {
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
     }
-    .score-max { font-size: 11px; color: var(--text-dim); }
+    .score-max { font-size: var(--font-size-xs); color: var(--text-dim); }
     .score-bar-bg {
       height: 4px;
       background: var(--surface);
@@ -435,7 +445,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     }
     .score-bar-fill { height: 100%; border-radius: 9999px; }
     .score-stats {
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       font-variant-numeric: tabular-nums;
       color: var(--text-dim);
     }
@@ -458,14 +468,14 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       user-select: none;
       background: var(--surface);
     }
     .mod-summary:hover { background: var(--surface-hover); }
     .mod-title { font-weight: 600; color: var(--text); }
     .mod-status-badge {
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       padding: 2px 8px;
       border: 1px solid;
       border-radius: 9999px;
@@ -476,14 +486,14 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       padding: 12px 14px;
       border-top: 1px solid var(--border);
       background: var(--bg);
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       color: var(--text-muted);
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
-    .mod-meta { font-family: var(--font-mono); font-size: 11px; display: flex; gap: 16px; color: var(--text-dim); }
-    .mod-limitations, .mod-sources, .mod-errors { font-size: 11px; }
+    .mod-meta { font-family: var(--font-mono); font-size: var(--font-size-xs); display: flex; gap: 16px; color: var(--text-dim); }
+    .mod-limitations, .mod-sources, .mod-errors { font-size: var(--font-size-xs); }
     .mod-errors { color: var(--crit); }
 
     /* Filter Bar */
@@ -501,7 +511,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       padding: 6px 12px;
       color: var(--text);
       font-family: var(--font-mono);
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       flex: 1;
       min-width: 180px;
     }
@@ -512,7 +522,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       border-radius: 8px;
       padding: 5px 10px;
       font-family: var(--font-mono);
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       color: var(--text-muted);
       cursor: pointer;
     }
@@ -540,7 +550,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     .finding-meta { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; flex-wrap: wrap; }
     .pill {
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       font-weight: 700;
       padding: 2px 8px;
       border-radius: 9999px;
@@ -557,35 +567,36 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     .pill.status-warning { background: var(--med-bg); color: var(--color-1); border: 1px solid var(--med); }
     .pill.status-not-available { background: var(--surface); color: var(--text-dim); border: 1px solid var(--border); }
 
-    .rule-id { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); }
-    .cat-id { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); border: 1px solid var(--border); padding: 1px 6px; border-radius: 9999px; }
-    .finding-title { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-    .finding-desc { color: var(--text-muted); font-size: 12px; margin-bottom: 8px; }
+    .rule-id { font-family: var(--font-mono); font-size: var(--font-size-xs); color: var(--text-dim); }
+    .cat-id { font-family: var(--font-mono); font-size: var(--font-size-2xs); color: var(--text-dim); border: 1px solid var(--border); padding: 1px 6px; border-radius: 9999px; }
+    .finding-title { font-size: var(--font-size-md); font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .finding-desc { color: var(--text-muted); font-size: var(--font-size-sm); margin-bottom: 8px; }
     .finding-recom {
       background: var(--bg);
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 8px 10px;
-      font-size: 12px;
+      font-size: var(--font-size-sm);
       color: var(--text);
       margin-bottom: 8px;
     }
-    .recom-label { font-family: var(--font-mono); font-weight: 700; font-size: 10px; color: var(--info); margin-right: 6px; }
+    .recom-label { font-family: var(--font-mono); font-weight: 700; font-size: var(--font-size-2xs); color: var(--info); margin-right: 6px; }
+    .expected-label, .expl-label { font-family: var(--font-mono); font-weight: 700; font-size: var(--font-size-2xs); color: var(--text-muted); margin-right: 6px; }
     .finding-refs {
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       color: var(--text-dim);
       margin-top: 6px;
     }
     .finding-refs a { color: var(--color-1); text-decoration: none; }
     .finding-refs a:hover { text-decoration: underline; }
-    .refs-label { font-family: var(--font-mono); font-weight: 600; font-size: 10px; margin-right: 6px; }
+    .refs-label { font-family: var(--font-mono); font-weight: 600; font-size: var(--font-size-2xs); margin-right: 6px; }
 
     /* Evidence Table */
     .evidence-wrapper { overflow-x: auto; margin-top: 8px; }
     .evidence-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       font-family: var(--font-mono);
       background: var(--bg);
       border: 1px solid var(--border);
@@ -596,7 +607,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       padding: 5px 8px;
       background: var(--surface);
       color: var(--text-dim);
-      font-size: 10px;
+      font-size: var(--font-size-2xs);
       text-transform: uppercase;
       letter-spacing: 0.05em;
       border-bottom: 1px solid var(--border);
@@ -615,7 +626,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     footer.report-footer {
       padding-top: 18px;
       border-top: 1px solid var(--border);
-      font-size: 11px;
+      font-size: var(--font-size-xs);
       color: var(--text-dim);
       display: flex;
       justify-content: space-between;

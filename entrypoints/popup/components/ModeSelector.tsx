@@ -104,7 +104,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
                     <span className="text-xs sm:text-sm font-bold text-zinc-900 dark:text-zinc-100 block">
                       {mode.title}
                     </span>
-                    <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium">
+                    <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium">
                       Duration: {mode.duration}
                     </span>
                   </div>
@@ -144,7 +144,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         </Button>
       </div>
 
-      <div className="pt-2.5 pb-1 flex items-center justify-center gap-3 border-t border-zinc-200/70 dark:border-zinc-800/80 text-[11px] select-none">
+      <div className="pt-2.5 pb-1 flex items-center justify-center gap-3 border-t border-zinc-200/70 dark:border-zinc-800/80 text-xs select-none">
         <button
           type="button"
           onClick={() => {

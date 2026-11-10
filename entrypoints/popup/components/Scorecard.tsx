@@ -169,7 +169,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
                 />
               </div>
 
-              <div className="flex items-center justify-between text-[11px] text-zinc-600 dark:text-zinc-400">
+              <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
                 <span>
                   {scoreObj
                     ? `${scoreObj.passed ?? 0} pass · ${scoreObj.failed ?? 0} fail`

@@ -58,7 +58,7 @@ export const TabBar: React.FC<TabBarProps> = ({
                 <span>{tab.label}</span>
                 {badge !== undefined ? (
                   <span
-                    className={`ml-0.5 px-1.5 py-0.5 text-[10px] font-bold rounded-md tabular-nums leading-none ${
+                    className={`ml-0.5 px-1.5 py-0.5 text-2xs font-bold rounded-md tabular-nums leading-none ${
                       isActive
                         ? 'bg-[#CEFF52] text-[#152E40] border border-[#CEFF52]'
                         : 'bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-300 dark:border-zinc-700'

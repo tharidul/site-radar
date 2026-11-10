@@ -211,22 +211,22 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h2 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight truncate">
                   Overall Health
                 </h2>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] min-[400px]:text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs shrink-0">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs shrink-0">
                   Grade {grade}
                 </span>
               </div>
-              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 min-[400px]:mt-1 leading-snug line-clamp-2">
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 min-[400px]:mt-1 leading-snug line-clamp-2">
                 {dynamicDescription}
               </p>
             </div>
           </div>
 
           <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-2.5 min-[400px]:pl-4 sm:pl-5 shrink-0 space-y-1 sm:space-y-1.5 min-w-[105px] min-[400px]:min-w-[125px] sm:min-w-[145px]">
-            <div className="text-[10px] min-[400px]:text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 sm:mb-2 whitespace-nowrap">
+            <div className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 sm:mb-2 whitespace-nowrap">
               {totalRules} CHECKS RUN
             </div>
 
-            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+            <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
                 <CheckCircle2 className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
                 <span>Passed</span>
@@ -236,7 +236,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+            <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
                 <XCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
                 <span>Failed</span>
@@ -246,7 +246,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+            <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
                 <AlertTriangle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
                 <span>Warnings</span>
@@ -256,7 +256,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+            <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-500 dark:text-zinc-400">
                 <Info className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
                 <span>Info / N/A</span>
@@ -313,7 +313,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   </div>
                 </div>
 
-                <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mt-1 sm:mt-1.5 leading-tight line-clamp-2 h-6 flex items-center justify-center text-center px-0.5">
+                <span className="text-2xs sm:text-xs font-semibold text-zinc-700 dark:text-zinc-300 mt-1 sm:mt-1.5 leading-tight line-clamp-2 h-6 flex items-center justify-center text-center px-0.5">
                   {cat.label}
                 </span>
               </button>
@@ -334,7 +334,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <Cpu className="w-3.5 h-3.5 text-[#CEFF52]" />
               <span>Detected Technologies &amp; Frameworks</span>
             </span>
-            <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
+            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
               {techData.length} identified
             </span>
           </div>
@@ -354,12 +354,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     {tech.name}
                   </span>
                   {tech.version && (
-                    <span className="shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
+                    <span className="shrink-0 text-2xs font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
                       v{tech.version}
                     </span>
                   )}
                 </div>
-                <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate shrink-0 ml-1.5">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400 truncate shrink-0 ml-1.5">
                   {tech.category}
                 </span>
               </div>

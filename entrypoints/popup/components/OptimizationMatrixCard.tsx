@@ -127,7 +127,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
           <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
             AI &amp; Search Optimization (The O&apos;s)
           </span>
-          <span className="text-[11px] font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 tabular-nums">
+          <span className="text-2xs font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 tabular-nums">
             {averageScore}% index
           </span>
         </div>
@@ -135,7 +135,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         <button
           type="button"
           onClick={() => onNavigateToIssues({ category: 'seo' })}
-          className="text-[11px] font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
+          className="text-xs font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
         >
           View all findings →
         </button>
@@ -154,13 +154,13 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
               <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100">
                 {row.name}
               </span>
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">
                 {row.tagline}
               </span>
             </div>
 
             <div className="hidden min-[480px]:block flex-1 min-w-0 pr-2">
-              <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
+              <p className="text-xs text-zinc-600 dark:text-zinc-400 truncate">
                 {row.statusText}
               </p>
             </div>

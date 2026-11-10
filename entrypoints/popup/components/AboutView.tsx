@@ -87,7 +87,7 @@ export const AboutView: React.FC = () => {
           <button
             type="button"
             onClick={openPrivacyPolicy}
-            className="inline-flex items-center gap-1 text-[11px] font-medium text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
           >
             <span>Read Policy</span>
             <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
@@ -98,7 +98,7 @@ export const AboutView: React.FC = () => {
         </p>
       </div>
 
-      <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-500 px-1">
+      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-500 px-1">
         <span>SiteRadar v0.2.0</span>
         <button
           type="button"

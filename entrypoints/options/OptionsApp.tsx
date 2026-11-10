@@ -274,7 +274,7 @@ export function OptionsApp() {
                       <button
                         type="button"
                         onClick={() => setExpandedDisclosureProviderId((prev) => (prev === provider.id ? null : provider.id))}
-                        className="text-[11px] font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer flex items-center gap-0.5"
+                        className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer flex items-center gap-0.5"
                       >
                         <span>{isDisclosureOpen ? 'Hide' : 'Details'}</span>
                         <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDisclosureOpen ? 'rotate-180' : ''}`} />
@@ -308,7 +308,7 @@ export function OptionsApp() {
                   <div className="pt-2 text-xs space-y-1 text-zinc-500 dark:text-zinc-400">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-zinc-600 dark:text-zinc-300">Endpoint:</span>
-                      <span className="text-zinc-800 dark:text-zinc-200 font-mono text-[11px] select-all">{provider.endpoint}</span>
+                      <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs select-all">{provider.endpoint}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-zinc-600 dark:text-zinc-300">Data transmitted:</span>
@@ -359,7 +359,7 @@ export function OptionsApp() {
                 onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
                 className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
-              <span className="text-[10px] text-zinc-400 mt-0.5 block">5–200 pages</span>
+              <span className="text-2xs text-zinc-400 mt-0.5 block">5–200 pages</span>
             </div>
 
             <div>
@@ -374,7 +374,7 @@ export function OptionsApp() {
                 onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
                 className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
-              <span className="text-[10px] text-zinc-400 mt-0.5 block">1–5 hops</span>
+              <span className="text-2xs text-zinc-400 mt-0.5 block">1–5 hops</span>
             </div>
 
             <div>
@@ -389,7 +389,7 @@ export function OptionsApp() {
                 onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
                 className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
-              <span className="text-[10px] text-zinc-400 mt-0.5 block">1–4 parallel</span>
+              <span className="text-2xs text-zinc-400 mt-0.5 block">1–4 parallel</span>
             </div>
 
             <div>
@@ -404,7 +404,7 @@ export function OptionsApp() {
                 onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
                 className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
               />
-              <span className="text-[10px] text-zinc-400 mt-0.5 block">5–60 seconds</span>
+              <span className="text-2xs text-zinc-400 mt-0.5 block">5–60 seconds</span>
             </div>
           </div>
 

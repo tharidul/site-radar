@@ -166,7 +166,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {scriptCount}
           </div>
           <div
-            className={`text-[11px] font-semibold ${
+            className={`text-xs font-semibold ${
               activeTab === 'scripts' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
@@ -194,7 +194,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {stylesheetCount}
           </div>
           <div
-            className={`text-[11px] font-semibold ${
+            className={`text-xs font-semibold ${
               activeTab === 'stylesheets'
                 ? 'text-[#152E40] dark:text-[#CEFF52] font-bold'
                 : 'text-zinc-600 dark:text-zinc-400'
@@ -224,7 +224,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {imageCount}
           </div>
           <div
-            className={`text-[11px] font-semibold ${
+            className={`text-xs font-semibold ${
               activeTab === 'images' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
@@ -252,7 +252,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             {origins.length}
           </div>
           <div
-            className={`text-[11px] font-semibold ${
+            className={`text-xs font-semibold ${
               activeTab === 'origins' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
@@ -318,34 +318,34 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       {s.isRenderBlocking && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                           blocking
                         </span>
                       )}
                       {s.isAsync && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           async
                         </span>
                       )}
                       {s.isDefer && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           defer
                         </span>
                       )}
                       {s.isModule && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           module
                         </span>
                       )}
                       {s.hasSri && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
                           SRI
                         </span>
                       )}
                     </div>
                   </div>
                   {s.src && (
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate" title={s.src}>
+                    <span className="text-2xs text-zinc-500 dark:text-zinc-400 truncate" title={s.src}>
                       {s.domain ? `${s.domain} • ` : ''}
                       {s.src}
                     </span>
@@ -383,24 +383,24 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       {sheet.isExternal && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           external
                         </span>
                       )}
                       {sheet.media && (
-                        <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           {sheet.media}
                         </span>
                       )}
                       {sheet.hasSri && (
-                        <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
                           SRI
                         </span>
                       )}
                     </div>
                   </div>
                   {sheet.href && (
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate" title={sheet.href}>
+                    <span className="text-2xs text-zinc-500 dark:text-zinc-400 truncate" title={sheet.href}>
                       {sheet.domain ? `${sheet.domain} • ` : ''}
                       {sheet.href}
                     </span>
@@ -446,37 +446,37 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         {img.format && (
-                          <span className="text-[9px] font-mono uppercase px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+                          <span className="text-2xs font-mono uppercase px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
                             {img.format}
                           </span>
                         )}
                         {img.width && img.height && (
-                          <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                          <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
                             {img.width}×{img.height}
                           </span>
                         )}
                         {img.isLazy && (
-                          <span className="text-[9px] font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                          <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                             lazy
                           </span>
                         )}
                         {!img.hasAlt ? (
-                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                             no alt
                           </span>
                         ) : (
-                          <span className="text-[9px] font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
                             alt
                           </span>
                         )}
                       </div>
                     </div>
                     {img.alt && (
-                      <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
+                      <span className="text-2xs text-zinc-500 dark:text-zinc-400 truncate">
                         "{img.alt}"
                       </span>
                     )}
-                    <span className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate" title={img.src}>
+                    <span className="text-2xs text-zinc-500 dark:text-zinc-400 truncate" title={img.src}>
                       {img.src}
                     </span>
                   </div>
@@ -517,7 +517,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
               <Cpu className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
               <span>Detected Frontend Frameworks &amp; Technologies</span>
             </h4>
-            <span className="text-[11px] text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
               {technologies.length} identified
             </span>
           </div>
@@ -542,17 +542,17 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                     {tech.name}
                   </span>
                   {tech.version && (
-                    <span className="shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
+                    <span className="shrink-0 text-2xs font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
                       v{tech.version}
                     </span>
                   )}
                 </div>
-                <div className="text-[11px] text-zinc-600 dark:text-zinc-400 mt-1 truncate">
+                <div className="text-xs text-zinc-600 dark:text-zinc-400 mt-1 truncate">
                   {tech.category}
                 </div>
                 {tech.evidence && (
                   <div
-                    className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-1.5 pt-1.5 border-t border-zinc-200/80 dark:border-zinc-800/60 truncate"
+                    className="text-2xs text-zinc-500 dark:text-zinc-400 mt-1.5 pt-1.5 border-t border-zinc-200/80 dark:border-zinc-800/60 truncate"
                     title={tech.evidence}
                   >
                     {tech.evidence}

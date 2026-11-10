@@ -131,7 +131,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   {status === 'completed' ? (
                     <span
                       title="Module collected"
-                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md select-none"
+                      className="inline-flex items-center gap-1 text-2xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md select-none"
                     >
                       <Check className="w-3 h-3 stroke-[2.5]" />
                       <span>Ready</span>
@@ -155,7 +155,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <span>Status: </span>
                       <span className="font-semibold text-zinc-900 dark:text-zinc-100 capitalize">{status}</span>
                       {status === 'skipped' && SKIPPED_REASONS[def.key] && (
-                        <p className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-1 col-span-2 leading-normal">
+                        <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 col-span-2 leading-normal">
                           {SKIPPED_REASONS[def.key]}
                         </p>
                       )}
@@ -188,11 +188,11 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                             <div className="min-w-0 pr-2">
                               <div className="flex items-center gap-1.5">
                                 <span className="font-bold text-zinc-900 dark:text-zinc-100">{t.name}</span>
-                                {t.version && <span className="text-[10px] text-zinc-500 font-mono">v{t.version}</span>}
+                                {t.version && <span className="text-2xs text-zinc-500 font-mono">v{t.version}</span>}
                               </div>
-                              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 block truncate">{t.evidence}</span>
+                              <span className="text-xs text-zinc-500 dark:text-zinc-400 block truncate">{t.evidence}</span>
                             </div>
-                            <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                            <span className="shrink-0 text-2xs font-semibold px-2 py-0.5 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                               {t.category}
                             </span>
                           </div>
@@ -207,7 +207,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                         <Shield className="w-3.5 h-3.5 shrink-0" />
                         <span>Privacy Protection (Zero-Telemetry Guardrail)</span>
                       </div>
-                      <p className="text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+                      <p className="text-xs leading-relaxed text-zinc-600 dark:text-zinc-400">
                         This lookup queries external servers (Cloudflare DoH, IP-API, crt.sh). To protect your browsing privacy, SiteRadar pauses external third-party requests until you explicitly opt in.
                       </p>
                       <button

@@ -51,7 +51,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
           <span> / {total}</span>
           {moduleName && (
             <span className="ml-2 text-zinc-500 dark:text-zinc-400">
-              (<code className="font-mono text-[11px]">{moduleName}</code>)
+              (<code className="font-mono text-2xs">{moduleName}</code>)
             </span>
           )}
         </div>
