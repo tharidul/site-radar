@@ -101,6 +101,83 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
       }));
   }
 
+  async reloadTab(tabId: number, options?: { bypassCache?: boolean; timeoutMs?: number; signal?: AbortSignal }): Promise<void> {
+    const api = this.api;
+    if (!api || !api.tabs?.reload) return;
+
+    const bypassCache = Boolean(options?.bypassCache);
+    const timeoutMs = options?.timeoutMs ?? 15000;
+    const signal = options?.signal;
+
+    if (signal?.aborted) throw signal.reason;
+
+    return new Promise<void>((resolve, reject) => {
+      let timer: any = null;
+      let cleanup: () => void = () => {};
+
+      const handleUpdated = (updatedTabId: number, changeInfo: any) => {
+        if (updatedTabId === tabId && changeInfo.status === 'complete') {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const handleRemoved = (removedTabId: number) => {
+        if (removedTabId === tabId) {
+          cleanup();
+          reject(new Error('Target tab was closed while reloading'));
+        }
+      };
+
+      const handleAbort = () => {
+        cleanup();
+        reject(signal?.reason || new Error('Tab reload cancelled'));
+      };
+
+      cleanup = () => {
+        if (timer) clearTimeout(timer);
+        if (api.tabs?.onUpdated) {
+          api.tabs.onUpdated.removeListener(handleUpdated);
+        }
+        if (api.tabs?.onRemoved) {
+          api.tabs.onRemoved.removeListener(handleRemoved);
+        }
+        if (signal) {
+          signal.removeEventListener('abort', handleAbort);
+        }
+      };
+
+      if (signal) {
+        signal.addEventListener('abort', handleAbort);
+      }
+
+      if (api.tabs?.onUpdated) {
+        api.tabs.onUpdated.addListener(handleUpdated);
+      }
+      if (api.tabs?.onRemoved) {
+        api.tabs.onRemoved.addListener(handleRemoved);
+      }
+
+      timer = setTimeout(() => {
+        cleanup();
+        resolve();
+      }, timeoutMs);
+
+      try {
+        const res = api.tabs.reload(tabId, { bypassCache });
+        if (res && typeof res.catch === 'function') {
+          res.catch((err: any) => {
+            cleanup();
+            reject(err);
+          });
+        }
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    });
+  }
+
   async executeScript<Args extends unknown[], R>(options: ScriptExecutionOptions<Args, R>): Promise<R[]> {
     const api = this.api;
     if (!api || !api.scripting) {

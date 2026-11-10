@@ -71,6 +71,14 @@ export class MockBrowserAdapter implements BrowserAdapter {
       .map((t) => ({ ...t }));
   }
 
+  async reloadTab(tabId: number, options?: { bypassCache?: boolean; timeoutMs?: number; signal?: AbortSignal }): Promise<void> {
+    if (options?.signal?.aborted) throw options.signal.reason;
+    const t = this.tabs.get(tabId);
+    if (t) {
+      t.status = 'complete';
+    }
+  }
+
   async executeScript<Args extends unknown[], R>(options: ScriptExecutionOptions<Args, R>): Promise<R[]> {
     this.injectedScripts.push(options);
     if (options.func) {

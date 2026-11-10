@@ -18,6 +18,7 @@ export default defineConfig({
         '@/core': path.resolve(__dirname, './src/core'),
         '@/browser': path.resolve(__dirname, './src/browser'),
         '@/messaging': path.resolve(__dirname, './src/messaging'),
+        '@/services': path.resolve(__dirname, './src/services'),
         '@/utils': path.resolve(__dirname, './src/utils'),
       },
     },
@@ -28,8 +29,14 @@ export default defineConfig({
     version: '0.1.0',
     permissions: [
       'activeTab',
+      'tabs',
       'scripting',
       'storage',
+      'cookies',
+      'contextMenus',
+    ],
+    host_permissions: [
+      '*://*/*',
     ],
     ...(env.browser === 'firefox' && {
       browser_specific_settings: {

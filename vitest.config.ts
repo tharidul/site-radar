@@ -18,6 +18,7 @@ export default defineConfig({
       '@/intelligence': path.resolve(import.meta.dirname, './src/intelligence'),
       '@/export': path.resolve(import.meta.dirname, './src/export'),
       '@/exporters': path.resolve(import.meta.dirname, './src/exporters'),
+      '@/services': path.resolve(import.meta.dirname, './src/services'),
       '@/utils': path.resolve(import.meta.dirname, './src/utils'),
       '@': path.resolve(import.meta.dirname, '.'),
     },

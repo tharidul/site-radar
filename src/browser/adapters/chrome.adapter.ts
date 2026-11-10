@@ -86,6 +86,85 @@ export class ChromeMV3Adapter implements BrowserAdapter {
       }));
   }
 
+  async reloadTab(tabId: number, options?: { bypassCache?: boolean; timeoutMs?: number; signal?: AbortSignal }): Promise<void> {
+    if (typeof chrome === 'undefined' || !chrome.tabs?.reload) {
+      return;
+    }
+
+    const bypassCache = Boolean(options?.bypassCache);
+    const timeoutMs = options?.timeoutMs ?? 15000;
+    const signal = options?.signal;
+
+    if (signal?.aborted) {
+      throw signal.reason;
+    }
+
+    return new Promise<void>((resolve, reject) => {
+      let timer: any = null;
+      let cleanup: () => void = () => {};
+
+      const handleUpdated = (updatedTabId: number, changeInfo: { status?: string }) => {
+        if (updatedTabId === tabId && changeInfo.status === 'complete') {
+          cleanup();
+          resolve();
+        }
+      };
+
+      const handleRemoved = (removedTabId: number) => {
+        if (removedTabId === tabId) {
+          cleanup();
+          reject(new Error('Target tab was closed while reloading'));
+        }
+      };
+
+      const handleAbort = () => {
+        cleanup();
+        reject(signal?.reason || new Error('Tab reload cancelled'));
+      };
+
+      cleanup = () => {
+        if (timer) clearTimeout(timer);
+        if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
+          chrome.tabs.onUpdated.removeListener(handleUpdated);
+        }
+        if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
+          chrome.tabs.onRemoved.removeListener(handleRemoved);
+        }
+        if (signal) {
+          signal.removeEventListener('abort', handleAbort);
+        }
+      };
+
+      if (signal) {
+        signal.addEventListener('abort', handleAbort);
+      }
+
+      if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
+        chrome.tabs.onUpdated.addListener(handleUpdated);
+      }
+      if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
+        chrome.tabs.onRemoved.addListener(handleRemoved);
+      }
+
+      timer = setTimeout(() => {
+        cleanup();
+        resolve();
+      }, timeoutMs);
+
+      try {
+        chrome.tabs.reload(tabId, { bypassCache }, () => {
+          if (chrome.runtime?.lastError) {
+            cleanup();
+            reject(new Error(chrome.runtime.lastError.message));
+          }
+        });
+      } catch (err) {
+        cleanup();
+        reject(err);
+      }
+    });
+  }
+
   async executeScript<Args extends unknown[], R>(options: ScriptExecutionOptions<Args, R>): Promise<R[]> {
     const target: chrome.scripting.InjectionTarget = {
       tabId: options.tabId,

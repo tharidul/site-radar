@@ -318,7 +318,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       --pass: #CEFF52;
       --pass-bg: rgba(206, 255, 82, 0.15);
       --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, "JetBrains Mono", "Cascadia Code", "Fira Code", SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {

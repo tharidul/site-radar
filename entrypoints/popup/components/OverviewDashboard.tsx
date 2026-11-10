@@ -148,30 +148,35 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     {
       key: 'security',
       label: 'Security',
+      shortLabel: 'Security',
       icon: Shield,
       score: scores['security'] ? Math.round(scores['security'].score) : 96,
     },
     {
       key: 'performance',
       label: 'Performance',
+      shortLabel: 'Speed',
       icon: Zap,
       score: scores['performance'] ? Math.round(scores['performance'].score) : 93,
     },
     {
       key: 'seo',
       label: 'SEO',
+      shortLabel: 'SEO',
       icon: Search,
       score: scores['seo'] ? Math.round(scores['seo'].score) : 90,
     },
     {
       key: 'accessibility',
       label: 'Accessibility',
+      shortLabel: 'A11y',
       icon: UserCheck,
       score: scores['accessibility'] ? Math.round(scores['accessibility'].score) : 86,
     },
     {
       key: 'best-practices',
       label: 'Best Practices',
+      shortLabel: 'Practices',
       icon: Layers,
       score: scores['best-practices'] ? Math.round(scores['best-practices'].score) : 95,
     },
@@ -180,189 +185,192 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       {/* Scrollable Content Area */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
-        {/* 1. Hero Overall Score Card matching exact design */}
-      <div className="rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xs flex items-center justify-between gap-4">
-        {/* Left: Overall Circular Gauge + Text */}
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-            <svg className="w-24 h-24 -rotate-90 transform" viewBox="0 0 100 100">
-              {/* Background ring */}
-              <circle
-                cx="50"
-                cy="50"
-                r={gaugeRadius}
-                fill="transparent"
-                stroke="currentColor"
-                className="text-zinc-200 dark:text-zinc-800"
-                strokeWidth="8"
-              />
-              {/* Progress ring */}
-              <circle
-                cx="50"
-                cy="50"
-                r={gaugeRadius}
-                fill="transparent"
-                stroke="#CEFF52"
-                strokeWidth="8"
-                strokeDasharray={gaugeCircumference}
-                strokeDashoffset={gaugeDashOffset}
-                strokeLinecap="round"
-                className="transition-[stroke-dashoffset] duration-300 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight leading-none tabular-nums">
-                {overallScore}
-              </span>
+      <div className="flex-1 min-h-0 overflow-y-auto p-3.5 space-y-3">
+        {/* 1. Hero Overall Score Card (Responsive: clean stacked layout prevents collide on thin viewports) */}
+        <div className="rounded-md bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-3">
+          {/* Top: Score Gauge + Health Title & Grade */}
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="relative w-20 h-20 shrink-0 flex items-center justify-center">
+              <svg className="w-20 h-20 -rotate-90 transform" viewBox="0 0 100 100">
+                {/* Background ring */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={gaugeRadius}
+                  fill="transparent"
+                  stroke="currentColor"
+                  className="text-zinc-200 dark:text-zinc-800"
+                  strokeWidth="8"
+                />
+                {/* Progress ring */}
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={gaugeRadius}
+                  fill="transparent"
+                  stroke="#CEFF52"
+                  strokeWidth="8"
+                  strokeDasharray={gaugeCircumference}
+                  strokeDashoffset={gaugeDashOffset}
+                  strokeLinecap="round"
+                  className="transition-[stroke-dashoffset] duration-300 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-2xl font-black text-zinc-900 dark:text-white tracking-tight leading-none tabular-nums">
+                  {overallScore}
+                </span>
+              </div>
+            </div>
+
+            {/* Overall Score text & Grade Badge */}
+            <div className="min-w-0 flex-1 flex flex-col justify-center">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h2 className="text-base font-bold text-zinc-900 dark:text-white tracking-tight">
+                  Overall Health
+                </h2>
+                <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs">
+                  Grade {grade}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2">
+                {dynamicDescription}
+              </p>
             </div>
           </div>
 
-          {/* Overall Score text & Grade Badge */}
-          <div className="min-w-0 flex flex-col justify-center">
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">
-                Overall Health
-              </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs">
-                Grade {grade}
-              </span>
+          {/* Bottom: Evaluated Rules Breakdown Strip */}
+          <div className="pt-2.5 border-t border-zinc-200/80 dark:border-zinc-800">
+            <div className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-2">
+              {totalRules} CHECKS RUN
             </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[210px]">
-              {dynamicDescription}
-            </p>
-          </div>
-        </div>
 
-        {/* Right: Evaluated Rules Breakdown */}
-        <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-5 min-w-[155px] shrink-0 space-y-1.5">
-          <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-            {totalRules} CHECKS RUN
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Passed</span>
-            </span>
-            <span className="font-bold text-zinc-900 dark:text-white tabular-nums">
-              {passedCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <XCircle className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Failed</span>
-            </span>
-            <span className="font-bold text-[#CEFF52] tabular-nums">
-              {failedCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <AlertTriangle className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Warnings</span>
-            </span>
-            <span className="font-bold text-[#CEFF52] tabular-nums">
-              {warningCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-              <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-              <span>Info / N/A</span>
-            </span>
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
-              {infoStatusCount + naCount}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 5 Category Cards with Circular Progress Gauge & Score in Middle */}
-      <div className="grid grid-cols-5 gap-2">
-        {categoriesConfig.map((cat) => {
-          const miniRadius = 17.5;
-          const miniCircumference = 2 * Math.PI * miniRadius;
-          const miniDashOffset = miniCircumference * (1 - Math.min(100, Math.max(0, cat.score)) / 100);
-
-          return (
-            <button
-              key={cat.key}
-              type="button"
-              onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-md bg-white dark:bg-zinc-900 px-1.5 py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
-              title={`View ${cat.label} findings (${cat.score})`}
-            >
-              {/* Circular Progress Gauge with Score in Middle */}
-              <div className="relative w-14 h-14 flex items-center justify-center">
-                <svg className="w-14 h-14 -rotate-90 transform" viewBox="0 0 44 44">
-                  {/* Background track */}
-                  <circle
-                    cx="22"
-                    cy="22"
-                    r={miniRadius}
-                    fill="transparent"
-                    stroke="currentColor"
-                    className="text-zinc-200 dark:text-zinc-800"
-                    strokeWidth="3.5"
-                  />
-                  {/* Progress ring */}
-                  <circle
-                    cx="22"
-                    cy="22"
-                    r={miniRadius}
-                    fill="transparent"
-                    stroke="#CEFF52"
-                    strokeWidth="3.5"
-                    strokeDasharray={miniCircumference}
-                    strokeDashoffset={miniDashOffset}
-                    strokeLinecap="round"
-                    className="transition-[stroke-dashoffset] duration-300 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-base font-black text-zinc-900 dark:text-white tabular-nums leading-none tracking-tight">
-                    {cat.score}
-                  </span>
-                </div>
+            <div className="grid grid-cols-2 min-[440px]:grid-cols-4 gap-1.5 text-xs">
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+                <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
+                  <span>Passed</span>
+                </span>
+                <span className="font-bold text-zinc-900 dark:text-white tabular-nums">
+                  {passedCount}
+                </span>
               </div>
 
-              <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mt-1.5 line-clamp-1">
-                {cat.label}
-              </span>
-            </button>
-          );
-        })}
-      </div>
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+                <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                  <XCircle className="w-3.5 h-3.5 text-rose-500 shrink-0" />
+                  <span>Failed</span>
+                </span>
+                <span className={`font-bold tabular-nums ${failedCount > 0 ? 'text-rose-600 dark:text-rose-400' : 'text-zinc-900 dark:text-white'}`}>
+                  {failedCount}
+                </span>
+              </div>
 
-      {/* 2.2 Modern AI & Search Optimization Matrix (The O's: SEO, AEO, AGO) */}
-      <OptimizationMatrixCard
-        findings={findings}
-        scores={scores}
-        onNavigateToIssues={onNavigateToIssues}
-      />
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+                <span className="flex items-center gap-1.5 text-zinc-700 dark:text-zinc-300">
+                  <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                  <span>Warnings</span>
+                </span>
+                <span className={`font-bold tabular-nums ${warningCount > 0 ? 'text-amber-600 dark:text-amber-400' : 'text-zinc-900 dark:text-white'}`}>
+                  {warningCount}
+                </span>
+              </div>
 
-      {/* 2.5 Detected Frameworks & Tech Stack */}
-      {techData.length > 0 && (
-        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-[#CEFF52]" />
-              <span>Detected Technologies &amp; Frameworks</span>
-            </span>
-            <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
-              {techData.length} identified
-            </span>
+              <div className="flex items-center justify-between px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+                <span className="flex items-center gap-1.5 text-zinc-500 dark:text-zinc-400">
+                  <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                  <span>Info / N/A</span>
+                </span>
+                <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
+                  {infoStatusCount + naCount}
+                </span>
+              </div>
+            </div>
           </div>
-          <div
-            className={`grid gap-1.5 ${
-              techData.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
-            }`}
-          >
+        </div>
+
+        {/* 2. 5 Category Cards with Circular Progress Gauge & Score in Middle */}
+        <div className="grid grid-cols-5 gap-1.5">
+          {categoriesConfig.map((cat) => {
+            const miniRadius = 15;
+            const miniCircumference = 2 * Math.PI * miniRadius;
+            const miniDashOffset = miniCircumference * (1 - Math.min(100, Math.max(0, cat.score)) / 100);
+
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => onNavigateToIssues({ category: cat.key })}
+                className="rounded-md bg-white dark:bg-zinc-900 px-1 py-2 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
+                title={`View ${cat.label} findings (${cat.score})`}
+              >
+                {/* Circular Progress Gauge with Score in Middle */}
+                <div className="relative w-11 h-11 sm:w-12 sm:h-12 flex items-center justify-center shrink-0">
+                  <svg className="w-11 h-11 sm:w-12 sm:h-12 -rotate-90 transform" viewBox="0 0 38 38">
+                    {/* Background track */}
+                    <circle
+                      cx="19"
+                      cy="19"
+                      r={miniRadius}
+                      fill="transparent"
+                      stroke="currentColor"
+                      className="text-zinc-200 dark:text-zinc-800"
+                      strokeWidth="3.5"
+                    />
+                    {/* Progress ring */}
+                    <circle
+                      cx="19"
+                      cy="19"
+                      r={miniRadius}
+                      fill="transparent"
+                      stroke="#CEFF52"
+                      strokeWidth="3.5"
+                      strokeDasharray={miniCircumference}
+                      strokeDashoffset={miniDashOffset}
+                      strokeLinecap="round"
+                      className="transition-[stroke-dashoffset] duration-300 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-white tabular-nums leading-none tracking-tight">
+                      {cat.score}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-[10px] font-semibold text-zinc-700 dark:text-zinc-300 mt-1 truncate max-w-full text-center px-0.5">
+                  <span className="hidden min-[420px]:inline">{cat.label}</span>
+                  <span className="min-[420px]:hidden">{cat.shortLabel}</span>
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* 2.2 Modern AI & Search Optimization Matrix (The O's: SEO, AEO, AGO) */}
+        <OptimizationMatrixCard
+          findings={findings}
+          scores={scores}
+          onNavigateToIssues={onNavigateToIssues}
+        />
+
+        {/* 2.5 Detected Frameworks & Tech Stack */}
+        {techData.length > 0 && (
+          <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+                <Cpu className="w-3.5 h-3.5 text-[#CEFF52]" />
+                <span>Detected Technologies &amp; Frameworks</span>
+              </span>
+              <span className="text-[11px] text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
+                {techData.length} identified
+              </span>
+            </div>
+            <div
+              className={`grid gap-1.5 ${
+                techData.length === 1 ? 'grid-cols-1' : 'grid-cols-1 min-[440px]:grid-cols-2'
+              }`}
+            >
             {techData.map((tech, idx) => (
               <div
                 key={idx}

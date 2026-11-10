@@ -118,6 +118,13 @@ export interface BrowserAdapter {
   queryTabs(query: { active?: boolean; currentWindow?: boolean }): Promise<TabInfo[]>;
 
   /**
+   * Reloads a specified tab and waits for it to finish loading.
+   * @param tabId Target tab identifier.
+   * @param options Reload and timeout settings.
+   */
+  reloadTab(tabId: number, options?: { bypassCache?: boolean; timeoutMs?: number; signal?: AbortSignal }): Promise<void>;
+
+  /**
    * Executes a script or function in the specified tab context.
    * @param options Script injection parameters.
    * @returns Return values array of the injected function per frame.

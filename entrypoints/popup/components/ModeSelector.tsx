@@ -15,6 +15,8 @@ interface ModeSelectorProps {
   onStartInspection: () => void;
   disabled: boolean;
   disabledReason?: string;
+  refreshPage?: boolean;
+  onToggleRefreshPage?: (enabled: boolean) => void;
 }
 
 interface ModeOption {
@@ -67,6 +69,8 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onStartInspection,
   disabled,
   disabledReason,
+  refreshPage = true,
+  onToggleRefreshPage,
 }) => {
   return (
     <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
@@ -119,7 +123,18 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         })}
       </div>
 
-      <div className="pt-2">
+      {/* Page Refresh Pre-Check Option */}
+      <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 px-1 py-0.5">
+        <input
+          type="checkbox"
+          checked={refreshPage}
+          onChange={(e) => onToggleRefreshPage?.(e.target.checked)}
+          className="w-3.5 h-3.5 rounded text-[#152E40] dark:text-[#CEFF52] accent-[#152E40] dark:accent-[#CEFF52] cursor-pointer"
+        />
+        <span>Hard refresh (clear cache) before scan</span>
+      </label>
+
+      <div className="pt-1">
         <Button
           type="button"
           variant="primary"

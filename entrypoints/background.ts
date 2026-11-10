@@ -21,6 +21,7 @@ export default defineBackground(() => {
       const options = {
         crawlLimits: payload?.crawlLimits,
         externalConsent: payload?.externalConsent,
+        refreshPage: payload?.refreshPage,
       };
 
       const inspectionPromise = inspectionOrchestrator.startInspection(mode, tabId, options);
@@ -86,6 +87,32 @@ export default defineBackground(() => {
   if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
     chrome.runtime.onInstalled.addListener(() => {
       inspectionOrchestrator.clearSessions();
+
+      // Register context menu to open side panel on demand
+      if (chrome.contextMenus) {
+        try {
+          chrome.contextMenus.create({
+            id: 'open-side-panel',
+            title: 'Open SiteRadar in Side Panel',
+            contexts: ['all'],
+          });
+        } catch {
+          // ignore duplicate on reload
+        }
+      }
+    });
+  }
+
+  // Handle context menu clicks to open Side Panel
+  if (typeof chrome !== 'undefined' && chrome.contextMenus?.onClicked) {
+    chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+      if (info.menuItemId === 'open-side-panel' && tab?.windowId && (chrome as any).sidePanel?.open) {
+        try {
+          await (chrome as any).sidePanel.open({ windowId: tab.windowId });
+        } catch (err) {
+          console.warn('Failed to open side panel from context menu:', err);
+        }
+      }
     });
   }
 });

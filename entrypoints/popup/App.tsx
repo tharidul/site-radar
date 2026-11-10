@@ -24,6 +24,7 @@ import { LiveProgressBar } from './components/LiveProgressBar';
 import { FindingsExplorer } from './components/FindingsExplorer';
 import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
+import { CookiesView } from './components/CookiesView';
 import { AboutView } from './components/AboutView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
@@ -77,7 +78,8 @@ class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundary
   }
 }
 
-export function App() {
+export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } = {}) {
+  const isSidepanel = propIsSidepanel ?? (typeof window !== 'undefined' && window.location.pathname.includes('sidepanel'));
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle');
   const [selectedMode, setSelectedMode] = useState<InspectionMode>('quick');
   const [inspection, setInspection] = useState<WebsiteInspection | null>(null);
@@ -90,6 +92,7 @@ export function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
+  const [refreshPage, setRefreshPage] = useState<boolean>(true);
 
   // Initial load: Fetch theme, active tab info and sync inspection state strictly for the current tab & URL
   useEffect(() => {
@@ -186,6 +189,25 @@ export function App() {
       chrome.tabs.onUpdated.addListener(handleTabUpdated);
     }
 
+    const handleTabActivated = async () => {
+      if (!mounted) return;
+      try {
+        const adapter = getBrowserAdapter();
+        const tab = await adapter.getActiveTab().catch(() => null);
+        if (mounted && tab) {
+          setActiveTab(tab);
+          const validation = validateScheme(tab.url || '');
+          setSchemeValidation(validation);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    if (typeof chrome !== 'undefined' && chrome.tabs?.onActivated) {
+      chrome.tabs.onActivated.addListener(handleTabActivated);
+    }
+
     // Listen to live broadcast events from orchestrator
     const unsubProgress = messageBus.onMessage(
       MESSAGE_CHANNELS.SCAN_PROGRESS,
@@ -224,6 +246,9 @@ export function App() {
       if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
         chrome.tabs.onUpdated.removeListener(handleTabUpdated);
       }
+      if (typeof chrome !== 'undefined' && chrome.tabs?.onActivated) {
+        chrome.tabs.onActivated.removeListener(handleTabActivated);
+      }
     };
   }, []);
 
@@ -237,8 +262,10 @@ export function App() {
     setProgress({
       scanId: `scan_${Date.now()}`,
       mode: selectedMode,
-      step: 'Initiating audit pipeline...',
-      percent: 5,
+      step: refreshPage
+        ? 'Hard refreshing page (clearing cache) for accurate data usage...'
+        : 'Initiating audit pipeline...',
+      percent: 3,
       completedModules: 0,
       totalModules: selectedMode === 'quick' ? 8 : selectedMode === 'full' ? 10 : 15,
       timestamp: Date.now(),
@@ -248,6 +275,7 @@ export function App() {
       const res = await messageBus.sendToBackground(MESSAGE_CHANNELS.START_INSPECTION, {
         mode: selectedMode,
         tabId: activeTab?.id,
+        refreshPage,
       });
 
       if (!res.success) {
@@ -258,7 +286,7 @@ export function App() {
       setScanStatus('failed');
       setErrorMessage(err?.message || 'Error communicating with background service worker');
     }
-  }, [schemeValidation.valid, selectedMode, activeTab?.id]);
+  }, [schemeValidation.valid, selectedMode, activeTab?.id, refreshPage]);
 
   // Cancel in-flight inspection (rerender-memo)
   const handleCancelInspection = useCallback(async () => {
@@ -328,6 +356,20 @@ export function App() {
     }
   }, []);
 
+  const handleOpenSidePanel = useCallback(async () => {
+    try {
+      if (typeof chrome !== 'undefined' && (chrome as any).sidePanel?.open) {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (tab?.windowId) {
+          await (chrome as any).sidePanel.open({ windowId: tab.windowId });
+          window.close();
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to open side panel:', err);
+    }
+  }, []);
+
   // Navigation from Overview cards to Issues (rerender-memo)
   const handleNavigateToIssues = useCallback((filter?: { severity?: Severity | 'all'; category?: string }) => {
     if (filter?.severity !== undefined) {
@@ -348,7 +390,11 @@ export function App() {
   return (
     <div
       data-theme={theme}
-      className={`flex flex-col h-[600px] w-[580px] bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden rounded-lg ${theme}`}
+      className={`flex flex-col ${
+        isSidepanel
+          ? 'h-screen w-full min-w-[320px] rounded-none'
+          : 'h-[600px] w-[580px] rounded-lg'
+      } bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
     >
       {/* 1. Header with Dark Crimson Wave and URL strip (shrink-0 prevents flex crushing) */}
       <div className="shrink-0">
@@ -362,13 +408,15 @@ export function App() {
           onOptionsClick={handleOpenOptions}
           theme={theme}
           onToggleTheme={handleToggleTheme}
-          onClose={handleClose}
+          onClose={isSidepanel ? undefined : handleClose}
+          onOpenSidePanel={handleOpenSidePanel}
+          isSidepanel={isSidepanel}
         />
       </div>
 
       {/* 2. Navigation Tab Bar (shrink-0 prevents flex crushing) */}
-      {inspection && scanStatus === 'completed' && (
-        <div className="shrink-0">
+      {scanStatus !== 'running' && (
+        <div className="shrink-0 overflow-hidden">
           <TabBar
             activeTab={activeDashboardTab}
             onSelectTab={setActiveDashboardTab}
@@ -397,7 +445,10 @@ export function App() {
             </span>
             <button
               type="button"
-              onClick={() => setScanStatus('idle')}
+              onClick={() => {
+                setScanStatus('idle');
+                setActiveDashboardTab('overview');
+              }}
               className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
             >
               Back to Launcher
@@ -415,7 +466,10 @@ export function App() {
             <p className="text-xs text-zinc-600 dark:text-zinc-400">{errorMessage || 'An unknown error occurred.'}</p>
             <button
               type="button"
-              onClick={() => setScanStatus('idle')}
+              onClick={() => {
+                setScanStatus('idle');
+                setActiveDashboardTab('overview');
+              }}
               className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
             >
               Try Again
@@ -423,30 +477,33 @@ export function App() {
           </div>
         )}
 
-        {/* Mode Selector & Launcher (Visible when idle/no inspection) */}
-        {(scanStatus === 'idle' || scanStatus === 'cancelled' || scanStatus === 'failed') && !inspection && (
-          <ModeSelector
-            selectedMode={selectedMode}
-            onSelectMode={setSelectedMode}
-            onStartInspection={handleStartInspection}
-            disabled={!schemeValidation.valid || !activeTab}
-            disabledReason={schemeValidation.reason || 'No active tab detected'}
-          />
-        )}
+        {/* Tab Content Suites */}
+        <TabErrorBoundary fallbackTab={() => setActiveDashboardTab('overview')}>
+          {/* Tab 1: Overview Tab */}
+          {activeDashboardTab === 'overview' && (
+            <>
+              {scanStatus === 'running' ? null : inspection && scanStatus === 'completed' ? (
+                <OverviewDashboard
+                  inspection={inspection}
+                  onNavigateToIssues={handleNavigateToIssues}
+                />
+              ) : (
+                <ModeSelector
+                  selectedMode={selectedMode}
+                  onSelectMode={setSelectedMode}
+                  onStartInspection={handleStartInspection}
+                  disabled={!schemeValidation.valid || !activeTab}
+                  disabledReason={schemeValidation.reason || 'No active tab detected'}
+                  refreshPage={refreshPage}
+                  onToggleRefreshPage={setRefreshPage}
+                />
+              )}
+            </>
+          )}
 
-        {/* Completed Findings Presentation Suite */}
-        {inspection && scanStatus === 'completed' && (
-          <TabErrorBoundary fallbackTab={() => setActiveDashboardTab('overview')}>
-            {/* Tab 1: Overview Dashboard (Matching Screenshot) */}
-            {activeDashboardTab === 'overview' && (
-              <OverviewDashboard
-                inspection={inspection}
-                onNavigateToIssues={handleNavigateToIssues}
-              />
-            )}
-
-            {/* Tab 2: Issues Explorer */}
-            {activeDashboardTab === 'issues' && (
+          {/* Tab 2: Issues Explorer */}
+          {activeDashboardTab === 'issues' && (
+            inspection ? (
               <FindingsExplorer
                 findings={inspection.findings}
                 activeSeverityFilter={activeSeverityFilter}
@@ -455,24 +512,77 @@ export function App() {
                 onSelectCategoryFilter={setActiveCategoryFilter}
                 scores={inspection.scores}
               />
-            )}
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">No findings collected yet</div>
+                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                  Run an inspection from the Overview tab to detect security, SEO, performance, and accessibility issues.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+                >
+                  Go to Overview
+                </button>
+              </div>
+            )
+          )}
 
-            {/* Tab 3: Rules & Modules Accordions */}
-            {activeDashboardTab === 'rules' && (
+          {/* Tab 3: Rules & Modules Accordions */}
+          {activeDashboardTab === 'rules' && (
+            inspection ? (
               <ModuleAccordions modules={inspection.modules as any} />
-            )}
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Rules &amp; Standards</div>
+                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                  Run an audit from the Overview tab to view evaluated rules and specifications.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+                >
+                  Go to Overview
+                </button>
+              </div>
+            )
+          )}
 
-            {/* Tab 4: Resources View */}
-            {activeDashboardTab === 'resources' && (
+          {/* Tab 4: Resources View */}
+          {activeDashboardTab === 'resources' && (
+            inspection ? (
               <ResourcesView inspection={inspection} />
-            )}
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Resource Inventory</div>
+                <p className="text-[11px] text-zinc-500 max-w-xs mx-auto">
+                  Run an audit from the Overview tab to inspect network payloads, scripts, and stylesheets.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+                >
+                  Go to Overview
+                </button>
+              </div>
+            )
+          )}
 
-            {/* Tab 5: About */}
-            {activeDashboardTab === 'about' && (
-              <AboutView />
-            )}
-          </TabErrorBoundary>
-        )}
+          {/* Tab 5: Cookies Manager & Security Inspector (Available anytime for active domain) */}
+          {activeDashboardTab === 'cookies' && (
+            <div className="p-4">
+              <CookiesView targetUrl={activeTab?.url || inspection?.target.url || ''} />
+            </div>
+          )}
+
+          {/* Tab 6: About */}
+          {activeDashboardTab === 'about' && (
+            <AboutView />
+          )}
+        </TabErrorBoundary>
       </main>
     </div>
   );

@@ -21,9 +21,9 @@ All core analysis runs locally in your browser tab and background service worker
 SiteRadar does not collect, record, or transmit:
 
 - Browsing history or URLs of visited pages outside explicit audits
-- Cookies, session tokens, or site storage (localStorage / sessionStorage)
+- Cookie tracking or telemetry. When using the on-demand Cookie Manager tab, cookies for the active domain are inspected and edited strictly locally within your browser and are never transmitted to any external server.
 - Form input values, keystrokes, or submitted personal information
-- Authentication credentials, passwords, or authentication cookies
+- Authentication credentials, passwords, or authentication tokens
 - Analytics, telemetry, usage metrics, or crash reports
 - Personally identifiable user information
 
@@ -103,6 +103,7 @@ Before any extracted metadata or HTTP headers enter the inspection report, SiteR
 | `activeTab` | Enables inspection on the tab you are actively viewing when you trigger an audit. |
 | `scripting` | Executes the lightweight in-tab collector to read DOM elements, SEO tags, and window-level framework globals. |
 | `storage` | Saves your theme preference and crawler limits locally across browser sessions. |
+| `cookies` | Enables the Cookie Manager tab to inspect, edit, and audit security attributes (HttpOnly, Secure, SameSite) of cookies for the active domain locally. |
 | `optional_host_permissions (*://*/*)` | Requested on demand to inspect HTTP headers and crawl pages on domains you audit. |
 
 ---

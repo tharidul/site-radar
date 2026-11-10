@@ -6,7 +6,7 @@
  */
 
 import React from 'react';
-import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X } from 'lucide-react';
+import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen } from 'lucide-react';
 import { Button } from './Button';
 
 interface HeaderProps {
@@ -20,6 +20,8 @@ interface HeaderProps {
   theme?: 'dark' | 'light';
   onToggleTheme?: () => void;
   onClose?: () => void;
+  onOpenSidePanel?: () => void;
+  isSidepanel?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -33,6 +35,8 @@ export const Header: React.FC<HeaderProps> = ({
   theme = 'dark',
   onToggleTheme,
   onClose,
+  onOpenSidePanel,
+  isSidepanel = false,
 }) => {
   return (
     <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
@@ -85,6 +89,20 @@ export const Header: React.FC<HeaderProps> = ({
               ) : (
                 <Sun className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
               )}
+            </Button>
+          )}
+
+          {onOpenSidePanel && !isSidepanel && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={onOpenSidePanel}
+              title="Dock to Side Panel (keeps extension open while browsing)"
+              aria-label="Open Side Panel"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+            >
+              <PanelRightOpen className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
             </Button>
           )}
 

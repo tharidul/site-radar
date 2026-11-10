@@ -71,6 +71,7 @@ export interface MessageProtocol {
       tabId?: number;
       crawlLimits?: Partial<CrawlLimits>;
       externalConsent?: Record<string, boolean>;
+      refreshPage?: boolean;
     };
     response: {
       success: boolean;

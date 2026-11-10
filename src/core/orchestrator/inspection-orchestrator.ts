@@ -56,6 +56,7 @@ export interface InspectionOptions {
   crawlLimits?: Partial<CrawlLimits>;
   externalConsent?: Record<string, boolean>;
   skipIntelligence?: boolean;
+  refreshPage?: boolean;
 }
 
 export interface OrchestratorOptions {
@@ -222,13 +223,48 @@ export class InspectionOrchestrator {
     session.inspection = inspection;
 
     try {
-      // 3. Ensure content script is ready in target tab
-      await this.ensureContentScriptInjected(tabId, signal);
-
-      // 4. Resolve Mode Plan
+      // 3. Resolve Mode Plan early
       const plan = getModePlan(mode);
 
-      // 5. Build and Schedule In-Page Collection Tasks (Phase 1)
+      // 4. Reload page if requested (default: true) to capture live data usage & fresh vitals (Ctrl+Shift+R hard refresh bypassing cache)
+      const shouldRefresh = options?.refreshPage !== false;
+      if (shouldRefresh) {
+        const refreshProgress: ScanProgressEvent = {
+          scanId,
+          mode,
+          step: 'Hard refreshing page (clearing cache) for accurate data usage...',
+          percent: 3,
+          completedModules: 0,
+          totalModules: plan.modules.length,
+          timestamp: Date.now(),
+        };
+        session.progress = refreshProgress;
+        this.emitProgress(refreshProgress);
+
+        await this.adapter.reloadTab(tabId, { bypassCache: true, signal, timeoutMs: 15000 });
+
+        if (signal.aborted) throw signal.reason;
+
+        // Brief settle window so DOM and initial paints register
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        const readyProgress: ScanProgressEvent = {
+          scanId,
+          mode,
+          step: 'Page refreshed. Initializing audit modules...',
+          percent: 6,
+          completedModules: 0,
+          totalModules: plan.modules.length,
+          timestamp: Date.now(),
+        };
+        session.progress = readyProgress;
+        this.emitProgress(readyProgress);
+      }
+
+      // 5. Ensure content script is ready in target tab
+      await this.ensureContentScriptInjected(tabId, signal);
+
+      // 6. Build and Schedule In-Page Collection Tasks (Phase 1)
       const tasks: ScheduledTask[] = plan.modules.map((planItem) => ({
         planItem,
         run: async ({ signal: moduleSignal }) => {

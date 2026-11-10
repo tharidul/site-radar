@@ -697,21 +697,24 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(card?.className).toContain('dark:bg-zinc-900');
     });
 
-    it('TabBar renders all 5 tabs including the About tab', () => {
+    it('TabBar renders all 6 tabs including the Cookies and About tabs', () => {
       const div = renderComponent(
         <TabBar
-          activeTab="about"
+          activeTab="cookies"
           onSelectTab={() => {}}
           issuesCount={2}
         />,
       );
       const buttons = div.querySelectorAll('button');
-      expect(buttons.length).toBe(5);
+      expect(buttons.length).toBe(6);
 
-      // 5th tab is About and active
-      expect(buttons[4]?.textContent).toContain('About');
+      // 5th tab is Cookies and active
+      expect(buttons[4]?.textContent).toContain('Cookies');
       expect(buttons[4]?.className).toContain('text-[#152E40]');
       expect(buttons[4]?.className).toContain('dark:text-[#CEFF52]');
+
+      // 6th tab is About
+      expect(buttons[5]?.textContent).toContain('About');
     });
   });
 });
