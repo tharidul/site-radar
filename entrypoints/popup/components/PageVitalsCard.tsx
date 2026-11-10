@@ -153,19 +153,19 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
         )}
       </div>
 
-      {/* Speed Timing Grid (Responsive: 2 columns on thin viewports, 4 columns on wide) */}
-      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 gap-2 py-3">
+      {/* Speed Timing Grid (Seamless 4-column ticker without nested boxes) */}
+      <div className="grid grid-cols-4 divide-x divide-zinc-200/70 dark:divide-zinc-800 py-3.5">
         {/* TTFB */}
-        <div className="p-2.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+        <div className="pr-3 pl-0">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             TTFB
           </div>
-          <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-0.5">
+          <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
             {ttfb || '—'}
           </div>
-          <div className="text-[10px] mt-0.5 truncate">
+          <div className="text-[11px] mt-0.5">
             {ttfb ? (
-              <span className="text-[#152E40] dark:text-[#CEFF52] font-semibold">Server response</span>
+              <span className="text-[#CEFF52] font-semibold">Server response</span>
             ) : (
               <span className="text-zinc-400 dark:text-zinc-500">Cached / Nav</span>
             )}
@@ -173,40 +173,40 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
         </div>
 
         {/* FCP */}
-        <div className="p-2.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+        <div className="px-3">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             FCP
           </div>
-          <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-0.5">
+          <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
             {fcp || '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
             First content paint
           </div>
         </div>
 
         {/* LCP */}
-        <div className="p-2.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+        <div className="px-3">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             LCP
           </div>
-          <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-0.5">
+          <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
             {lcp || '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
             Largest element
           </div>
         </div>
 
         {/* Load Event */}
-        <div className="p-2.5 rounded bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/50 dark:border-zinc-800/60">
+        <div className="pl-3 pr-0">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             Load Event
           </div>
-          <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-0.5">
+          <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
             {fullLoad || domLoad || 'Complete'}
           </div>
-          <div className="text-[10px] text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
+          <div className="text-[11px] text-zinc-500 dark:text-zinc-400 mt-0.5">
             {fullLoad ? 'Window load' : domLoad ? 'DOM ready' : 'Rendered'}
           </div>
         </div>

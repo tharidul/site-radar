@@ -162,25 +162,25 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
             title={`View ${row.name} findings (${row.score}%)`}
           >
             {/* Left: Discipline Name & Target */}
-            <div className="flex items-baseline gap-1.5 flex-1 min-w-0">
-              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100 shrink-0">
+            <div className="flex items-baseline gap-2 min-w-[125px] shrink-0">
+              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100">
                 {row.name}
               </span>
-              <span className="text-[11px] text-zinc-500 dark:text-zinc-400 truncate">
+              <span className="text-[11px] text-zinc-500 dark:text-zinc-400">
                 {row.tagline}
               </span>
             </div>
 
-            {/* Middle: Factual Signal Diagnosis (visible on wider viewports) */}
-            <div className="hidden min-[480px]:block flex-1 min-w-0 px-2">
+            {/* Middle: Factual Signal Diagnosis */}
+            <div className="flex-1 min-w-0 pr-2">
               <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                 {row.statusText}
               </p>
             </div>
 
             {/* Right: Clean Progress Bar & Score */}
-            <div className="flex items-center gap-2 shrink-0 ml-auto">
-              <div className="w-12 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-14 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all duration-300 ease-out"
                   style={{
