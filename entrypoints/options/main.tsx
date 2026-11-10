@@ -1,7 +1,3 @@
-/**
- * @file entrypoints/options/main.tsx
- * @description Entrypoint mounting the options and settings page.
- */
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';

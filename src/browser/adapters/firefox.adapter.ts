@@ -1,7 +1,3 @@
-/**
- * @file src/browser/adapters/firefox.adapter.ts
- * @description Firefox Manifest V3 browser adapter wrapping browser.* / Gecko WebExtension APIs.
- */
 
 import type {
   BrowserAdapter,
@@ -12,7 +8,6 @@ import type {
   BrowserCapabilities,
 } from './types';
 
-// Declare browser for Gecko runtime environments
 declare const browser: any;
 
 export class FirefoxMV3Adapter implements BrowserAdapter {

@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/Badge.tsx
- * @description Unified Badge primitive following the single-component rule.
- * Consolidates status, severity, and module collection tags across the extension with zero redundancy.
- */
 
 import React from 'react';
 import type { Severity, FindingStatus, CollectionStatus } from '@/types/inspection';
@@ -67,7 +62,6 @@ export const Badge: React.FC<BadgeProps> = ({
         break;
     }
   } else if (variant === 'severity' && severity) {
-    // If the check passed or is not-applicable/not-available, keep severity badge neutral
     if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
       colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
     } else {

@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/privacy-signals.collector.ts
- * @description Detects consent management platforms (CMPs), privacy policy links, third-party tracker domains, and storage API usage.
- */
 
 import type { PrivacySignalsData } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -53,7 +49,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
     const win = context.window || (doc.defaultView as Window | null);
     const pageUrl = doc.location?.href || context.url || '';
 
-    // 1. Consent Management Platform (CMP) detection
     let consentBannerDetected = false;
 
     for (const cmp of KNOWN_CMPS) {
@@ -75,7 +70,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
       }
     }
 
-    // 2. Privacy Policy Links
     const privacyPolicyLinks: string[] = [];
     const privacyCandidates = doc.querySelectorAll('a[href]');
     privacyCandidates.forEach((a) => {
@@ -107,7 +101,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
       }
     });
 
-    // 3. Third-Party Tracker Identification
     let pageHostname = '';
     try {
       pageHostname = new URL(pageUrl || 'http://localhost').hostname.toLowerCase();
@@ -121,7 +114,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
       const src = (el.getAttribute('src') || '').toLowerCase();
       for (const pattern of KNOWN_TRACKER_PATTERNS) {
         if (src.includes(pattern)) {
-          // Verify it is genuinely third-party relative to inspected page
           const isFirstParty =
             (basePageDomain && pattern.includes(basePageDomain)) ||
             (basePageDomain.includes('google.') && (pattern.includes('google') || pattern.includes('doubleclick')));
@@ -133,7 +125,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
       }
     });
 
-    // 4. Storage API Detection (ZERO VALUE COLLECTION GUARANTEE)
     const storageTypesUsed: string[] = [];
     if (win) {
       try {
@@ -141,7 +132,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
           storageTypesUsed.push('localStorage');
         }
       } catch {
-        // Storage access blocked
       }
 
       try {
@@ -149,7 +139,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
           storageTypesUsed.push('sessionStorage');
         }
       } catch {
-        // Storage access blocked
       }
 
       try {
@@ -157,7 +146,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
           storageTypesUsed.push('indexedDB');
         }
       } catch {
-        // IndexedDB unavailable
       }
     }
 
@@ -166,7 +154,6 @@ export class PrivacySignalsCollector implements PageCollector<PrivacySignalsData
         storageTypesUsed.push('cookies');
       }
     } catch {
-      // Cookie access blocked
     }
 
     const thirdPartyTrackers = Array.from(trackersFound);

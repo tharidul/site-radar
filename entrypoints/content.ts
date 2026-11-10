@@ -1,7 +1,3 @@
-/**
- * @file entrypoints/content.ts
- * @description In-tab content script collector coordinator.
- */
 
 import { defineContentScript } from 'wxt/utils/define-content-script';
 import { MESSAGE_CHANNELS } from '../src/types/messaging';
@@ -9,11 +5,6 @@ import { messageBus } from '../src/messaging/bus';
 import { PAGE_COLLECTORS } from '../src/collectors/page';
 import { redactSecrets } from '../src/security/secret-redactor';
 
-/**
- * Smoothly animates window scrolling to target coordinates over durationMs.
- * Uses requestAnimationFrame with cubic easeInOutQuad easing for natural momentum,
- * with a safety timer fallback in case background tab throttling pauses rAF.
- */
 function smoothScrollTo(
   targetY: number,
   targetX: number,
@@ -33,7 +24,6 @@ function smoothScrollTo(
     const startTime = performance.now();
     let completed = false;
 
-    // Safety timeout in case background tab throttling suspends requestAnimationFrame
     const safetyTimer = setTimeout(() => {
       if (!completed) {
         completed = true;
@@ -47,7 +37,6 @@ function smoothScrollTo(
       const elapsed = currentTime - startTime;
       const progress = Math.min(1, elapsed / durationMs);
 
-      // Smooth easeInOutQuad easing for natural deceleration and acceleration
       const ease =
         progress < 0.5
           ? 2 * progress * progress
@@ -76,7 +65,6 @@ function smoothScrollTo(
 export default defineContentScript({
   registration: 'runtime',
   main() {
-    // 1. Handshake Ping Handler
     messageBus.onMessage(
       MESSAGE_CHANNELS.PING_CONTENT_SCRIPT,
       async () => {
@@ -88,7 +76,6 @@ export default defineContentScript({
       },
     );
 
-    // 2. Collector Execution Handler
     messageBus.onMessage(
       MESSAGE_CHANNELS.EXECUTE_COLLECTOR,
       async (payload) => {
@@ -118,7 +105,6 @@ export default defineContentScript({
             options: payload?.options as Record<string, unknown> | undefined,
           });
 
-          // Strict secret redaction applied before data crosses boundary
           const sanitizedData = rawResult.data !== null && rawResult.data !== undefined
             ? redactSecrets(rawResult.data)
             : null;
@@ -146,7 +132,6 @@ export default defineContentScript({
       },
     );
 
-    // 3. Scroll to Bottom and Measure Dynamic Page Payloads
     messageBus.onMessage(
       MESSAGE_CHANNELS.MEASURE_SCROLLED_PAGE,
       async () => {
@@ -154,7 +139,6 @@ export default defineContentScript({
           const origX = window.scrollX;
           const origY = window.scrollY;
 
-          // Compute page dimensions
           const docEl = document.documentElement;
           const body = document.body;
           const totalHeight = Math.max(
@@ -167,7 +151,6 @@ export default defineContentScript({
           );
 
           const viewportHeight = window.innerHeight || 800;
-          // For infinite feeds, safely bound scroll sweep to 8 screens to prevent unbounded runaway loops
           const maxScrollScreens = 8;
           const targetBottom = Math.min(
             totalHeight,
@@ -175,33 +158,29 @@ export default defineContentScript({
           );
           const scrollDistance = Math.max(0, targetBottom - origY);
 
-          // Scroll slowly at ~1000px/s (1px/ms) so user can see progress and IntersectionObserver/lazy-loaders trigger reliably
-          const scrollDownDuration = Math.min(
-            3500,
-            Math.max(1500, Math.round((scrollDistance / 1000) * 1000))
-          );
+          const scrollDownDuration = scrollDistance <= 50
+            ? 0
+            : Math.min(2200, Math.max(500, Math.round((scrollDistance / 1500) * 1000)));
 
-          // Smoothly glide down across the page
-          await smoothScrollTo(targetBottom, origX, scrollDownDuration);
+          if (scrollDownDuration > 0) {
+            await smoothScrollTo(targetBottom, origX, scrollDownDuration);
+            await new Promise((r) => setTimeout(r, 400));
+          }
 
-          // Wait at the bottom for lazy-loaded network requests to dispatch and populate timeline
-          await new Promise((r) => setTimeout(r, 650));
-
-          // Check if document height grew significantly while scrolling (infinite scroll detection)
           const finalHeight = Math.max(
             body ? body.scrollHeight : 0,
             docEl ? docEl.scrollHeight : 0
           );
           const isInfiniteScroll = finalHeight > totalHeight * 1.25;
 
-          // Smoothly glide back to user's original scroll position
-          const scrollUpDuration = Math.min(
-            1200,
-            Math.max(600, Math.round((scrollDistance / 2000) * 1000))
-          );
-          await smoothScrollTo(origY, origX, scrollUpDuration);
+          const scrollUpDuration = scrollDistance <= 50
+            ? 0
+            : Math.min(900, Math.max(300, Math.round((scrollDistance / 2500) * 1000)));
 
-          // Collect updated performance entries
+          if (scrollUpDuration > 0) {
+            await smoothScrollTo(origY, origX, scrollUpDuration);
+          }
+
           let scrolledTransferSize = 0;
           let scrolledDecodedSize = 0;
           const resources = performance.getEntriesByType('resource');
@@ -218,7 +197,6 @@ export default defineContentScript({
             }
           });
 
-          // Also account for navigation entry
           const navEntries = performance.getEntriesByType('navigation');
           if (navEntries.length > 0) {
             const nav = navEntries[0] as PerformanceNavigationTiming;

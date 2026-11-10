@@ -1,9 +1,3 @@
-/**
- * @file src/core/orchestrator/cancellation.ts
- * @description Scan cancellation controller providing instant abort of running
- * inspections, module tasks, and network operations via AbortController.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 9.
- */
 
 export class ScanCancelledError extends Error {
   readonly code = 'SCAN_CANCELLED' as const;
@@ -68,10 +62,6 @@ export class CancellationManager implements ICancellationManager {
     this.controllers.delete(scanId);
   }
 
-  /**
-   * Creates a child AbortSignal that aborts if EITHER the parent scan is cancelled
-   * OR the specified timeout interval elapses.
-   */
   createLinkedTimeout(
     scanId: string,
     timeoutMs: number,

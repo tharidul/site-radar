@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/OptimizationMatrixCard.tsx
- * @description Editorial, high-density AI & Search Optimization card.
- * Compares SEO (Search Engines), AEO (Answer Engines), and AGO (Autonomous AI Agents)
- * in a clean, compact tabular layout with zero AI slop, no icon tiles, and clear font hierarchy.
- */
 
 import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
@@ -32,7 +26,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
   onNavigateToIssues,
 }) => {
   const rows: OptimizationRow[] = useMemo(() => {
-    // 1. SEO (Search Engines)
     const seoFindings = findings.filter(
       (f) => f.category === 'seo' && !f.ruleId.startsWith('aeo-') && !f.ruleId.startsWith('ago-')
     );
@@ -46,7 +39,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         ? 'Metadata, canonical, and heading hierarchy verified'
         : `${seoIssues.length} check${seoIssues.length === 1 ? '' : 's'} require review`;
 
-    // 2. AEO (Answer Engines / Perplexity / ChatGPT)
     const aeoFindings = findings.filter((f) => f.ruleId.startsWith('aeo-'));
     const aeoIssues = aeoFindings.filter((f) => f.status === 'failed' || f.status === 'warning');
     let aeoScore = 80;
@@ -66,7 +58,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         ? 'AI crawler permissions and structured content verified'
         : aeoIssues.map((i) => i.title.replace(/^AEO\s+/, '')).join(' · ');
 
-    // 3. AGO (Agentic Optimization / AI Browser Agents)
     const agoFindings = findings.filter((f) => f.ruleId.startsWith('ago-'));
     const agoIssues = agoFindings.filter((f) => f.status === 'failed' || f.status === 'warning');
     let agoScore = 90;
@@ -131,7 +122,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
 
   return (
     <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
-      {/* Header Bar */}
       <div className="flex items-center justify-between mb-2">
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
@@ -151,7 +141,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         </button>
       </div>
 
-      {/* High-density, un-slopped rows */}
       <div className="space-y-1.5">
         {rows.map((row) => (
           <button
@@ -161,7 +150,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
             className="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out text-left cursor-pointer group active:scale-[0.99]"
             title={`View ${row.name} findings (${row.score}%)`}
           >
-            {/* Left: Discipline Name & Target */}
             <div className="flex items-baseline gap-2 min-w-[125px] shrink-0">
               <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100">
                 {row.name}
@@ -171,14 +159,12 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
               </span>
             </div>
 
-            {/* Middle: Factual Signal Diagnosis */}
-            <div className="flex-1 min-w-0 pr-2">
+            <div className="hidden min-[480px]:block flex-1 min-w-0 pr-2">
               <p className="text-[11px] text-zinc-600 dark:text-zinc-400 truncate">
                 {row.statusText}
               </p>
             </div>
 
-            {/* Right: Clean Progress Bar & Score */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-14 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-700 overflow-hidden">
                 <div

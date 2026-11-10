@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/ModeSelector.tsx
- * @description Inspection mode selector and audit launch controls with scheme guards.
- * Styled to harmonize with the Website Intelligence redesign.
- */
 
 import React from 'react';
 import { Zap, Layers, Compass, Play, ExternalLink } from 'lucide-react';
@@ -123,7 +118,6 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         })}
       </div>
 
-      {/* Page Refresh Pre-Check Option */}
       <label className="flex items-center gap-2 cursor-pointer select-none text-xs text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200 px-1 py-0.5">
         <input
           type="checkbox"
@@ -150,7 +144,6 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         </Button>
       </div>
 
-      {/* Author & Privacy Policy Links */}
       <div className="pt-2.5 pb-1 flex items-center justify-center gap-3 border-t border-zinc-200/70 dark:border-zinc-800/80 text-[11px] select-none">
         <button
           type="button"

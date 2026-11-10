@@ -1,14 +1,8 @@
-/**
- * @file entrypoints/popup/components/Scorecard.tsx
- * @description Findings scorecard summary, severity breakdown, and category score indicators (Feature 43).
- * Adheres strictly to anti-slop guidelines: functional typography, high contrast, zero generic cards.
- */
 
 import React, { useMemo } from 'react';
 import type { CategoryScore, AuditFinding, Severity } from '@/types/inspection';
 import { AlertCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
 
-// Hoisted stable default non-primitive (rerender-memo-with-default-value)
 const EMPTY_SCORES: Record<string, CategoryScore> = {};
 
 interface ScorecardProps {
@@ -24,7 +18,6 @@ export const Scorecard: React.FC<ScorecardProps> = ({
   activeSeverityFilter = 'all',
   onFilterSeverity,
 }) => {
-  // Single-pass severity aggregation (js-combine-iterations, rerender-memo)
   const counts = useMemo(() => {
     let critical = 0;
     let high = 0;
@@ -58,7 +51,6 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         </span>
       </div>
 
-      {/* Severity Count Filter Buttons */}
       <div className="grid grid-cols-5 gap-1.5">
         <button
           type="button"
@@ -131,7 +123,6 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         </button>
       </div>
 
-      {/* Category Scores Grid */}
       <div className="grid grid-cols-2 gap-2 pt-1">
         {categories.map((catKey) => {
           const scoreObj = scores[catKey];

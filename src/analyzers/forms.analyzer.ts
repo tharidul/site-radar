@@ -1,7 +1,3 @@
-/**
- * @file src/analyzers/forms.analyzer.ts
- * @description Evaluates cross-origin form submission actions and input destinations under Best Practices.
- */
 
 import type { AuditFinding, FormsData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -41,7 +37,6 @@ export class FormsAnalyzer implements Analyzer {
             externalActionForms++;
           }
         } catch {
-          // ignore parsing error
         }
       }
     }

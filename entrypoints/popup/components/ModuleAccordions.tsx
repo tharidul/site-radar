@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/ModuleAccordions.tsx
- * @description 10 expandable module result accordions displaying execution status,
- * coverage metrics, operational limitations, and key-value tables (Rules tab).
- * Redesigned to harmonize with the Website Intelligence visual standard.
- */
 
 import React, { useState } from 'react';
 import { ChevronDown, ChevronRight, AlertCircle, ShieldAlert, Check, Shield } from 'lucide-react';

@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/accessibility.collector.ts
- * @description Injects and executes axe-core automated accessibility audits (WCAG 2.1 AA).
- */
 
 import axe from 'axe-core';
 import type { AccessibilityData } from '../../types/inspection';

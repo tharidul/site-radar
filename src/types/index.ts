@@ -1,7 +1,3 @@
-/**
- * @file src/types/index.ts
- * @description Unified index re-exporting all domain contracts, interfaces, and protocols.
- */
 
 export * from './inspection';
 export * from './browser';

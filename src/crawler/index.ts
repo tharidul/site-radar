@@ -1,7 +1,3 @@
-/**
- * @file src/crawler/index.ts
- * @description Bounded same-origin crawler module exports.
- */
 
 export * from './robots';
 export * from './robots-parser';

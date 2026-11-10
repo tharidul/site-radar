@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/seo.analyzer.ts
- * @description Evaluates SEO metadata, title, meta description, robots directives, canonical tags,
- * heading hierarchy, and structured data schemas with context-aware calibration.
- */
 
 import type { AuditFinding, SeoData, DomSemanticData, StructuredDataInfo } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -36,7 +31,6 @@ export class SeoAnalyzer implements Analyzer {
           .build(),
       );
     } else {
-      // 1. Document Title
       const title = seoData.title?.trim();
       if (!title) {
         findings.push(
@@ -72,7 +66,6 @@ export class SeoAnalyzer implements Analyzer {
         );
       }
 
-      // 2. Meta Description
       const desc = seoData.description?.trim();
       if (!desc) {
         findings.push(
@@ -96,7 +89,6 @@ export class SeoAnalyzer implements Analyzer {
         );
       }
 
-      // 3. Robots Directives (Calibrated: noindex on utility/search pages is intentional, not a failure)
       const robots = seoData.metaRobotsDirectives;
       const isNoindex = Array.isArray(robots) ? robots.includes('noindex') : Boolean(robots?.noindex);
       const isNofollow = Array.isArray(robots) ? robots.includes('nofollow') : Boolean(robots?.nofollow);
@@ -143,7 +135,6 @@ export class SeoAnalyzer implements Analyzer {
         );
       }
 
-      // 4. Canonical URL
       const canonical = seoData.canonicalUrl;
       if (!canonical) {
         findings.push(
@@ -183,12 +174,10 @@ export class SeoAnalyzer implements Analyzer {
       }
     }
 
-    // 5. Heading Hierarchy (Calibrated for minimalist apps & homepages)
     const domRes = getModuleData<DomSemanticData>(modules, 'dom');
     if (domRes.data?.headingHierarchy) {
       const h1Count = domRes.data.headingHierarchy.filter((h) => h.level === 1).length;
       if (h1Count === 0) {
-        // Minimalist homepages or search interfaces (e.g. google.com) may lack an H1 without SEO harm
         const isMinimalOrSearch = target.hostname.includes('google.') || (domRes.data.elementCount && domRes.data.elementCount < 60);
         findings.push(
           new FindingBuilder('seo-heading-hierarchy')
@@ -220,7 +209,6 @@ export class SeoAnalyzer implements Analyzer {
       }
     }
 
-    // 6. Structured Data
     const sdRes = getModuleData<StructuredDataInfo>(modules, 'structuredData');
     if (sdRes.data?.schemas && sdRes.data.schemas.length > 0) {
       findings.push(
@@ -243,7 +231,6 @@ export class SeoAnalyzer implements Analyzer {
       );
     }
 
-    // 7. AEO: FAQ & Q&A Schema Markup (aeo-faq-schema)
     const schemas = sdRes.data?.schemas || [];
     const faqOrQASchemas = schemas.filter((s) => {
       const t = (s.schemaType || '').toLowerCase();
@@ -285,7 +272,6 @@ export class SeoAnalyzer implements Analyzer {
       );
     }
 
-    // 8. AEO: LLMs.txt Context Standard (aeo-llms-txt)
     const hasLlms = Boolean(seoData?.hasLlmsTxtLink);
     if (hasLlms) {
       findings.push(
@@ -310,7 +296,6 @@ export class SeoAnalyzer implements Analyzer {
       );
     }
 
-    // 9. AEO: AI Model & Crawler Access (aeo-ai-crawlers)
     const hasNoAi = Boolean(seoData?.hasNoAiDirective);
     const robotsDirectives = seoData?.metaRobotsDirectives;
     const isNoIndex = Array.isArray(robotsDirectives)
@@ -350,7 +335,6 @@ export class SeoAnalyzer implements Analyzer {
       );
     }
 
-    // 10. AEO: Conversational Question Headings (aeo-question-headings)
     if (domRes.data?.headingHierarchy) {
       const headings = domRes.data.headingHierarchy;
       const questionRegex = /^(what|how|why|who|where|when|can|is|does|are|which|top|best|should)\b/i;

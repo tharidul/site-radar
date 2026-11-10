@@ -1,30 +1,15 @@
-/**
- * @file src/core/orchestrator/mode-plans.ts
- * @description Execution plans defining enabled collection modules, priorities,
- * timeouts, and coverage expectations for Quick Scan and Full Page Audit.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 4, 8.
- */
 
 import type { InspectionMode } from '../../types/inspection';
 
 export interface ModulePlanItem {
-  /** Unique module identifier */
   id: string;
-  /** Human-readable module name */
   name: string;
-  /** Primary category grouping */
   category: 'identity' | 'seo' | 'security' | 'performance' | 'accessibility' | 'technology' | 'privacy' | 'content' | 'resources';
-  /** Module execution timeout in milliseconds */
   timeoutMs: number;
-  /** Allowed retry count on unexpected failure */
   retryCount: number;
-  /** Execution priority (lower executes first: 1 = high priority, 10 = low priority) */
   priority: number;
-  /** Whether this module performs heavy DOM/CPU operations (e.g. axe-core) */
   heavy?: boolean;
-  /** Expected number of distinct checks/evaluations executed by this module */
   expectedChecks: number;
-  /** Stated operational limitations */
   limitations: string[];
 }
 
@@ -37,7 +22,6 @@ export interface ModePlan {
   maxConcurrency: number;
 }
 
-/** 8 Core Modules for Quick Scan */
 export const QUICK_SCAN_MODULES: readonly ModulePlanItem[] = [
   {
     id: 'identity',
@@ -141,7 +125,6 @@ export const QUICK_SCAN_MODULES: readonly ModulePlanItem[] = [
   },
 ] as const;
 
-/** Additional In-Depth Modules for Full Page Audit */
 export const FULL_AUDIT_ADDITIONAL_MODULES: readonly ModulePlanItem[] = [
   {
     id: 'structuredData',

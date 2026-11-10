@@ -1,18 +1,7 @@
-/**
- * @file src/export/html.exporter.ts
- * @description Anti-slop, standalone, self-contained HTML audit report exporter.
- * Features zinc-950 dark theme, semantic HTML5 <details>/<summary> accordions,
- * multi-layered anti-XSS defense, zero remote CDN calls, and complete secret redaction.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 13, Feature 49,
- * and .agents/skills/anti-slop-frontend-design/SKILL.md.
- */
 
 import type { WebsiteInspection, AuditFinding, CategoryScore, CollectionResult } from '@/types/inspection';
 import { redactSecrets } from '@/security/secret-redactor';
 
-/**
- * Strict HTML entity escaping for text nodes and quoted attribute contexts.
- */
 export function escapeHtml(str: unknown): string {
   if (str === null || str === undefined) return '';
   const s = typeof str === 'string' ? str : String(str);
@@ -24,9 +13,6 @@ export function escapeHtml(str: unknown): string {
     .replace(/'/g, '&#39;');
 }
 
-/**
- * Sanitizes URLs for href/src attributes to block javascript:, data:, vbscript: injection.
- */
 export function sanitizeHref(url: unknown): string {
   if (!url || typeof url !== 'string') return '#';
   const trimmed = url.trim();
@@ -36,9 +22,6 @@ export function sanitizeHref(url: unknown): string {
   return '#';
 }
 
-/**
- * Formats evidence values safely into escaped string or JSON representation.
- */
 export function formatEvidenceValue(value: unknown): string {
   if (value === undefined || value === null) return '';
   if (typeof value === 'string') return escapeHtml(value);
@@ -75,7 +58,6 @@ const MODULE_DISPLAY_NAMES: Record<string, string> = {
 };
 
 export function exportToHtml(inspection: WebsiteInspection): string {
-  // 1. Scrub entire inspection structure of any secrets
   const sanitized = redactSecrets(inspection);
 
   const targetUrl = sanitizeHref(sanitized.target?.url);
@@ -96,14 +78,12 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       ? sanitized.completedAt - sanitized.startedAt
       : undefined;
 
-  // Severity counts
   const critCount = findings.filter((f) => f.severity === 'critical').length;
   const highCount = findings.filter((f) => f.severity === 'high').length;
   const medCount = findings.filter((f) => f.severity === 'medium').length;
   const lowCount = findings.filter((f) => f.severity === 'low').length;
   const infoCount = findings.filter((f) => f.severity === 'info').length;
 
-  // Build category score summary cards
   const scoreCardsHtml = Object.entries(scores)
     .map(([cat, score]: [string, CategoryScore]) => {
       const scoreVal = Math.round(score.score);
@@ -135,7 +115,6 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     })
     .join('');
 
-  // 10 canonical module accordions
   const canonicalModuleKeys = [
     'identity',
     'seo',
@@ -200,7 +179,6 @@ export function exportToHtml(inspection: WebsiteInspection): string {
     })
     .join('');
 
-  // Build findings list
   const findingsHtml = findings
     .map((f: AuditFinding) => {
       const sev = escapeHtml(f.severity);
@@ -317,8 +295,8 @@ export function exportToHtml(inspection: WebsiteInspection): string {
       --info-bg: rgba(21, 46, 64, 0.3);
       --pass: #CEFF52;
       --pass-bg: rgba(206, 255, 82, 0.15);
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --font-sans: "Inter", sans-serif;
+      --font-mono: ui-monospace, monospace;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {

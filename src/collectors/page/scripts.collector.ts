@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/scripts.collector.ts
- * @description Audits script tags, render-blocking scripts, subresource integrity (SRI), and external script domains.
- */
 
 import type { JavaScriptData, ScriptItem } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -35,7 +31,6 @@ export class ScriptsCollector implements PageCollector<JavaScriptData> {
     let withSri = 0;
 
     scriptElements.forEach((script) => {
-      // Exclude JSON-LD scripts
       const type = (script.getAttribute('type') || '').toLowerCase();
       if (type === 'application/ld+json') return;
 
@@ -75,7 +70,6 @@ export class ScriptsCollector implements PageCollector<JavaScriptData> {
         }
       }
 
-      // Check render-blocking (in <head> and synchronous external)
       const isInHead = script.closest('head') !== null;
       const isRenderBlocking = Boolean(!isInline && isInHead && !isAsync && !isDefer && !isModule);
       if (isRenderBlocking) renderBlockingCount++;

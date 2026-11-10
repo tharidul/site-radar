@@ -1,6 +1,5 @@
 @import "tailwindcss";
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
-/* deslop-ignore-file 03 */
 
 :root {
   --color-1: #CEFF52;
@@ -13,7 +12,8 @@
 }
 
 @theme {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: "Inter", sans-serif;
+  --font-mono: ui-monospace, monospace;
 
   --color-c1: var(--color-1);
   --color-c2: var(--color-2);
@@ -38,21 +38,19 @@
     --bg-page: var(--color-5);
     --text-page: #ffffff;
 
-    /* Base neutral surfaces: Jet Black canvas, #152E40 cards, clean borders, crisp white text */
-    --color-zinc-950: var(--color-5); /* #080b0e Jet Black */
-    --color-zinc-900: var(--color-3); /* #152E40 Cards & elevated surfaces */
-    --color-zinc-850: color-mix(in srgb, var(--color-3) 85%, #000000); /* Recessed wells */
-    --color-zinc-800: #234b66; /* Clean card borders on #152E40 */
-    --color-zinc-700: #2f5f80; /* Dividers & subtle strokes */
-    --color-zinc-600: #5d8ca9; /* Muted icons & details */
-    --color-zinc-500: #88a8be; /* Tertiary text */
-    --color-zinc-400: #b5c9d6; /* Secondary descriptions & labels */
-    --color-zinc-300: #dce7ee; /* High-readability secondary text */
-    --color-zinc-200: #edf3f7; /* Near-white headings */
-    --color-zinc-100: var(--color-4); /* Crisp white text */
+    --color-zinc-950: var(--color-5);
+    --color-zinc-900: var(--color-3);
+    --color-zinc-850: color-mix(in srgb, var(--color-3) 85%, #000000);
+    --color-zinc-800: #234b66;
+    --color-zinc-700: #2f5f80;
+    --color-zinc-600: #5d8ca9;
+    --color-zinc-500: #88a8be;
+    --color-zinc-400: #b5c9d6;
+    --color-zinc-300: #dce7ee;
+    --color-zinc-200: #edf3f7;
+    --color-zinc-100: var(--color-4);
     --color-zinc-50:  #f8fafc;
 
-    /* Status and alert tokens derived strictly from #152E40 and #CEFF52 */
     --color-rose-50:  color-mix(in srgb, var(--color-2) 15%, var(--color-5));
     --color-rose-100: color-mix(in srgb, var(--color-2) 25%, var(--color-5));
     --color-rose-200: color-mix(in srgb, var(--color-2) 40%, var(--color-5));
@@ -123,9 +121,8 @@
     --bg-page: #f8f8fa;
     --text-page: var(--color-3);
 
-    /* Clean, high-contrast light mode neutrals derived from #152E40 */
     --color-zinc-950: #0d0d0e;
-    --color-zinc-900: var(--color-3); /* #152E40 - 14.1:1 contrast on white (AAA) */
+    --color-zinc-900: var(--color-3);
     --color-zinc-850: color-mix(in srgb, var(--color-3) 92%, #ffffff);
     --color-zinc-800: color-mix(in srgb, var(--color-3) 88%, #ffffff);
     --color-zinc-700: color-mix(in srgb, var(--color-3) 80%, #ffffff);
@@ -254,7 +251,6 @@
     border-radius: 16px;
   }
 
-  /* Custom compact scrollbar adhering to anti-slop design */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -270,7 +266,6 @@
     background: var(--scrollbar-hover);
   }
 
-  /* Utility to completely eliminate scrollbars from horizontal tabs/toolbars */
   .no-scrollbar {
     -ms-overflow-style: none;
     scrollbar-width: none;
@@ -281,7 +276,6 @@
     height: 0 !important;
   }
 
-  /* Unslop UI typography and feedback standards (Rules 16, 18, 20) */
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
   }

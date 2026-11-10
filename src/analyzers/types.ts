@@ -1,7 +1,3 @@
-/**
- * @file src/analyzers/types.ts
- * @description Analyzer interfaces and context definitions.
- */
 
 import type {
   AuditFinding,

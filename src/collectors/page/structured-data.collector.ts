@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/structured-data.collector.ts
- * @description Extracts and validates JSON-LD schemas, Microdata, and RDFa structured markup.
- */
 
 import type { StructuredDataInfo } from '../../types/inspection';
 import { redactSecrets, redactSecretsFromString } from '../../security/secret-redactor';
@@ -20,7 +16,6 @@ export class StructuredDataCollector implements PageCollector<StructuredDataInfo
     let microdataCount = 0;
     let rdfaCount = 0;
 
-    // 1. JSON-LD scripts
     const jsonLdScripts = doc.querySelectorAll('script[type="application/ld+json"]');
     jsonLdScripts.forEach((script) => {
       jsonLdCount++;
@@ -67,7 +62,6 @@ export class StructuredDataCollector implements PageCollector<StructuredDataInfo
       }
     });
 
-    // 2. Microdata
     const microdataElements = doc.querySelectorAll('[itemscope]');
     microdataElements.forEach((el) => {
       microdataCount++;
@@ -86,7 +80,6 @@ export class StructuredDataCollector implements PageCollector<StructuredDataInfo
       });
     });
 
-    // 3. RDFa
     const rdfaElements = doc.querySelectorAll('[typeof], [vocab]');
     rdfaElements.forEach((el) => {
       rdfaCount++;

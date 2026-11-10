@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/performance.analyzer.ts
- * @description Evaluates performance metrics, Core Web Vitals (FCP, LCP, CLS, INP), TTFB,
- * render-blocking resources, and DOM bloat using evidence-based thresholds.
- */
 
 import type { AuditFinding, PerformanceData, DomSemanticData, JavaScriptData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -36,7 +31,6 @@ export class PerformanceAnalyzer implements Analyzer {
           .build(),
       );
     } else {
-      // 1. LCP (Largest Contentful Paint)
       const lcp = perfData.webVitals?.lcpMs;
       if (lcp !== undefined && lcp > 0) {
         if (lcp > 4000) {
@@ -84,7 +78,6 @@ export class PerformanceAnalyzer implements Analyzer {
         );
       }
 
-      // 2. CLS (Cumulative Layout Shift)
       const cls = perfData.webVitals?.clsScore;
       if (cls !== undefined) {
         if (cls > 0.25) {
@@ -132,7 +125,6 @@ export class PerformanceAnalyzer implements Analyzer {
         );
       }
 
-      // 3. INP / Interaction Latency
       const inp = perfData.webVitals?.inpMs;
       if (inp !== undefined && inp > 0) {
         if (inp > 500) {
@@ -169,7 +161,6 @@ export class PerformanceAnalyzer implements Analyzer {
         }
       }
 
-      // 4. TTFB (Time to First Byte)
       const ttfb = perfData.navigationTiming?.ttfbMs;
       if (ttfb !== undefined && ttfb >= 0) {
         if (ttfb > 1800) {
@@ -214,7 +205,6 @@ export class PerformanceAnalyzer implements Analyzer {
         );
       }
 
-      // 5. FCP (First Contentful Paint)
       const fcp = perfData.paintTiming?.fcpMs;
       if (fcp !== undefined && fcp > 0) {
         const ruleKey = 'perf-slow-fcp';
@@ -254,7 +244,6 @@ export class PerformanceAnalyzer implements Analyzer {
       }
     }
 
-    // 6. Render-blocking scripts
     const scriptsRes = getModuleData<JavaScriptData>(modules, 'scripts');
     if (scriptsRes.data?.scripts) {
       const renderBlocking = scriptsRes.data.scripts.filter((s) => s.isRenderBlocking);
@@ -280,7 +269,6 @@ export class PerformanceAnalyzer implements Analyzer {
       }
     }
 
-    // 7. DOM Size / Depth
     const domRes = getModuleData<DomSemanticData>(modules, 'dom');
     if (domRes.data) {
       const elementCount = domRes.data.elementCount || 0;

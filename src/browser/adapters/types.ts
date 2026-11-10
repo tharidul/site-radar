@@ -1,7 +1,3 @@
-/**
- * @file src/browser/adapters/types.ts
- * @description Type definitions for cross-browser adapter implementations.
- */
 
 export type {
   BrowserName,

@@ -1,9 +1,3 @@
-/**
- * @file src/security/secret-redactor.ts
- * @description Zero-secret redaction engine. Masks credentials, tokens, API keys,
- * authorization headers, session cookies, and form values with cycle protection.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 14.
- */
 
 const SENSITIVE_KEY_PATTERNS = [
   /password/i,
@@ -97,9 +91,6 @@ const SECRET_PATTERNS: Array<{
   },
 ];
 
-/**
- * Validates a numeric string against the Luhn algorithm (ISO/IEC 7812).
- */
 export function isValidLuhn(value: string): boolean {
   const digits = value.replace(/[\s-]/g, '');
   if (!/^\d{13,19}$/.test(digits)) return false;
@@ -119,9 +110,6 @@ export function isValidLuhn(value: string): boolean {
   return sum % 10 === 0;
 }
 
-/**
- * Redacts known secret patterns from an individual string.
- */
 export function redactSecretsFromString(text: string): string {
   if (!text || typeof text !== 'string') return text;
 
@@ -135,7 +123,6 @@ export function redactSecretsFromString(text: string): string {
     }
   }
 
-  // Credit card detection with Luhn verification (Amex 4-6-5, 16-digit 4-4-4-4, and 13-19 unhyphenated digits)
   result = result.replace(
     /\b(?:\d{4}[ -]?){3}\d{4}\b|\b\d{4}[ -]\d{6}[ -]\d{5}\b|\b\d{13,19}\b/g,
     (match) => {
@@ -149,19 +136,11 @@ export function redactSecretsFromString(text: string): string {
   return result;
 }
 
-/**
- * Checks if an object property key indicates sensitive data.
- */
 export function isSensitiveKey(key: string): boolean {
   const normalized = key.toLowerCase().replace(/[-_]/g, '');
   return SENSITIVE_KEY_PATTERNS.some((p) => p.test(normalized));
 }
 
-/**
- * Recursively redacts secrets from objects, arrays, and primitives.
- * Handles cyclical structures gracefully without infinite recursion using an active recursion stack.
- * Preserves Date, RegExp, Error, and TypedArray/ArrayBuffer instances without destruction.
- */
 export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
   if (data === null || data === undefined) return data;
 
@@ -177,17 +156,14 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
     return '[CIRCULAR]' as unknown as T;
   }
 
-  // Preserve Date instances without destroying prototypes/slots
   if (data instanceof Date) {
     return new Date(data.getTime()) as unknown as T;
   }
 
-  // Preserve RegExp instances
   if (data instanceof RegExp) {
     return new RegExp(data.source, data.flags) as unknown as T;
   }
 
-  // Preserve Error instances with redacted message and stack
   if (data instanceof Error) {
     const copy = new (data.constructor as new (msg?: string) => Error)(
       redactSecretsFromString(data.message),
@@ -199,7 +175,6 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
     return copy as unknown as T;
   }
 
-  // Preserve TypedArrays and ArrayBuffer views without converting to plain object
   if (ArrayBuffer.isView(data)) {
     return (typeof (data as any).slice === 'function' ? (data as any).slice() : data) as unknown as T;
   }
@@ -242,22 +217,15 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
   }
 }
 
-/**
- * Sanitized form field structure preserving architecture and types without collecting values.
- */
 export interface SanitizedFormField {
   name: string;
   id?: string;
   type: string;
   autocomplete?: string;
   required: boolean;
-  hasValue: boolean; // boolean indicator only; value is never collected
+  hasValue: boolean;
 }
 
-/**
- * Sanitizes form inputs collected from the DOM.
- * Guarantees zero user input collection while preserving structural metadata.
- */
 export function sanitizeFormField(field: {
   name?: string;
   id?: string;

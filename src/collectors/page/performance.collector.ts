@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/performance.collector.ts
- * @description Extracts Navigation Timing, Paint Timing, and Resource distribution metrics.
- */
 
 import type { PerformanceData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -24,7 +20,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
 
     if (perf && typeof perf.getEntriesByType === 'function') {
       try {
-        // Navigation timing (PerformanceNavigationTiming Level 2 or legacy timing)
         const navEntries = perf.getEntriesByType('navigation');
         if (navEntries.length > 0) {
           const nav = navEntries[0] as PerformanceNavigationTiming;
@@ -48,7 +43,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
             transferSizeApprox += nav.encodedBodySize;
           }
         } else if (perf.timing) {
-          // Legacy PerformanceTiming fallback
           const t = perf.timing;
           const start = t.navigationStart || t.fetchStart;
           navigationTiming = {
@@ -60,7 +54,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
           };
         }
 
-        // Paint Timing
         const paintEntries = perf.getEntriesByType('paint');
         if (paintEntries.length > 0) {
           paintTiming = {};
@@ -73,7 +66,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
           });
         }
 
-        // Resource Timing
         const resources = perf.getEntriesByType('resource');
         resourceCount = resources.length;
         resources.forEach((entry) => {
@@ -90,7 +82,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
           }
         });
 
-        // Web Vitals: Attempt buffered retrieval of LCP, CLS, and First Input
         try {
           let lcpEntries: any[] = [];
           try {
@@ -107,7 +98,6 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
             fidEntries = perf.getEntriesByType('first-input');
           } catch {}
 
-          // Use PerformanceObserver with buffered: true if supported (standard Chromium retrieval)
           const PO = (win as any)?.PerformanceObserver;
           if (PO && Array.isArray(PO.supportedEntryTypes)) {
             if (lcpEntries.length === 0 && PO.supportedEntryTypes.includes('largest-contentful-paint')) {
@@ -176,10 +166,8 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
             };
           }
         } catch {
-          // Buffered entry queries unsupported in some contexts
         }
       } catch {
-        // Handle environments where performance entries throw
       }
     }
 

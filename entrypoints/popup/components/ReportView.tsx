@@ -1,7 +1,3 @@
-/**
- * @file entrypoints/popup/components/ReportView.tsx
- * @description Report tab providing executive audit summary, audit metadata, and export actions.
- */
 
 import React, { useState } from 'react';
 import { FileCode, FileText, Check, ShieldCheck, Clock, Globe, Copy } from 'lucide-react';
@@ -51,7 +47,6 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
         </div>
       </div>
 
-      {/* Metadata Card */}
       <Card padding="md" className="space-y-2 text-xs">
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -90,7 +85,6 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
         </div>
       </Card>
 
-      {/* Export Action Card */}
       <Card padding="md" className="space-y-3">
         <div>
           <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100">

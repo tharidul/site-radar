@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/media.collector.ts
- * @description Extracts and audits image elements, alternate text, media formats, audio/video tags, and lazy loading.
- */
 
 import type { ImagesData, ImageItem, VideoItem } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -15,7 +11,6 @@ export class MediaCollector implements PageCollector<ImagesData> {
     const doc = context.document;
     const pageUrl = doc.location?.href || context.url || '';
 
-    // Images
     const imgElements = doc.querySelectorAll('img');
     const totalImages = imgElements.length;
     let missingAltCount = 0;
@@ -57,7 +52,6 @@ export class MediaCollector implements PageCollector<ImagesData> {
       const isLazy = img.getAttribute('loading') === 'lazy';
       if (isLazy) lazyLoadedCount++;
 
-      // Detect format
       let format = 'unknown';
       const lowerSrc = sanitizedSrc.toLowerCase();
       if (lowerSrc.startsWith('data:image/')) {

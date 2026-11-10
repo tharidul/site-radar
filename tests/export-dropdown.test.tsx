@@ -1,8 +1,3 @@
-/**
- * @file tests/export-dropdown.test.tsx
- * @description Unit tests for ExportDropdown component ensuring proper popover menu interaction,
- * accessibility attributes, and elimination of button spam.
- */
 
 import { describe, it, expect, vi } from 'vitest';
 import React, { act } from 'react';
@@ -12,9 +7,7 @@ import { ExportDropdown } from '../entrypoints/popup/components/ExportDropdown';
 import type { WebsiteInspection } from '../src/types/inspection';
 import * as downloadModule from '../src/export/download';
 
-// Configure React act environment for testing
-// @ts-expect-error test global
-globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 const mockInspection: WebsiteInspection = {
   id: 'test-audit-dropdown',
@@ -55,10 +48,8 @@ describe('ExportDropdown Component', () => {
     const trigger = container.querySelector('button[aria-haspopup="menu"]') as HTMLButtonElement;
     expect(trigger).toBeTruthy();
 
-    // Trigger is closed initially
     expect(container.querySelector('[role="menu"]')).toBeNull();
 
-    // Click to open
     await act(async () => {
       trigger.click();
     });
@@ -69,7 +60,6 @@ describe('ExportDropdown Component', () => {
     expect(menu?.textContent).toContain('Export JSON');
     expect(menu?.textContent).toContain('Export HTML');
 
-    // Click again to close
     await act(async () => {
       trigger.click();
     });
@@ -85,7 +75,6 @@ describe('ExportDropdown Component', () => {
     });
     expect(container.querySelector('[role="menu"]')).toBeTruthy();
 
-    // Fire Escape key
     await act(async () => {
       window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
     });

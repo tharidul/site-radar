@@ -2,7 +2,7 @@
   "name": "siteradar",
   "description": "SiteRadar — Website Security & Technical Auditor cross-browser extension for Chrome and Firefox.",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "repository": {
     "type": "git",

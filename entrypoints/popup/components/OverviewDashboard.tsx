@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/OverviewDashboard.tsx
- * @description Master Overview Dashboard component matching the exact visual design:
- * Circular Overall Score gauge, grade badge, status breakdown, 5 category cards,
- * Audit Scorecard list, Severity Distribution donut chart, and action footer.
- */
 
 import React, { useState, useMemo, useCallback } from 'react';
 import {
@@ -38,7 +32,6 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const scores = inspection.scores || {};
   const techData = (inspection.modules?.technology?.data as TechnologyData | undefined)?.technologies || [];
 
-  // Single-pass count aggregation across all findings (js-combine-iterations, rerender-memo)
   const { statusCounts, severityCounts, totalIssues, totalRules } = useMemo(() => {
     let passed = 0;
     let failed = 0;
@@ -92,14 +85,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   const infoStatusCount = statusCounts.info;
   const naCount = statusCounts.na;
 
-  // Overall Score Calculation (average of category scores or engine overall)
   const categoryKeys = ['security', 'performance', 'seo', 'accessibility', 'best-practices'];
   const availableScores = categoryKeys.map((k) => scores[k]?.score).filter((s): s is number => s !== undefined);
   const overallScore = availableScores.length > 0
     ? Math.round(availableScores.reduce((a, b) => a + b, 0) / availableScores.length)
-    : 92; // Fallback to 92 if pending
+    : 92;
 
-  // Letter Grade & Subtitle
   let grade = 'A';
   let gradeDescription = 'Well-optimized. No major issues found.';
   if (overallScore >= 90) {
@@ -119,12 +110,10 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     gradeDescription = 'Critical security or configuration issues found.';
   }
 
-  // Circular gauge parameters
   const gaugeRadius = 41;
   const gaugeCircumference = 2 * Math.PI * gaugeRadius;
   const gaugeDashOffset = gaugeCircumference * (1 - Math.min(100, Math.max(0, overallScore)) / 100);
 
-  // Dynamic description matching the exact screenshot standard
   const dynamicDescription = useMemo(() => {
     if (failedCount > 0) {
       const failedCategories = Array.from(
@@ -143,210 +132,201 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     return gradeDescription;
   }, [failedCount, warningCount, findings, gradeDescription]);
 
-  // Category Score Definitions (rerender-memo)
   const categoriesConfig = useMemo(() => [
     {
       key: 'security',
       label: 'Security',
       icon: Shield,
       score: scores['security'] ? Math.round(scores['security'].score) : 96,
+      color: '#D4FF5F',
     },
     {
       key: 'performance',
       label: 'Performance',
       icon: Zap,
       score: scores['performance'] ? Math.round(scores['performance'].score) : 93,
+      color: '#CEFF52',
     },
     {
       key: 'seo',
       label: 'SEO',
       icon: Search,
       score: scores['seo'] ? Math.round(scores['seo'].score) : 90,
+      color: '#A8F642',
     },
     {
       key: 'accessibility',
       label: 'Accessibility',
       icon: UserCheck,
       score: scores['accessibility'] ? Math.round(scores['accessibility'].score) : 86,
+      color: '#7EE838',
     },
     {
       key: 'best-practices',
       label: 'Best Practices',
       icon: Layers,
       score: scores['best-practices'] ? Math.round(scores['best-practices'].score) : 95,
+      color: '#5CD632',
     },
   ], [scores]);
 
   return (
     <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      {/* Scrollable Content Area */}
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
-        {/* 1. Hero Overall Score Card matching exact design */}
-      <div className="rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xs flex items-center justify-between gap-4">
-        {/* Left: Overall Circular Gauge + Text */}
-        <div className="flex items-center gap-4 min-w-0">
-          <div className="relative w-24 h-24 shrink-0 flex items-center justify-center">
-            <svg className="w-24 h-24 -rotate-90 transform" viewBox="0 0 100 100">
-              {/* Background ring */}
-              <circle
-                cx="50"
-                cy="50"
-                r={gaugeRadius}
-                fill="transparent"
-                stroke="currentColor"
-                className="text-zinc-200 dark:text-zinc-800"
-                strokeWidth="8"
-              />
-              {/* Progress ring */}
-              <circle
-                cx="50"
-                cy="50"
-                r={gaugeRadius}
-                fill="transparent"
-                stroke="#CEFF52"
-                strokeWidth="8"
-                strokeDasharray={gaugeCircumference}
-                strokeDashoffset={gaugeDashOffset}
-                strokeLinecap="round"
-                className="transition-[stroke-dashoffset] duration-300 ease-out"
-              />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <span className="text-3xl sm:text-4xl font-black text-zinc-900 dark:text-white tracking-tight leading-none tabular-nums">
-                {overallScore}
-              </span>
-            </div>
-          </div>
-
-          {/* Overall Score text & Grade Badge */}
-          <div className="min-w-0 flex flex-col justify-center">
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-lg font-bold text-zinc-900 dark:text-white tracking-tight">
-                Overall Health
-              </h2>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs">
-                Grade {grade}
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed line-clamp-2 max-w-[210px]">
-              {dynamicDescription}
-            </p>
-          </div>
-        </div>
-
-        {/* Right: Evaluated Rules Breakdown */}
-        <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-5 min-w-[155px] shrink-0 space-y-1.5">
-          <div className="text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-2">
-            {totalRules} CHECKS RUN
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <CheckCircle2 className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Passed</span>
-            </span>
-            <span className="font-bold text-zinc-900 dark:text-white tabular-nums">
-              {passedCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <XCircle className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Failed</span>
-            </span>
-            <span className="font-bold text-[#CEFF52] tabular-nums">
-              {failedCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
-              <AlertTriangle className="w-3.5 h-3.5 text-[#CEFF52] shrink-0" />
-              <span>Warnings</span>
-            </span>
-            <span className="font-bold text-[#CEFF52] tabular-nums">
-              {warningCount}
-            </span>
-          </div>
-
-          <div className="flex items-center justify-between text-xs py-0.5">
-            <span className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400">
-              <Info className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-              <span>Info / N/A</span>
-            </span>
-            <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
-              {infoStatusCount + naCount}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. 5 Category Cards with Circular Progress Gauge & Score in Middle */}
-      <div className="grid grid-cols-5 gap-2">
-        {categoriesConfig.map((cat) => {
-          const miniRadius = 17.5;
-          const miniCircumference = 2 * Math.PI * miniRadius;
-          const miniDashOffset = miniCircumference * (1 - Math.min(100, Math.max(0, cat.score)) / 100);
-
-          return (
-            <button
-              key={cat.key}
-              type="button"
-              onClick={() => onNavigateToIssues({ category: cat.key })}
-              className="rounded-md bg-white dark:bg-zinc-900 px-1.5 py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
-              title={`View ${cat.label} findings (${cat.score})`}
-            >
-              {/* Circular Progress Gauge with Score in Middle */}
-              <div className="relative w-14 h-14 flex items-center justify-center">
-                <svg className="w-14 h-14 -rotate-90 transform" viewBox="0 0 44 44">
-                  {/* Background track */}
-                  <circle
-                    cx="22"
-                    cy="22"
-                    r={miniRadius}
-                    fill="transparent"
-                    stroke="currentColor"
-                    className="text-zinc-200 dark:text-zinc-800"
-                    strokeWidth="3.5"
-                  />
-                  {/* Progress ring */}
-                  <circle
-                    cx="22"
-                    cy="22"
-                    r={miniRadius}
-                    fill="transparent"
-                    stroke="#CEFF52"
-                    strokeWidth="3.5"
-                    strokeDasharray={miniCircumference}
-                    strokeDashoffset={miniDashOffset}
-                    strokeLinecap="round"
-                    className="transition-[stroke-dashoffset] duration-300 ease-out"
-                  />
-                </svg>
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="text-base font-black text-zinc-900 dark:text-white tabular-nums leading-none tracking-tight">
-                    {cat.score}
-                  </span>
-                </div>
+        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 min-[400px]:p-4 sm:p-5 shadow-xs flex items-center justify-between gap-3 min-[400px]:gap-4">
+          <div className="flex items-center gap-3 min-[400px]:gap-4 min-w-0 flex-1">
+            <div className="relative w-22 h-22 min-[400px]:w-24 min-[400px]:h-24 min-[500px]:w-[102px] min-[500px]:h-[102px] shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 100 100">
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={gaugeRadius}
+                  fill="transparent"
+                  stroke="currentColor"
+                  className="text-zinc-200 dark:text-zinc-800"
+                  strokeWidth="8"
+                />
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={gaugeRadius}
+                  fill="transparent"
+                  stroke="#CEFF52"
+                  strokeWidth="8"
+                  strokeDasharray={gaugeCircumference}
+                  strokeDashoffset={gaugeDashOffset}
+                  strokeLinecap="round"
+                  className="transition-[stroke-dashoffset] duration-300 ease-out"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="text-2xl min-[400px]:text-3xl min-[500px]:text-4xl font-black text-zinc-900 dark:text-white tracking-tight leading-none tabular-nums">
+                  {overallScore}
+                </span>
               </div>
+            </div>
 
-              <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mt-1.5 line-clamp-1">
-                {cat.label}
+            <div className="min-w-0 flex-1 flex flex-col justify-center">
+              <div className="flex items-center gap-1.5 min-[400px]:gap-2 flex-wrap">
+                <h2 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight truncate">
+                  Overall Health
+                </h2>
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] min-[400px]:text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs shrink-0">
+                  Grade {grade}
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 min-[400px]:mt-1 leading-snug line-clamp-2">
+                {dynamicDescription}
+              </p>
+            </div>
+          </div>
+
+          <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-2.5 min-[400px]:pl-4 sm:pl-5 shrink-0 space-y-1 sm:space-y-1.5 min-w-[105px] min-[400px]:min-w-[125px] sm:min-w-[145px]">
+            <div className="text-[10px] min-[400px]:text-[11px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 sm:mb-2 whitespace-nowrap">
+              {totalRules} CHECKS RUN
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+              <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
+                <CheckCircle2 className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <span>Passed</span>
               </span>
-            </button>
-          );
-        })}
-      </div>
+              <span className="font-bold text-zinc-900 dark:text-white tabular-nums">
+                {passedCount}
+              </span>
+            </div>
 
-      {/* 2.2 Modern AI & Search Optimization Matrix (The O's: SEO, AEO, AGO) */}
+            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+              <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
+                <XCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <span>Failed</span>
+              </span>
+              <span className="font-bold text-[#CEFF52] tabular-nums">
+                {failedCount}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+              <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
+                <AlertTriangle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <span>Warnings</span>
+              </span>
+              <span className="font-bold text-[#CEFF52] tabular-nums">
+                {warningCount}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between text-[11px] min-[400px]:text-xs py-0.5 gap-2">
+              <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-500 dark:text-zinc-400">
+                <Info className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                <span>Info / N/A</span>
+              </span>
+              <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
+                {infoStatusCount + naCount}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-5 gap-1.5 min-[400px]:gap-2">
+          {categoriesConfig.map((cat) => {
+            const miniRadius = 17.5;
+            const miniCircumference = 2 * Math.PI * miniRadius;
+            const miniDashOffset = miniCircumference * (1 - Math.min(100, Math.max(0, cat.score)) / 100);
+
+            return (
+              <button
+                key={cat.key}
+                type="button"
+                onClick={() => onNavigateToIssues({ category: cat.key })}
+                className="rounded-md bg-white dark:bg-zinc-900 px-1 min-[400px]:px-1.5 py-2 min-[400px]:py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
+                title={`View ${cat.label} findings (${cat.score})`}
+              >
+                <div className="relative w-12 h-12 min-[380px]:w-[52px] min-[380px]:h-[52px] min-[480px]:w-14 min-[480px]:h-14 flex items-center justify-center shrink-0">
+                  <svg className="w-full h-full -rotate-90 transform" viewBox="0 0 44 44">
+                    <circle
+                      cx="22"
+                      cy="22"
+                      r={miniRadius}
+                      fill="transparent"
+                      stroke="currentColor"
+                      className="text-zinc-200 dark:text-zinc-800"
+                      strokeWidth="3.5"
+                    />
+                    <circle
+                      cx="22"
+                      cy="22"
+                      r={miniRadius}
+                      fill="transparent"
+                      stroke={cat.color}
+                      strokeWidth="3.5"
+                      strokeDasharray={miniCircumference}
+                      strokeDashoffset={miniDashOffset}
+                      strokeLinecap="round"
+                      className="transition-[stroke-dashoffset] duration-300 ease-out"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <span className="text-sm min-[400px]:text-base font-black text-zinc-900 dark:text-white tabular-nums leading-none tracking-tight">
+                      {cat.score}
+                    </span>
+                  </div>
+                </div>
+
+                <span className="text-[9px] min-[380px]:text-[10px] sm:text-[11px] font-semibold text-zinc-700 dark:text-zinc-300 mt-1 sm:mt-1.5 leading-tight line-clamp-2 h-6 flex items-center justify-center text-center px-0.5">
+                  {cat.label}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+
       <OptimizationMatrixCard
         findings={findings}
         scores={scores}
         onNavigateToIssues={onNavigateToIssues}
       />
 
-      {/* 2.5 Detected Frameworks & Tech Stack */}
       {techData.length > 0 && (
         <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
           <div className="flex items-center justify-between mb-2">
@@ -360,7 +340,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
           <div
             className={`grid gap-1.5 ${
-              techData.length === 1 ? 'grid-cols-1' : 'grid-cols-2'
+              techData.length === 1 ? 'grid-cols-1' : 'grid-cols-1 min-[440px]:grid-cols-2'
             }`}
           >
             {techData.map((tech, idx) => (
@@ -388,15 +368,12 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      {/* 2.7 Page Performance and Data Usage */}
       <PageVitalsCard inspection={inspection} />
     </div>
 
-    {/* 4. Static Bottom Action Footer Bar (Pinned, non-scrolling) */}
     <div className="shrink-0 relative z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">
       <ExportDropdown inspection={inspection} direction="up" align="left" />
 
-      {/* View Details Button */}
       <Button
         type="button"
         variant="outline"

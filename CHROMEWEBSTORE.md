@@ -195,7 +195,8 @@ The extension strictly avoids persistent content scripts and broad host permissi
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
-| 0.1.0 | 2026-11-07 | Transitioned to on-demand dynamic script injection architecture (`activeTab` + `scripting`); eliminated `<all_urls>` persistent content script injection and redundant broad permissions to ensure strict compliance with Chrome Web Store Minimum Permissions policy. | Ready for packaging |
+| 0.2.0 | 2026-11-10 | Added native browser side panel support, hard refresh (`Ctrl+Shift+R` cache bypass) scan flow, automatic full page lazy-load scroll measurement, AI & Search Optimization matrix (SEO/AEO/AGO), local cookie inspection manager, unified export dropdown, and enhanced dark/light contrast styling. | Ready for release |
+| 0.1.0 | 2026-11-07 | Transitioned to on-demand dynamic script injection architecture (`activeTab` + `scripting`); eliminated `<all_urls>` persistent content script injection and redundant broad permissions to ensure strict compliance with Chrome Web Store Minimum Permissions policy. | Archived |
 
 ---
 

@@ -1,9 +1,3 @@
-/**
- * @file src/intelligence/asn-lookup.ts
- * @description IP Geolocation, BGP prefix, and Autonomous System (ASN) lookup client.
- * Strictly verifies IP is public routable before initiating external network queries.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, Feature 35.
- */
 
 import type { IpAsnLookupResult } from '@/types/intelligence';
 import { isPrivateIp } from '@/security/private-network.guard';
@@ -23,13 +17,9 @@ export class AsnLookupClient {
     this.skipConsentCheck = options?.skipConsentCheck ?? false;
   }
 
-  /**
-   * Resolves public IP address to ASN and geolocation metadata.
-   */
   async lookup(ip: string, targetOrigin?: string): Promise<IpAsnLookupResult> {
     const cleanIp = ip.trim();
 
-    // STRICT SSRF GUARD: Never query ASN / geolocation for private or loopback IPs
     if (isPrivateIp(cleanIp)) {
       return {
         ip: cleanIp,
@@ -47,7 +37,6 @@ export class AsnLookupClient {
     const timer = setTimeout(() => timeoutCtrl.abort(), this.timeoutMs);
 
     try {
-      // Query IP-API JSON endpoint with HTTPS
       const url = `https://ipapi.co/${encodeURIComponent(cleanIp)}/json/`;
       const response = await fetch(url, {
         method: 'GET',

@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/CookiesView.tsx
- * @description Clean, high-performance Cookie Manager and Security Auditor component.
- * Allows viewing, searching, adding, editing, deleting, importing, and exporting cookies
- * adhering strictly to the Anti-Slop Frontend Design and Unslop UI standards.
- */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
@@ -48,7 +42,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
-  // Modal states
   const [isEditing, setIsEditing] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [importJsonText, setImportJsonText] = useState('');
@@ -71,7 +64,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   }, [targetUrl]);
 
-  // Load cookies
   const loadCookies = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -88,14 +80,12 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     loadCookies();
   }, [loadCookies]);
 
-  // Copy helper
   const handleCopy = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 1800);
   };
 
-  // Filter cookies
   const filteredCookies = useMemo(() => {
     let result = cookies;
 
@@ -125,7 +115,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
 
   const summary = useMemo(() => computeAuditSummary(cookies), [cookies]);
 
-  // Expand / Collapse helpers
   const toggleExpand = useCallback((cookieKey: string) => {
     setExpandedKeys((prev) => {
       const next = new Set(prev);
@@ -151,7 +140,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   }, [areAllExpanded, filteredCookies]);
 
-  // Delete cookie
   const handleDelete = async (cookie: InspectedCookie) => {
     try {
       await cookieService.deleteCookie(targetUrl, cookie);
@@ -163,7 +151,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   };
 
-  // Clear all cookies
   const handleClearAll = async () => {
     try {
       const count = await cookieService.clearAll(targetUrl, cookies);
@@ -176,7 +163,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   };
 
-  // Save new / edited cookie
   const handleSaveCookie = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCookie.name?.trim()) {
@@ -200,7 +186,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   };
 
-  // Open Edit Modal
   const openEditModal = (cookie?: InspectedCookie) => {
     if (cookie) {
       setEditingCookie({ ...cookie });
@@ -214,13 +199,12 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         httpOnly: false,
         sameSite: 'lax',
         session: true,
-        expirationDate: Math.floor(Date.now() / 1000) + 86400 * 30, // +30 days
+        expirationDate: Math.floor(Date.now() / 1000) + 86400 * 30,
       });
     }
     setIsEditing(true);
   };
 
-  // Import JSON
   const handleImportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!importJsonText.trim()) return;
@@ -237,7 +221,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
     }
   };
 
-  // Export JSON file download
   const handleExportDownload = () => {
     const jsonStr = cookieService.exportJson(cookies);
     const blob = new Blob([jsonStr], { type: 'application/json' });
@@ -255,7 +238,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
 
   return (
     <div className="space-y-2.5 pb-8">
-      {/* Minimal Header & Primary Controls */}
       <div className="flex items-center justify-between gap-2 pt-0.5">
         <div className="flex items-baseline gap-2 min-w-0">
           <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight shrink-0">
@@ -350,7 +332,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         </div>
       </div>
 
-      {/* Search Input Bar (Sleek Single Row with Filter Segment) */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="w-3.5 h-3.5 absolute left-2.5 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none" />
@@ -372,7 +353,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           )}
         </div>
 
-        {/* Compact Filter Segment */}
         <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/80 p-0.5 rounded-md shrink-0">
           {(['all', 'flagged', 'session', 'persistent'] as const).map((mode) => (
             <button
@@ -391,7 +371,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         </div>
       </div>
 
-      {/* Status Feedback Toast */}
       {feedbackMessage && (
         <div className="text-xs font-medium text-zinc-900 dark:text-[#CEFF52] bg-zinc-100 dark:bg-zinc-800/90 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
           <span>{feedbackMessage}</span>
@@ -401,7 +380,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         </div>
       )}
 
-      {/* Cookie List */}
       {isLoading ? (
         <div className="p-8 text-center text-xs text-zinc-500">
           Loading domain cookies...
@@ -442,7 +420,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     : 'border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-2xs'
                 }`}
               >
-                {/* Accordion Row Header: Always visible, clickable to toggle expand/collapse */}
                 <div
                   role="button"
                   tabIndex={0}
@@ -459,14 +436,12 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
-                    {/* Expand/Collapse Chevron Indicator */}
                     <ChevronDown
                       className={`w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 transition-transform duration-200 shrink-0 ${
                         isExpanded ? 'rotate-0 text-[#152E40] dark:text-[#CEFF52]' : '-rotate-90'
                       }`}
                     />
 
-                    {/* Cookie Name */}
                     <span
                       className="font-bold text-xs text-zinc-900 dark:text-zinc-100 font-mono tracking-tight truncate max-w-[210px] shrink-0"
                       title={cookie.name}
@@ -474,7 +449,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       {cookie.name}
                     </span>
 
-                    {/* Security Badges: clean & subtle */}
                     {cookie.httpOnly && (
                       <span className="text-[10px] font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
                         HttpOnly
@@ -487,7 +461,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       </span>
                     )}
 
-                    {/* Lifetime Indicator (Clean text without background badge, fully visible) */}
                     <span
                       className={`inline-flex items-center gap-1 text-xs font-mono tabular-nums shrink-0 ${
                         lifetime.isExpired
@@ -503,7 +476,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     </span>
                   </div>
 
-                  {/* Header Actions (stopPropagation prevents accordion toggle when clicking actions) */}
                   <div
                     className="flex items-center gap-0.5 shrink-0 ml-auto"
                     onClick={(e) => e.stopPropagation()}
@@ -537,10 +509,8 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                   </div>
                 </div>
 
-                {/* Collapsible Details Body */}
                 {isExpanded && (
                   <div className="p-4 pt-3.5 space-y-3.5">
-                    {/* Domain, Path & Lifetime details */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-50/80 dark:bg-zinc-950/40 p-3 rounded-md border border-zinc-200/50 dark:border-zinc-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-400 dark:text-zinc-500 w-16 shrink-0">Domain:</span>
@@ -581,7 +551,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       </div>
                     </div>
 
-                    {/* Security Warning Flags */}
                     {(audit.missingSecure || audit.missingHttpOnly || audit.sameSiteNoneInsecure) && (
                       <div className="flex items-center gap-2 flex-wrap">
                         {audit.missingSecure && (
@@ -605,7 +574,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       </div>
                     )}
 
-                    {/* Full Cookie Value Inspector */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
@@ -641,7 +609,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       </div>
                     </div>
 
-                    {/* Expanded Action Toolbar */}
                     <div className="pt-2 flex items-center justify-between gap-2 border-t border-zinc-100 dark:border-zinc-800/80">
                       <div className="flex items-center gap-2">
                         <button
@@ -680,7 +647,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         </div>
       )}
 
-      {/* Edit / Add Modal */}
       {isEditing && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xl border border-zinc-200 dark:border-zinc-800 space-y-4">
@@ -769,7 +735,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </select>
               </div>
 
-              {/* Flags Checklist */}
               <div className="pt-2 flex items-center gap-5">
                 <label className="inline-flex items-center gap-2 cursor-pointer">
                   <input
@@ -811,7 +776,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </label>
               </div>
 
-              {/* Lifetime / Expiration Date for Persistent Cookies */}
               {!editingCookie.session && (
                 <div className="pt-2.5 border-t border-zinc-100 dark:border-zinc-800 space-y-2">
                   <div className="flex items-center justify-between">
@@ -842,7 +806,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden"
                   />
 
-                  {/* Quick Preset Buttons */}
                   <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                     <span className="text-xs text-zinc-400">Presets:</span>
                     {[
@@ -868,7 +831,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </div>
               )}
 
-              {/* Buttons */}
               <div className="pt-3.5 flex items-center justify-end gap-2.5 border-t border-zinc-200 dark:border-zinc-800">
                 <button
                   type="button"
@@ -889,7 +851,6 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
         </div>
       )}
 
-      {/* Import JSON Modal */}
       {isImporting && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="w-full max-w-md rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xl border border-zinc-200 dark:border-zinc-800 space-y-4">

@@ -52,7 +52,6 @@ describe('Fresh Page Reload on Inspection Start', () => {
     try {
       await orchestrator.startInspection('quick', 99, { refreshPage: true, skipIntelligence: true });
     } catch {
-      // Mock environment in Node doesn't have a live browser tab DOM, so modules may complete partially
     }
 
     expect(reloadSpy).toHaveBeenCalledWith(99, expect.objectContaining({ bypassCache: true, timeoutMs: 15000 }));
@@ -63,7 +62,6 @@ describe('Fresh Page Reload on Inspection Start', () => {
     const activeDashboardTab = 'overview';
     const inspection = null;
 
-    // Mirrors the rendering condition in App.tsx
     const content = activeDashboardTab === 'overview' ? (
       scanStatus === 'running' ? null : inspection && scanStatus === 'completed' ? (
         <div data-testid="overview" />

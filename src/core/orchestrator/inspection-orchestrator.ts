@@ -1,9 +1,3 @@
-/**
- * @file src/core/orchestrator/inspection-orchestrator.ts
- * @description Central inspection engine orchestrating collection modules, analyzers,
- * category scoring, progress broadcasting, bounded crawling, and external intelligence.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 2, 4, 6, 9, 10.
- */
 
 import type {
   InspectionMode,
@@ -13,6 +7,7 @@ import type {
   InspectionSummary,
   CategoryScore,
   TechnologyData,
+  PerformanceData,
 } from '../../types/inspection';
 import type { ScanProgressEvent } from '../../types/messaging';
 import type { CrawlLimits } from '../../types/crawler';
@@ -77,9 +72,6 @@ export class InspectionOrchestrator {
     this.cancellation = options?.cancellation || cancellationManager;
   }
 
-  /**
-   * Returns current active scan session by ID, or the most recent matching session for a tab/URL.
-   */
   getSession(scanId?: string, tabId?: number, url?: string): ActiveScanSession | undefined {
     if (scanId) {
       return this.activeSessions.get(scanId);
@@ -87,7 +79,6 @@ export class InspectionOrchestrator {
     const sessions = Array.from(this.activeSessions.values());
     if (sessions.length === 0) return undefined;
 
-    // Filter by tabId and/or url to prevent cross-site/cross-tab state leakage
     if (tabId !== undefined || url) {
       for (let i = sessions.length - 1; i >= 0; i--) {
         const s = sessions[i];
@@ -112,9 +103,6 @@ export class InspectionOrchestrator {
     return sessions[sessions.length - 1];
   }
 
-  /**
-   * Clears in-memory audit results and sessions to guarantee zero persistent history.
-   */
   clearSessions(): void {
     for (const [id, session] of this.activeSessions.entries()) {
       if (session.state === 'running') {
@@ -124,9 +112,6 @@ export class InspectionOrchestrator {
     this.activeSessions.clear();
   }
 
-  /**
-   * Starts a new website inspection in the specified mode.
-   */
   async startInspection(
     mode: InspectionMode,
     targetTabId?: number,
@@ -141,7 +126,6 @@ export class InspectionOrchestrator {
       };
     }
   > {
-    // 1. Resolve and validate target tab
     let tab = targetTabId !== undefined
       ? await this.adapter.getTab(targetTabId)
       : await this.adapter.getActiveTab();
@@ -177,7 +161,6 @@ export class InspectionOrchestrator {
     const parsedUrl = new URL(normalizedUrl);
     const tabId = tab.id;
 
-    // 2. Initialize Scan Session
     const scanId = typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
       : `scan_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
@@ -223,10 +206,8 @@ export class InspectionOrchestrator {
     session.inspection = inspection;
 
     try {
-      // 3. Resolve Mode Plan early
       const plan = getModePlan(mode);
 
-      // 4. Reload page if requested (default: true) to capture live data usage & fresh vitals (Ctrl+Shift+R hard refresh bypassing cache)
       const shouldRefresh = options?.refreshPage !== false;
       if (shouldRefresh) {
         const refreshProgress: ScanProgressEvent = {
@@ -245,7 +226,6 @@ export class InspectionOrchestrator {
 
         if (signal.aborted) throw signal.reason;
 
-        // Brief settle window so DOM and initial paints register
         await new Promise((resolve) => setTimeout(resolve, 350));
 
         const readyProgress: ScanProgressEvent = {
@@ -261,10 +241,8 @@ export class InspectionOrchestrator {
         this.emitProgress(readyProgress);
       }
 
-      // 5. Ensure content script is ready in target tab
       await this.ensureContentScriptInjected(tabId, signal);
 
-      // 6. Build and Schedule In-Page Collection Tasks (Phase 1)
       const tasks: ScheduledTask[] = plan.modules.map((planItem) => ({
         planItem,
         run: async ({ signal: moduleSignal }) => {
@@ -274,7 +252,6 @@ export class InspectionOrchestrator {
 
           let moduleOptions: Record<string, unknown> | undefined;
 
-          // Perform non-invasive main-world inspection for framework signatures
           if (planItem.id === 'technology') {
             try {
               if (this.adapter.capabilities?.hasScriptingApi) {
@@ -285,7 +262,6 @@ export class InspectionOrchestrator {
                     const results: Array<{ name: string; category: string; version?: string; evidence: string; confidence: number }> = [];
                     try {
                       const w = window as any;
-                      // 1. React
                       if (w.React?.version) {
                         results.push({ name: 'React', category: 'JavaScript Framework', version: String(w.React.version), evidence: `window.React.version: ${w.React.version}`, confidence: 1.0 });
                       } else if (w.React || w.ReactDOM || w.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers?.size > 0) {
@@ -302,14 +278,12 @@ export class InspectionOrchestrator {
                         }
                       }
 
-                      // 2. Next.js
                       if (w.next?.version) {
                         results.push({ name: 'Next.js', category: 'Web Framework', version: String(w.next.version), evidence: `window.next.version: ${w.next.version}`, confidence: 1.0 });
                       } else if (w.__NEXT_DATA__ || w.next || w.__next_f) {
                         results.push({ name: 'Next.js', category: 'Web Framework', evidence: 'window.__NEXT_DATA__ / window.next in main world', confidence: 1.0 });
                       }
 
-                      // 3. Vue.js
                       if (w.Vue?.version) {
                         results.push({ name: 'Vue.js', category: 'JavaScript Framework', version: String(w.Vue.version), evidence: `window.Vue.version: ${w.Vue.version}`, confidence: 1.0 });
                       } else if (w.Vue || w.__VUE__ || w.__VUE_HMR_RUNTIME__) {
@@ -321,55 +295,46 @@ export class InspectionOrchestrator {
                         }
                       }
 
-                      // 4. Nuxt.js
                       if (w.$nuxt || w.__NUXT__ || w.__NUXT_DATA__) {
                         results.push({ name: 'Nuxt.js', category: 'Web Framework', evidence: 'window.$nuxt / __NUXT__ in main world', confidence: 1.0 });
                       }
 
-                      // 5. Angular
                       if (w.angular?.version?.full) {
                         results.push({ name: 'Angular', category: 'JavaScript Framework', version: String(w.angular.version.full), evidence: `window.angular.version: ${w.angular.version.full}`, confidence: 1.0 });
                       } else if (w.angular || w.ng || w.getAllAngularRootElements) {
                         results.push({ name: 'Angular', category: 'JavaScript Framework', evidence: 'window.angular / window.ng in main world', confidence: 0.95 });
                       }
 
-                      // 6. Remix
                       if (w.__remixContext || w.__remixManifest) {
                         results.push({ name: 'Remix', category: 'Web Framework', evidence: 'window.__remixContext in main world', confidence: 1.0 });
                       }
 
-                      // 7. Gatsby
                       if (w.___gatsby) {
                         results.push({ name: 'Gatsby', category: 'Web Framework', evidence: 'window.___gatsby in main world', confidence: 1.0 });
                       }
 
-                      // 8. Solid.js
                       if (w.Solid || w._$HY) {
                         results.push({ name: 'Solid.js', category: 'JavaScript Framework', evidence: 'window.Solid in main world', confidence: 0.95 });
                       }
 
-                      // 9. Alpine.js
                       if (w.Alpine?.version) {
                         results.push({ name: 'Alpine.js', category: 'JavaScript Framework', version: String(w.Alpine.version), evidence: `window.Alpine.version: ${w.Alpine.version}`, confidence: 1.0 });
                       } else if (w.Alpine) {
                         results.push({ name: 'Alpine.js', category: 'JavaScript Framework', evidence: 'window.Alpine in main world', confidence: 0.95 });
                       }
 
-                      // 10. HTMX
                       if (w.htmx?.version) {
                         results.push({ name: 'HTMX', category: 'JavaScript Library', version: String(w.htmx.version), evidence: `window.htmx.version: ${w.htmx.version}`, confidence: 1.0 });
                       } else if (w.htmx) {
                         results.push({ name: 'HTMX', category: 'JavaScript Library', evidence: 'window.htmx in main world', confidence: 0.95 });
                       }
 
-                      // 11. jQuery
                       if (w.jQuery?.fn?.jquery) {
                         results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.jQuery.fn.jquery), evidence: `window.jQuery.fn.jquery: ${w.jQuery.fn.jquery}`, confidence: 1.0 });
                       } else if (w.$?.fn?.jquery) {
                         results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.$.fn.jquery), evidence: `window.$.fn.jquery: ${w.$.fn.jquery}`, confidence: 1.0 });
                       }
                     } catch {
-                      // Handled
                     }
                     return results;
                   },
@@ -379,7 +344,6 @@ export class InspectionOrchestrator {
                 }
               }
             } catch {
-              // Main world probe failure is non-fatal; DOM analysis proceeds
             }
           }
 
@@ -394,7 +358,6 @@ export class InspectionOrchestrator {
               return response.result;
             }
           } catch {
-            // Handled below for mock environment fallback
           }
 
           if (this.adapter.browserType === 'mock') {
@@ -435,11 +398,43 @@ export class InspectionOrchestrator {
         },
       });
 
-      // Execute in-page collection tasks with isolated boundaries
       const moduleResults = await scheduler.executeAll(tasks);
       inspection.modules = { ...moduleResults };
 
-      // Attempt lightweight background header retrieval to enrich security header checks if accessible
+      try {
+        if (!signal.aborted && this.adapter.browserType !== 'mock') {
+          const scrollProgress: ScanProgressEvent = {
+            scanId,
+            mode,
+            step: 'Measuring full page data usage & below-the-fold assets...',
+            percent: Math.min(92, (session.progress?.percent || 50) + 5),
+            completedModules: Object.keys(inspection.modules).length,
+            totalModules: plan.modules.length,
+            timestamp: Date.now(),
+          };
+          session.progress = scrollProgress;
+          this.emitProgress(scrollProgress);
+
+          const scrollRes = await this.bus.sendToTab(
+            tabId,
+            MESSAGE_CHANNELS.MEASURE_SCROLLED_PAGE,
+            undefined,
+          );
+
+          if (scrollRes && scrollRes.success) {
+            const perfModule = inspection.modules['performance'];
+            if (perfModule && perfModule.data) {
+              const perfData = perfModule.data as PerformanceData;
+              perfData.scrolledTransferSizeApprox = scrollRes.scrolledTransferSizeApprox;
+              perfData.scrolledResourceCount = scrollRes.scrolledResourceCount;
+              perfData.scrolledDecodedSizeApprox = scrollRes.scrolledDecodedSizeApprox;
+              perfData.isInfiniteScrollDetected = scrollRes.isInfiniteScroll;
+            }
+          }
+        }
+      } catch {
+      }
+
       try {
         if (typeof fetch === 'function' && inspection.target.url.startsWith('http')) {
           const resp = await fetch(inspection.target.url, {
@@ -457,7 +452,6 @@ export class InspectionOrchestrator {
               (secModule.data as any).securityHeaders = headersMap;
             }
 
-            // Enrich technology detection with backend web servers, runtimes, frameworks & platforms
             const techModule = inspection.modules['technology'];
             if (techModule && techModule.data) {
               const techData = techModule.data as TechnologyData;
@@ -494,7 +488,6 @@ export class InspectionOrchestrator {
           }
         }
       } catch {
-        // Cross-origin fetch without host permission is gracefully ignored
       }
 
       if (inspection.modules['security']) {
@@ -511,7 +504,6 @@ export class InspectionOrchestrator {
         inspection.modules['content'] = inspection.modules['dom'];
       }
 
-      // Synthesize unified 'resources' module combining scripts, styles, media, and third-party origins
       const scriptsMod = inspection.modules['scripts'];
       const stylesMod = inspection.modules['styles'];
       const mediaMod = inspection.modules['media'];
@@ -547,7 +539,6 @@ export class InspectionOrchestrator {
               }
             }
           } catch {
-            // ignore
           }
         });
       }
@@ -576,14 +567,11 @@ export class InspectionOrchestrator {
         sources: ['DOM:script', 'DOM:link[rel="stylesheet"]', 'DOM:img', 'DOM:a'],
       };
 
-      // Check if scan was cancelled during collection
       if (signal.aborted) {
         throw signal.reason || new ScanCancelledError(scanId);
       }
 
-      // PHASE 2 & 3: Deep Inspection Extended Pipeline
       if (mode === 'deep') {
-        // --- Phase 2: Site Discovery & Bounded Crawler ---
         this.emitProgress({
           scanId,
           mode,
@@ -660,7 +648,6 @@ export class InspectionOrchestrator {
           throw signal.reason || new ScanCancelledError(scanId);
         }
 
-        // --- Phase 3: External Intelligence Aggregation ---
         this.emitProgress({
           scanId,
           mode,
@@ -677,7 +664,6 @@ export class InspectionOrchestrator {
         }
 
         if (!options?.skipIntelligence) {
-          // DoH Resolver
           if (consentManager.hasConsent(inspection.target.origin, 'doh')) {
             try {
               const doh = new DohResolver({ skipConsentCheck: false });
@@ -723,7 +709,6 @@ export class InspectionOrchestrator {
             };
           }
 
-          // IP & ASN Lookup
           if (consentManager.hasConsent(inspection.target.origin, 'ip-asn')) {
             try {
               const asnClient = new AsnLookupClient({ skipConsentCheck: false });
@@ -773,7 +758,6 @@ export class InspectionOrchestrator {
             };
           }
 
-          // CT Logs Client
           if (consentManager.hasConsent(inspection.target.origin, 'crt-sh')) {
             try {
               const ctClient = new CtLogsClient({ skipConsentCheck: false });
@@ -824,7 +808,6 @@ export class InspectionOrchestrator {
             };
           }
 
-          // TLS Security Evaluator
           if (consentManager.hasConsent(inspection.target.origin, 'tls')) {
             try {
               const tls = new TlsEvaluator();
@@ -879,7 +862,6 @@ export class InspectionOrchestrator {
         throw signal.reason || new ScanCancelledError(scanId);
       }
 
-      // 6. Run Analyzers & Finding Generation (Isolated)
       inspection.findings = await this.executeAnalyzers(
         inspection.target,
         mode,
@@ -887,7 +869,6 @@ export class InspectionOrchestrator {
         signal,
       );
 
-      // Ensure sec-missing-https critical finding exists if target is HTTP
       if (!inspection.target.url.startsWith('https://')) {
         if (!inspection.findings.some((f) => f.ruleId === 'sec-missing-https')) {
           inspection.findings.push({
@@ -913,11 +894,9 @@ export class InspectionOrchestrator {
         }
       }
 
-      // 7. Calculate Category Scores
       const scoreCalculation = calculateInspectionScores(inspection.findings);
       inspection.scores = scoreCalculation.scores;
 
-      // 8. Compute Summary Metrics
       inspection.summary = this.computeSummary(inspection.modules, inspection.findings);
       inspection.completedAt = Date.now();
 
@@ -951,9 +930,6 @@ export class InspectionOrchestrator {
     }
   }
 
-  /**
-   * Cancels a currently running scan session immediately.
-   */
   cancelInspection(scanId: string): boolean {
     const session = this.activeSessions.get(scanId);
     if (!session || session.state !== 'running') {
@@ -962,9 +938,6 @@ export class InspectionOrchestrator {
     return this.cancellation.cancel(scanId, 'Cancelled by user');
   }
 
-  /**
-   * Cross-browser content script handshake and dynamic injection.
-   */
   private async ensureContentScriptInjected(tabId: number, signal: AbortSignal): Promise<void> {
     try {
       const pong = await this.bus.sendToTab(tabId, MESSAGE_CHANNELS.PING_CONTENT_SCRIPT, undefined as void);

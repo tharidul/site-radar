@@ -1,10 +1,3 @@
-/**
- * @file entrypoints/popup/App.tsx
- * @description Master extension popup coordinator.
- * Redesigned to match the exact Website Intelligence dashboard architecture:
- * Deep crimson wave header, Target Site bar, Tab bar (Overview, Issues, Rules, Resources, Report),
- * and the complete Overview Dashboard.
- */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import type { WebsiteInspection, InspectionMode, AuditFinding, Severity } from '@/types/inspection';
@@ -94,7 +87,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [theme, setTheme] = useState<AppTheme>('dark');
   const [refreshPage, setRefreshPage] = useState<boolean>(true);
 
-  // Initial load: Fetch theme, active tab info and sync inspection state strictly for the current tab & URL
   useEffect(() => {
     let mounted = true;
 
@@ -118,7 +110,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           }
         }
 
-        // Query background inspection state strictly scoped to this tab and URL
         if (tab?.id && tab?.url) {
           const stateRes = await messageBus
             .sendToBackground(MESSAGE_CHANNELS.GET_INSPECTION_STATE, {
@@ -128,7 +119,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             .catch(() => null);
 
           if (mounted && stateRes) {
-            // Verify that the inspection target matches the active tab URL to prevent cross-site data retention
             const isMatch = Boolean(
               stateRes.inspection?.target?.url &&
               (tab.url === stateRes.inspection.target.url ||
@@ -159,7 +149,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
 
     initialize();
 
-    // Listen for tab URL changes while popup is open to reset stale audit data
     const handleTabUpdated = (updatedTabId: number, changeInfo: { url?: string; status?: string }) => {
       if (!mounted) return;
       if (changeInfo.url) {
@@ -200,7 +189,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           setSchemeValidation(validation);
         }
       } catch {
-        // ignore
       }
     };
 
@@ -208,7 +196,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       chrome.tabs.onActivated.addListener(handleTabActivated);
     }
 
-    // Listen to live broadcast events from orchestrator
     const unsubProgress = messageBus.onMessage(
       MESSAGE_CHANNELS.SCAN_PROGRESS,
       (event: ScanProgressEvent) => {
@@ -252,13 +239,12 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     };
   }, []);
 
-  // Launch inspection (rerender-memo)
   const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
 
     setScanStatus('running');
     setErrorMessage(null);
-    setInspection(null); // Clear previous inspection immediately when starting a new scan
+    setInspection(null);
     setProgress({
       scanId: `scan_${Date.now()}`,
       mode: selectedMode,
@@ -288,7 +274,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, [schemeValidation.valid, selectedMode, activeTab?.id, refreshPage]);
 
-  // Cancel in-flight inspection (rerender-memo)
   const handleCancelInspection = useCallback(async () => {
     setIsCancelling(true);
     try {
@@ -306,7 +291,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, [progress?.scanId]);
 
-  // In-memory results clear control (Feature 50): purges all transient audit data (rerender-memo)
   const handleClearResults = useCallback(async () => {
     try {
       await messageBus.sendToBackground(MESSAGE_CHANNELS.CLEAR_IN_MEMORY_STATE, undefined);
@@ -323,7 +307,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, []);
 
-  // Open options page (rerender-memo)
   const handleOpenOptions = useCallback(() => {
     try {
       if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
@@ -338,7 +321,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, []);
 
-  // Theme toggle with functional state updater (rerender-functional-setstate, rerender-memo)
   const handleToggleTheme = useCallback(() => {
     setTheme((prev) => {
       const nextTheme: AppTheme = prev === 'dark' ? 'light' : 'dark';
@@ -352,7 +334,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     try {
       window.close();
     } catch {
-      // ignore
     }
   }, []);
 
@@ -370,7 +351,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, []);
 
-  // Navigation from Overview cards to Issues (rerender-memo)
   const handleNavigateToIssues = useCallback((filter?: { severity?: Severity | 'all'; category?: string }) => {
     if (filter?.severity !== undefined) {
       setActiveSeverityFilter(filter.severity);
@@ -381,7 +361,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     setActiveDashboardTab('issues');
   }, []);
 
-  // Memoized count of active issues (rerender-memo)
   const issuesCount = useMemo(() => {
     if (!inspection?.findings) return 0;
     return inspection.findings.filter((f) => f.status === 'failed' || f.status === 'warning').length;
@@ -396,7 +375,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           : 'h-[600px] w-[580px] rounded-lg'
       } bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
     >
-      {/* 1. Header with Dark Crimson Wave and URL strip (shrink-0 prevents flex crushing) */}
       <div className="shrink-0">
         <Header
           tabUrl={activeTab?.url}
@@ -414,7 +392,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         />
       </div>
 
-      {/* 2. Navigation Tab Bar (shrink-0 prevents flex crushing) */}
       {scanStatus !== 'running' && (
         <div className="shrink-0 overflow-hidden">
           <TabBar
@@ -425,9 +402,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         </div>
       )}
 
-      {/* 3. Main Content Container (OverviewDashboard manages its own internal scroll with a pinned static footer) */}
       <main className={`flex-1 min-h-0 ${activeDashboardTab === 'overview' && inspection && scanStatus === 'completed' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'}`}>
-        {/* Live Progress Bar when running */}
         {scanStatus === 'running' && (
           <LiveProgressBar
             progress={progress}
@@ -436,7 +411,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           />
         )}
 
-        {/* Cancelled Banner */}
         {scanStatus === 'cancelled' && (
           <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
             <span className="text-zinc-900 dark:text-zinc-100 font-medium">
@@ -456,7 +430,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           </div>
         )}
 
-        {/* Failed Banner */}
         {scanStatus === 'failed' && (
           <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
             <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
@@ -477,9 +450,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           </div>
         )}
 
-        {/* Tab Content Suites */}
         <TabErrorBoundary fallbackTab={() => setActiveDashboardTab('overview')}>
-          {/* Tab 1: Overview Tab */}
           {activeDashboardTab === 'overview' && (
             <>
               {scanStatus === 'running' ? null : inspection && scanStatus === 'completed' ? (
@@ -501,7 +472,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             </>
           )}
 
-          {/* Tab 2: Issues Explorer */}
           {activeDashboardTab === 'issues' && (
             inspection ? (
               <FindingsExplorer
@@ -529,7 +499,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             )
           )}
 
-          {/* Tab 3: Rules & Modules Accordions */}
           {activeDashboardTab === 'rules' && (
             inspection ? (
               <ModuleAccordions modules={inspection.modules as any} />
@@ -550,7 +519,6 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             )
           )}
 
-          {/* Tab 4: Resources View */}
           {activeDashboardTab === 'resources' && (
             inspection ? (
               <ResourcesView inspection={inspection} />
@@ -571,14 +539,12 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             )
           )}
 
-          {/* Tab 5: Cookies Manager & Security Inspector (Available anytime for active domain) */}
           {activeDashboardTab === 'cookies' && (
             <div className="p-4">
               <CookiesView targetUrl={activeTab?.url || inspection?.target.url || ''} />
             </div>
           )}
 
-          {/* Tab 6: About */}
           {activeDashboardTab === 'about' && (
             <AboutView />
           )}

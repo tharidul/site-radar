@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/FindingDetailInspector.tsx
- * @description Clean, editorial inline finding detail inspector.
- * Eliminates nested card containers in favor of high-contrast typographic hierarchy.
- */
 
 import React, { useState } from 'react';
 import { ExternalLink, ShieldAlert, Copy, Check } from 'lucide-react';
@@ -43,7 +38,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
 
   return (
     <div className="space-y-3.5 text-xs text-zinc-700 dark:text-zinc-300">
-      {/* Recommended Remediation (Clean Highlight with Left Accent Line) */}
       {finding.recommendation && (
         <div className="border-l-2 border-orange-500 pl-3 py-0.5 space-y-0.5">
           <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
@@ -56,7 +50,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {/* Expected Behavior */}
       {finding.expectedBehavior && (
         <div className="space-y-0.5">
           <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
@@ -68,7 +61,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {/* Technical Explanation */}
       {finding.explanation && (
         <div className="space-y-0.5">
           <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
@@ -80,7 +72,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {/* Detection Confidence */}
       {finding.confidence !== undefined && (
         <div className="flex items-center gap-2 text-xs text-zinc-500 dark:text-zinc-400 pt-0.5">
           <span>Detection Confidence:</span>
@@ -90,7 +81,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {/* Redacted Evidence Table - Clean Flat Hairline Table */}
       {finding.evidence && finding.evidence.length > 0 && (
         <div className="space-y-1.5 pt-1">
           <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">
@@ -111,7 +101,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
                     <td className="py-1.5 pr-3 font-medium text-zinc-800 dark:text-zinc-300 align-top whitespace-nowrap">
                       {ev.label}
                     </td>
-                    {/* deslop-ignore-next-line 34 */}
                     <td className="py-1.5 pr-3 font-mono text-[11px] text-orange-600 dark:text-orange-400 break-all whitespace-pre-wrap">
                       {formatEvidenceValue(ev.value)}
                     </td>
@@ -126,7 +115,6 @@ export const FindingDetailInspector: React.FC<FindingDetailInspectorProps> = ({
         </div>
       )}
 
-      {/* References */}
       {finding.references && finding.references.length > 0 && (
         <div className="space-y-1 pt-1">
           <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400 block">

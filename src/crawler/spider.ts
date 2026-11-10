@@ -1,10 +1,3 @@
-/**
- * @file src/crawler/spider.ts
- * @description Bounded same-origin spider traversal engine.
- * Strictly adheres to operational limits: max 50 pages, depth 3, concurrency 2.
- * Validates every target against scheme rules, private network guards, and robots.txt.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 10, Feature 32.
- */
 
 import type {
   CrawlLimits,
@@ -59,9 +52,6 @@ export class BoundedSpider {
     }
   }
 
-  /**
-   * Sets custom robots.txt directives for traversal filtering.
-   */
   setRobotsDirectives(directives: RobotsDirectives): void {
     const rawLines = [
       `User-agent: ${directives.userAgent}`,
@@ -76,9 +66,6 @@ export class BoundedSpider {
     this.activeAbortController?.abort('Cancelled by caller');
   }
 
-  /**
-   * Executes bounded same-origin crawl starting from the seed URL.
-   */
   async crawl(seedUrl: string, externalSignal?: AbortSignal): Promise<CrawlResult> {
     const startedAt = Date.now();
     this.activeAbortController = new AbortController();
@@ -102,13 +89,11 @@ export class BoundedSpider {
       const normalizedSeed = normalizeUrl(seedUrl);
       const parsedOrigin = new URL(normalizedSeed).origin;
 
-      // 1. SSRF check on seed URL
       const seedPublicCheck = await validatePublicUrl(seedUrl);
       if (!seedPublicCheck.valid) {
         return this.buildEmptyResult(seedUrl, startedAt, 'error', `SSRF Blocked: ${seedPublicCheck.reason}`);
       }
 
-      // 2. Fetch robots.txt if available
       try {
         const robotsUrl = `${parsedOrigin}/robots.txt`;
         const robotsResp = await this.fetchWithTimeout(robotsUrl, 3000);
@@ -117,7 +102,6 @@ export class BoundedSpider {
           this.robotsParser.parse(robotsTxt);
         }
       } catch {
-        // robots.txt missing/failed is non-fatal
       }
 
       const visitedUrls = new Set<string>();
@@ -153,7 +137,6 @@ export class BoundedSpider {
 
       emitProgress();
 
-      // Work pool with bounded concurrency
       const inFlight = new Set<Promise<void>>();
 
       while ((queue.length > 0 || inFlight.size > 0) && crawledPages.length < this.limits.maxPages) {
@@ -194,12 +177,10 @@ export class BoundedSpider {
               pageStatus = response.status;
               mimeType = response.headers.get('content-type') || undefined;
 
-              // 1. Post-fetch destination URL redirect validation
               const responseUrl = response.url;
               let isRedirectViolation = false;
 
               if (responseUrl && responseUrl !== url) {
-                // Validate destination URL against private IP / SSRF
                 const destPublicCheck = await validatePublicUrl(responseUrl);
                 if (!destPublicCheck.valid) {
                   isRedirectViolation = true;
@@ -213,7 +194,6 @@ export class BoundedSpider {
                     });
                   }
                 } else {
-                  // Validate origin boundary
                   let destOrigin: string | null = null;
                   try {
                     destOrigin = new URL(responseUrl).origin;
@@ -235,7 +215,6 @@ export class BoundedSpider {
                 }
               }
 
-              // 2. Only parse body and extract links if NOT a redirect violation
               if (
                 !isRedirectViolation &&
                 response.ok &&
@@ -243,11 +222,9 @@ export class BoundedSpider {
                 /text\/html|application\/xhtml\+xml/i.test(mimeType)
               ) {
                 const html = await response.text();
-                // Extract title
                 const titleMatch = /<title[^>]*>([^<]+)<\/title>/i.exec(html);
                 pageTitle = titleMatch?.[1]?.trim();
 
-                // Extract links
                 const linkHrefRegex = /<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi;
                 let match: RegExpExecArray | null;
                 while ((match = linkHrefRegex.exec(html)) !== null) {
@@ -289,7 +266,6 @@ export class BoundedSpider {
             progress.pagesCompleted++;
             emitProgress();
 
-            // Enqueue discovered links if within depth limit and capacity
             if (
               depth < this.limits.maxDepth &&
               crawledPages.length + queue.length < this.limits.maxPages * 2 &&
@@ -300,8 +276,6 @@ export class BoundedSpider {
                   const resolved = new URL(rawLink, url);
                   const linkOrigin = resolved.origin;
 
-                  // 1. Evaluate scheme check BEFORE sameOriginOnly check so non-HTTP schemes
-                  // (javascript:, data:, file:, mailto:) receive 'scheme-disallowed' rather than 'out-of-scope'
                   if (resolved.protocol !== 'http:' && resolved.protocol !== 'https:') {
                     if (!excludedUrls.some((e) => e.url === resolved.href)) {
                       excludedUrls.push({ url: resolved.href, reason: 'scheme-disallowed' });
@@ -309,7 +283,6 @@ export class BoundedSpider {
                     continue;
                   }
 
-                  // Check same-origin boundary
                   if (this.limits.sameOriginOnly && linkOrigin !== parsedOrigin) {
                     if (!excludedUrls.some((e) => e.url === resolved.href)) {
                       excludedUrls.push({ url: resolved.href, reason: 'out-of-scope' });
@@ -317,13 +290,11 @@ export class BoundedSpider {
                     continue;
                   }
 
-                  // Normalize
                   const canonical = normalizeUrl(resolved.href);
                   if (visitedUrls.has(canonical) || queuedUrls.has(canonical)) {
                     continue;
                   }
 
-                  // Robots check
                   if (!this.robotsParser.isAllowed(resolved.pathname)) {
                     if (!excludedUrls.some((e) => e.url === canonical)) {
                       excludedUrls.push({ url: canonical, reason: 'robots-disallowed' });
@@ -331,7 +302,6 @@ export class BoundedSpider {
                     continue;
                   }
 
-                  // Private network / SSRF check
                   const publicCheck = await validatePublicUrl(canonical);
                   if (!publicCheck.valid) {
                     if (!excludedUrls.some((e) => e.url === canonical)) {
@@ -340,7 +310,6 @@ export class BoundedSpider {
                     continue;
                   }
 
-                  // Queue link
                   queuedUrls.add(canonical);
                   queue.push({
                     url: canonical,
@@ -348,7 +317,6 @@ export class BoundedSpider {
                     parentUrl: url,
                   });
                 } catch {
-                  // Ignore malformed hrefs
                 }
               }
             }

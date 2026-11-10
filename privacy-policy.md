@@ -1,7 +1,7 @@
 # Privacy Policy — SiteRadar
 
-**Effective Date:** November 9, 2026  
-**Version:** 0.1.0  
+**Effective Date:** November 10, 2026  
+**Version:** 0.2.0  
 **Developer & Publisher:** Tharidu Lakmal (LKML)  
 **Website:** [https://tharidulakmal.com](https://tharidulakmal.com)  
 **Repository:** [https://github.com/tharidul/site-radar](https://github.com/tharidul/site-radar)  

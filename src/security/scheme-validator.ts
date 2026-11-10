@@ -1,8 +1,3 @@
-/**
- * @file src/security/scheme-validator.ts
- * @description URL scheme validation and protocol whitelist guard.
- * Rejects javascript:, data:, file:, chrome:, about:, and extension protocols.
- */
 
 const ALLOWED_SCHEMES = new Set(['http:', 'https:']);
 
@@ -25,25 +20,16 @@ export interface SchemeValidationResult {
   reason?: string;
 }
 
-/**
- * Checks if a scheme string is strictly allowed ('http:' or 'https:').
- */
 export function isAllowedScheme(scheme: string): boolean {
   const normalized = scheme.endsWith(':') ? scheme.toLowerCase() : `${scheme.toLowerCase()}:`;
   return ALLOWED_SCHEMES.has(normalized);
 }
 
-/**
- * Checks if a scheme string is known to be prohibited.
- */
 export function isProhibitedScheme(scheme: string): boolean {
   const normalized = scheme.endsWith(':') ? scheme.toLowerCase() : `${scheme.toLowerCase()}:`;
   return PROHIBITED_SCHEMES.has(normalized);
 }
 
-/**
- * Validates the protocol scheme of a URL string.
- */
 export function validateScheme(urlStr: string): SchemeValidationResult {
   if (!urlStr || typeof urlStr !== 'string') {
     return { valid: false, reason: 'Empty or invalid URL input' };

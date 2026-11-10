@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/dom.collector.ts
- * @description Extracts semantic DOM structure, heading hierarchy, landmarks, and tree complexity.
- */
 
 import type { DomSemanticData, HeadingItem, LandmarkItem } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -16,7 +12,6 @@ export class DomCollector implements PageCollector<DomSemanticData> {
     const allElements = doc.querySelectorAll('*');
     const elementCount = allElements.length;
 
-    // 1. Heading Hierarchy
     const headingHierarchy: HeadingItem[] = [];
     const headingElements = doc.querySelectorAll('h1, h2, h3, h4, h5, h6, [role="heading"]');
     let h1Count = 0;
@@ -35,7 +30,6 @@ export class DomCollector implements PageCollector<DomSemanticData> {
 
       if (level === 1) h1Count++;
 
-      // Check for skipped levels (e.g., h1 directly to h3)
       if (previousLevel > 0 && level > previousLevel + 1) {
         headingOrderValid = false;
       }
@@ -51,7 +45,6 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       });
     });
 
-    // 2. Landmarks
     const landmarkElements: LandmarkItem[] = [];
     let hasMainLandmark = false;
 
@@ -78,17 +71,15 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       });
     });
 
-    // 3. Hidden nodes count
     const hiddenNodes = doc.querySelectorAll('[hidden], [aria-hidden="true"]');
     const hiddenNodeCount = hiddenNodes.length;
 
-    // 4. Max DOM Depth
     let maxDomDepth = 0;
     function calculateDepth(node: Node, depth: number) {
       if (depth > maxDomDepth) maxDomDepth = depth;
       for (let i = 0; i < node.childNodes.length; i++) {
         const child = node.childNodes[i];
-        if (child && child.nodeType === 1) { // Element node
+        if (child && child.nodeType === 1) {
           calculateDepth(child, depth + 1);
         }
       }
@@ -97,12 +88,10 @@ export class DomCollector implements PageCollector<DomSemanticData> {
       calculateDepth(doc.documentElement, 1);
     }
 
-    // 5. Citable Content Structures (AEO & LLM extraction signals)
     const tablesCount = doc.querySelectorAll('table').length;
     const listsCount = doc.querySelectorAll('ul, ol').length;
     const definitionListsCount = doc.querySelectorAll('dl').length;
 
-    // 6. Interactive Elements & Agent Action Targets (AGO signals)
     const nativeButtonsCount = doc.querySelectorAll(
       'button, a[href], input[type="button" i], input[type="submit" i]'
     ).length;

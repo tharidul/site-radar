@@ -1,24 +1,13 @@
-/**
- * @file src/intelligence/tls-evaluator.ts
- * @description Evaluates TLS configuration, HSTS policies, and HTTP security response headers.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, Feature 37.
- */
 
 import type { TlsInspectionResult, SecurityHeadersEvaluation } from '@/types/intelligence';
 
 export { type SecurityHeadersEvaluation };
 
 export class TlsEvaluator {
-  /**
-   * Alias method for evaluating security response headers.
-   */
   evaluateSecurityHeaders(headers: Record<string, string | null> | Headers): SecurityHeadersEvaluation {
     return this.evaluateHeaders(headers);
   }
 
-  /**
-   * Evaluates security headers from a Headers object or key-value map.
-   */
   evaluateHeaders(headers: Record<string, string | null> | Headers): SecurityHeadersEvaluation {
     const getHeader = (name: string): string | undefined => {
       if (typeof (headers as Headers).get === 'function') {
@@ -29,7 +18,6 @@ export class TlsEvaluator {
       return (matchKey && record[matchKey]) || undefined;
     };
 
-    // 1. Strict-Transport-Security (HSTS)
     const hstsRaw = getHeader('strict-transport-security');
     let hstsMaxAge: number | undefined;
     let hstsIncludeSubDomains = false;
@@ -44,7 +32,6 @@ export class TlsEvaluator {
       hstsPreload = /preload/i.test(hstsRaw);
     }
 
-    // 2. Content-Security-Policy (CSP)
     const cspRaw = getHeader('content-security-policy');
     let hasUpgradeInsecureRequests = false;
     let hasFrameAncestors = false;
@@ -54,18 +41,14 @@ export class TlsEvaluator {
       hasFrameAncestors = /frame-ancestors/i.test(cspRaw);
     }
 
-    // 3. X-Frame-Options
     const xfoRaw = getHeader('x-frame-options');
     const xfoVal = xfoRaw?.toUpperCase().trim();
 
-    // 4. X-Content-Type-Options
     const xctoRaw = getHeader('x-content-type-options');
     const isNoSniff = xctoRaw ? /nosniff/i.test(xctoRaw) : false;
 
-    // 5. Referrer-Policy
     const rpRaw = getHeader('referrer-policy');
 
-    // 6. Permissions-Policy
     const ppRaw = getHeader('permissions-policy') || getHeader('feature-policy');
 
     return {
@@ -110,9 +93,6 @@ export class TlsEvaluator {
     };
   }
 
-  /**
-   * Constructs basic TLS inspection result model from inspected host and headers.
-   */
   evaluateTls(host: string, isHttps: boolean, port = 443): TlsInspectionResult {
     return {
       host,

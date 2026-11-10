@@ -1,14 +1,6 @@
-/**
- * @file src/collectors/page/backend-signatures.ts
- * @description Fingerprinting for backend runtimes, web servers, backend frameworks, and cloud/edge platforms
- * using HTTP response headers, session cookies, CSRF tokens, and DOM generator metadata.
- */
 
 import type { DetectedTechnology } from '../../types/inspection';
 
-/**
- * Extracts cookie names from document.cookie safely.
- */
 export function getCookieNames(doc: Document): Set<string> {
   const names = new Set<string>();
   try {
@@ -22,15 +14,11 @@ export function getCookieNames(doc: Document): Set<string> {
   return names;
 }
 
-/**
- * Detects backend technologies from in-page signals (cookies, form tokens, meta tags).
- */
 export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechnology[] {
   const detected: DetectedTechnology[] = [];
   const cookies = getCookieNames(doc);
   const cookieList = Array.from(cookies);
 
-  // 1. PHP
   if (cookies.has('PHPSESSID') || cookieList.some((c) => c.startsWith('PHPSESSID'))) {
     detected.push({
       name: 'PHP',
@@ -40,7 +28,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 2. Laravel (PHP)
   if (
     cookies.has('laravel_session') ||
     cookieList.some((c) => c.startsWith('laravel_session')) ||
@@ -62,7 +49,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     }
   }
 
-  // 3. Django (Python)
   const hasDjangoCsrf = Boolean(doc.querySelector('input[name="csrfmiddlewaretoken"]'));
   const hasDjangoCookie = cookies.has('csrftoken') && (hasDjangoCsrf || cookies.has('sessionid'));
   if (hasDjangoCsrf || hasDjangoCookie) {
@@ -80,7 +66,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 4. Ruby on Rails
   const hasRailsAuthToken = Boolean(
     doc.querySelector('meta[name="csrf-param"][content="authenticity_token"]') ||
     doc.querySelector('input[name="authenticity_token"]')
@@ -101,7 +86,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 5. ASP.NET / ASP.NET Core
   const hasAspNetToken = Boolean(
     doc.querySelector('input[name="__RequestVerificationToken"]') ||
     doc.querySelector('input[name="__VIEWSTATE"]')
@@ -128,7 +112,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 6. Java (Servlet / Spring / Tomcat)
   if (cookies.has('JSESSIONID') || cookieList.some((c) => c.startsWith('JSESSIONID'))) {
     detected.push({
       name: 'Java',
@@ -138,7 +121,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 7. Node.js (Express session)
   if (cookies.has('connect.sid') || cookieList.some((c) => c.startsWith('connect.sid'))) {
     detected.push({
       name: 'Express',
@@ -154,7 +136,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
     });
   }
 
-  // 8. Drupal (CMS & Backend)
   if (
     (win as any)?.Drupal ||
     doc.querySelector('script[src*="/core/misc/drupal.js"]') ||
@@ -182,9 +163,6 @@ export function detectBackendFromDom(doc: Document, win?: Window): DetectedTechn
   return detected;
 }
 
-/**
- * Detects backend technologies from HTTP response headers (Server, X-Powered-By, PaaS markers).
- */
 export function detectBackendFromHeaders(headers: Record<string, string>): DetectedTechnology[] {
   const detected: DetectedTechnology[] = [];
   const getHeader = (name: string): string | undefined => {
@@ -212,11 +190,7 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
   const xVarnish = getHeader('x-varnish');
   const cfRay = getHeader('cf-ray');
 
-  // ==========================================
-  // 1. Web Servers (from Server Header)
-  // ==========================================
   if (server) {
-    // Nginx
     if (/nginx/i.test(server)) {
       const vMatch = server.match(/nginx\/([\d.]+)/i);
       detected.push({
@@ -227,7 +201,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Apache HTTP Server
     else if (/apache/i.test(server)) {
       const vMatch = server.match(/apache\/([\d.]+)/i);
       detected.push({
@@ -238,7 +211,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Caddy
     else if (/caddy/i.test(server)) {
       const vMatch = server.match(/caddy\/([\d.]+)/i);
       detected.push({
@@ -249,7 +221,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // LiteSpeed
     else if (/litespeed/i.test(server)) {
       detected.push({
         name: 'LiteSpeed',
@@ -258,7 +229,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Kestrel (.NET Core)
     else if (/kestrel/i.test(server)) {
       detected.push({
         name: 'Kestrel',
@@ -275,7 +245,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Microsoft-IIS
     else if (/microsoft-iis/i.test(server)) {
       const vMatch = server.match(/microsoft-iis\/([\d.]+)/i);
       detected.push({
@@ -286,7 +255,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Gunicorn (Python WSGI)
     else if (/gunicorn/i.test(server)) {
       const vMatch = server.match(/gunicorn\/([\d.]+)/i);
       detected.push({
@@ -305,7 +273,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Uvicorn (Python ASGI)
     else if (/uvicorn/i.test(server)) {
       detected.push({
         name: 'Uvicorn',
@@ -322,7 +289,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Werkzeug (Python Flask)
     else if (/werkzeug/i.test(server)) {
       const vMatch = server.match(/werkzeug\/([\d.]+)/i);
       detected.push({
@@ -341,7 +307,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Cowboy (Erlang / Elixir Phoenix)
     else if (/cowboy/i.test(server)) {
       detected.push({
         name: 'Cowboy (Elixir/Erlang)',
@@ -350,7 +315,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // OpenResty
     else if (/openresty/i.test(server)) {
       const vMatch = server.match(/openresty\/([\d.]+)/i);
       detected.push({
@@ -361,7 +325,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Traefik
     else if (/traefik/i.test(server)) {
       detected.push({
         name: 'Traefik',
@@ -370,7 +333,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Envoy
     else if (/envoy/i.test(server)) {
       detected.push({
         name: 'Envoy',
@@ -379,7 +341,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Netlify (from Server header)
     else if (/netlify/i.test(server)) {
       detected.push({
         name: 'Netlify',
@@ -388,7 +349,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Google Frontend (GFE)
     else if (/gfe|google frontend/i.test(server)) {
       detected.push({
         name: 'Google Cloud Infrastructure (GFE)',
@@ -397,7 +357,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `Server header: ${server}`,
       });
     }
-    // Cloudflare
     else if (/cloudflare/i.test(server)) {
       detected.push({
         name: 'Cloudflare',
@@ -408,11 +367,7 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // ==========================================
-  // 2. Backend Runtimes (from X-Powered-By)
-  // ==========================================
   if (poweredBy) {
-    // PHP
     if (/php/i.test(poweredBy)) {
       const vMatch = poweredBy.match(/php\/([\d.]+)/i);
       detected.push({
@@ -423,7 +378,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `X-Powered-By: ${poweredBy}`,
       });
     }
-    // Express (Node.js)
     else if (/express/i.test(poweredBy)) {
       detected.push({
         name: 'Express',
@@ -440,7 +394,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // ASP.NET
     else if (/asp\.net/i.test(poweredBy)) {
       detected.push({
         name: 'ASP.NET',
@@ -457,7 +410,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Next.js (from X-Powered-By)
     else if (/next\.js/i.test(poweredBy)) {
       const vMatch = poweredBy.match(/next\.js\s+([\d.]+)/i);
       detected.push({
@@ -468,7 +420,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         evidence: `X-Powered-By: ${poweredBy}`,
       });
     }
-    // Java Servlet
     else if (/servlet/i.test(poweredBy)) {
       const vMatch = poweredBy.match(/servlet\/([\d.]+)/i);
       detected.push({
@@ -487,7 +438,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
         });
       }
     }
-    // Phusion Passenger (Ruby / Python)
     else if (/phusion passenger/i.test(poweredBy)) {
       const vMatch = poweredBy.match(/passenger\/([\d.]+)/i);
       detected.push({
@@ -500,10 +450,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // ==========================================
-  // 3. Framework-Specific Headers
-  // ==========================================
-  // ASP.NET Version headers
   if (xAspNet || xAspNetMvc) {
     const existing = detected.find((d) => d.name.includes('ASP.NET'));
     if (existing) {
@@ -528,9 +474,7 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // Ruby on Rails (X-Runtime header)
   if (xRuntime && !detected.some((d) => d.name === 'Ruby on Rails')) {
-    // X-Runtime header has format like 0.023412 or float seconds
     if (/^[\d.]+$/.test(xRuntime)) {
       detected.push({
         name: 'Ruby on Rails',
@@ -549,10 +493,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // ==========================================
-  // 4. Cloud, Hosting & Edge Platforms
-  // ==========================================
-  // Vercel
   if (xVercelId || xVercelCache) {
     if (!detected.some((d) => d.name === 'Vercel')) {
       detected.push({
@@ -564,7 +504,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // AWS CloudFront / S3
   if (xAmzCfId) {
     if (!detected.some((d) => d.name === 'Amazon CloudFront')) {
       detected.push({
@@ -586,7 +525,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     }
   }
 
-  // Fly.io
   if (flyReqId) {
     detected.push({
       name: 'Fly.io',
@@ -596,7 +534,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     });
   }
 
-  // Render
   if (renderOrigin) {
     detected.push({
       name: 'Render',
@@ -606,7 +543,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     });
   }
 
-  // Fastly
   if (fastlyReqId) {
     detected.push({
       name: 'Fastly',
@@ -616,7 +552,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     });
   }
 
-  // Varnish
   if (xVarnish) {
     detected.push({
       name: 'Varnish Cache',
@@ -626,7 +561,6 @@ export function detectBackendFromHeaders(headers: Record<string, string>): Detec
     });
   }
 
-  // Cloudflare (CF-Ray)
   if (cfRay && !detected.some((d) => d.name === 'Cloudflare')) {
     detected.push({
       name: 'Cloudflare',

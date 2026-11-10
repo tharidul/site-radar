@@ -13,7 +13,6 @@ describe('AGO (Agentic Optimization) Rules Evaluation', () => {
     form.action = 'https://example.com/checkout';
     doc.body.appendChild(form);
 
-    // Labeled input with autocomplete
     const label1 = doc.createElement('label');
     label1.setAttribute('for', 'email-input');
     label1.textContent = 'Email Address';
@@ -26,7 +25,6 @@ describe('AGO (Agentic Optimization) Rules Evaluation', () => {
     input1.setAttribute('autocomplete', 'email');
     form.appendChild(input1);
 
-    // Unlabeled input
     const input2 = doc.createElement('input');
     input2.name = 'promo-code';
     input2.type = 'text';
@@ -43,18 +41,15 @@ describe('AGO (Agentic Optimization) Rules Evaluation', () => {
     const collector = new DomCollector();
     const doc = document.implementation.createHTMLDocument();
 
-    // Native button
     const btn = doc.createElement('button');
     btn.textContent = 'Submit';
     doc.body.appendChild(btn);
 
-    // Clickable div without role="button"
     const clickDiv = doc.createElement('div');
     clickDiv.setAttribute('onclick', 'handleClick()');
     clickDiv.id = 'fake-btn';
     doc.body.appendChild(clickDiv);
 
-    // Clickable span without role
     const clickSpan = doc.createElement('span');
     clickSpan.setAttribute('tabindex', '0');
     doc.body.appendChild(clickSpan);
@@ -173,13 +168,13 @@ describe('AGO (Agentic Optimization) Rules Evaluation', () => {
           sources: [],
           coverage: { expected: 6, collected: 6, unavailable: 0, supported: true },
           data: {
-            elementCount: 2500, // Bloated
-            maxDomDepth: 38, // Deep nesting > 32
+            elementCount: 2500,
+            maxDomDepth: 38,
             hiddenNodeCount: 0,
             headingHierarchy: [],
             landmarkElements: [{ tag: 'main', role: 'main' }],
             hasMainLandmark: true,
-            nonSemanticClickableCount: 5, // Clickable divs
+            nonSemanticClickableCount: 5,
             nativeButtonsCount: 2,
             nonSemanticClickableSamples: ['div#submit-btn'],
           },

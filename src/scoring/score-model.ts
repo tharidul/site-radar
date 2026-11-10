@@ -1,7 +1,3 @@
-/**
- * @file src/scoring/score-model.ts
- * @description Domain contracts and scoring interfaces for category and inspection score calculations.
- */
 
 import type { CategoryScore } from '../types/inspection';
 

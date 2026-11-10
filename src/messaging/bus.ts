@@ -1,9 +1,3 @@
-/**
- * @file src/messaging/bus.ts
- * @description Type-safe runtime message bus implementation for WebExtensions
- * supporting Chrome MV3 and Firefox MV3 runtime messaging.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 8, 9.
- */
 
 import {
   type ProtocolChannel,
@@ -13,31 +7,18 @@ import {
 } from '../types/messaging';
 import { getBrowserAdapter, type BrowserAdapter } from '../browser/adapters';
 
-/**
- * Interface contract for runtime messaging.
- */
 export interface IMessageBus {
-  /**
-   * Sends a typed request to the background service worker and awaits typed response.
-   */
   sendToBackground<C extends ProtocolChannel>(
     channel: C,
     payload: MessageProtocol[C]['request'],
   ): Promise<MessageProtocol[C]['response']>;
 
-  /**
-   * Sends a typed request to a content script in a specific tab.
-   */
   sendToTab<C extends ProtocolChannel>(
     tabId: number,
     channel: C,
     payload: MessageProtocol[C]['request'],
   ): Promise<MessageProtocol[C]['response']>;
 
-  /**
-   * Subscribes a handler to a specific message channel.
-   * Returns an unsubscribe function.
-   */
   onMessage<C extends ProtocolChannel>(
     channel: C,
     handler: (
@@ -161,8 +142,6 @@ export class ExtensionMessageBus implements IMessageBus {
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       this.runtimeListenerAttached = true;
       chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
-        // MED-1: Reject messages from external extensions or web pages.
-        // Only accept messages originating from this extension's own context.
         if (sender.id !== chrome.runtime.id) {
           return false;
         }
@@ -179,7 +158,6 @@ export class ExtensionMessageBus implements IMessageBus {
         }
 
         const payload = message.payload;
-        // Execute handlers for this channel
         (async () => {
           try {
             let lastResult: any;
@@ -198,15 +176,11 @@ export class ExtensionMessageBus implements IMessageBus {
           }
         })();
 
-        // Return true to indicate asynchronous response
         return true;
       });
     }
   }
 
-  /**
-   * Dispatches an envelope directly in memory to registered listeners (used for testing).
-   */
   async dispatchLocally<C extends ProtocolChannel>(
     channel: C,
     payload: MessageProtocol[C]['request'],
@@ -226,7 +200,6 @@ export class ExtensionMessageBus implements IMessageBus {
   }
 }
 
-/** Default singleton message bus */
 export const messageBus = new ExtensionMessageBus();
 
 export function createMessageBus(adapter?: BrowserAdapter): IMessageBus {

@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/technology.analyzer.ts
- * @description Evaluates detected technology stacks, identifies framework composition,
- * flags meta generator version disclosure, and checks for multi-framework bloat.
- */
 
 import type { AuditFinding, TechnologyData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -20,7 +15,6 @@ export class TechnologyAnalyzer implements Analyzer {
     const techRes = getModuleData<TechnologyData>(modules, 'technology');
     const technologies = techRes.data?.technologies || [];
 
-    // 1. Meta generator version disclosure
     const generatorTech = technologies.find((t) => t.evidence.toLowerCase().includes('generator'));
     const generator = generatorTech?.version || generatorTech?.evidence;
     if (generator) {
@@ -49,7 +43,6 @@ export class TechnologyAnalyzer implements Analyzer {
       }
     }
 
-    // 2. Competing UI Frameworks (checking across distinct frontend ecosystems)
     if (technologies.length > 0) {
       const ecosystems = new Set<string>();
       for (const t of technologies) {
@@ -97,7 +90,6 @@ export class TechnologyAnalyzer implements Analyzer {
         );
       }
 
-      // 3. Identified Technology Stack finding
       const stackSummary = technologies
         .map((t) => (t.version ? `${t.name} (v${t.version})` : t.name))
         .join(', ');

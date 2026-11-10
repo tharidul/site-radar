@@ -1,7 +1,3 @@
-/**
- * @file src/intelligence/index.ts
- * @description Public exports for external intelligence modules.
- */
 
 export * from './consent-manager';
 export * from './doh-resolver';

@@ -2,7 +2,6 @@ import { defineConfig } from 'wxt';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'node:path';
 
-// See https://wxt.dev/api/config.html
 export default defineConfig({
   manifestVersion: 3,
   modules: ['@wxt-dev/module-react'],
@@ -26,7 +25,7 @@ export default defineConfig({
   manifest: (env) => ({
     name: 'SiteRadar',
     description: 'Evidence-based website technical inspection, security auditing, and accessibility analysis.',
-    version: '0.1.0',
+    version: '0.2.0',
     permissions: [
       'activeTab',
       'tabs',

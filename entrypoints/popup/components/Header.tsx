@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/Header.tsx
- * @description Extension header with brand identity,
- * quick controls (Clear, Theme, Settings, Close), and the embedded Target URL strip.
- * Exactly matches the design provided by the user.
- */
 
 import React from 'react';
 import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen } from 'lucide-react';
@@ -41,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
       <div className="relative z-10 flex items-center justify-between">
-        {/* Brand Shield & Title */}
         <div className="flex items-center gap-3">
           <img
             src="/icon/128.png"
@@ -58,7 +51,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Action Controls */}
         <div className="flex items-center gap-1.5">
           {hasInspectionData && (
             <Button
@@ -134,7 +126,6 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Embedded Target Site URL Strip matching screenshot */}
       <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />

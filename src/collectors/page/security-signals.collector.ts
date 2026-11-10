@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/security-signals.collector.ts
- * @description Audits in-page security signals: mixed content, Subresource Integrity (SRI), and meta CSP directives.
- */
 
 import type { SecuritySignalsData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -22,7 +18,6 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
 
     let mixedContentDetected = false;
 
-    // On HTTPS pages, inspect subresources for unencrypted HTTP schemes
     if (isHttps) {
       const subresourceElements = doc.querySelectorAll(
         'img[src], script[src], link[href], iframe[src], audio[src], video[src], source[src]',
@@ -36,7 +31,6 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
       });
     }
 
-    // Subresource Integrity (SRI) Coverage for scripts
     let totalScripts = 0;
     let sriScripts = 0;
     const externalScripts = doc.querySelectorAll('script[src]');
@@ -50,7 +44,6 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
       }
     });
 
-    // Subresource Integrity (SRI) Coverage for stylesheets
     let totalLinks = 0;
     let sriLinks = 0;
     const externalStyles = doc.querySelectorAll('link[rel="stylesheet" i][href]');
@@ -61,7 +54,6 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
       }
     });
 
-    // Inspect meta tags for security directives
     let cspPresent = false;
     let upgradeInsecureRequests = false;
 
@@ -92,7 +84,7 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
       },
       upgradeInsecureRequests,
       cspPresent,
-      hstsPresent: false, // Populated via background network request enrichment
+      hstsPresent: false,
       metaReferrerPolicy,
     };
 

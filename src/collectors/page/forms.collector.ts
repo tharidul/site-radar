@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/forms.collector.ts
- * @description Audits form elements, action security, and input field types with ZERO secret capture.
- */
 
 import type { FormsData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -51,7 +47,6 @@ export class FormsCollector implements PageCollector<FormsData> {
         containsUnencryptedSubmissions = true;
       }
 
-      // Fields extraction
       const inputs = form.querySelectorAll('input, textarea, select, button');
       const fieldCount = inputs.length;
       const fieldTypes: string[] = [];
@@ -97,7 +92,6 @@ export class FormsCollector implements PageCollector<FormsData> {
 
     const hasPasswordForms = forms.some((f) => f.hasPasswordField);
 
-    // Inspect all form input elements across document (including standalone search/login inputs)
     const allInputElements = doc.querySelectorAll('input, textarea, select');
     let totalInputCount = 0;
     let labeledInputCount = 0;
@@ -106,14 +100,12 @@ export class FormsCollector implements PageCollector<FormsData> {
 
     allInputElements.forEach((el) => {
       const type = (el.getAttribute('type') || el.tagName.toLowerCase()).toLowerCase();
-      // Skip non-data-entry types
       if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image') {
         return;
       }
 
       totalInputCount++;
 
-      // Check label association (<label for>, enclosing <label>, aria-label, aria-labelledby, title)
       let hasLabel = false;
       const inputId = el.getAttribute('id');
       if (inputId) {
@@ -123,7 +115,6 @@ export class FormsCollector implements PageCollector<FormsData> {
             hasLabel = true;
           }
         } catch {
-          // ignore selector errors
         }
       }
 
@@ -150,7 +141,6 @@ export class FormsCollector implements PageCollector<FormsData> {
         }
       }
 
-      // Check autocomplete attribute
       const auto = el.getAttribute('autocomplete');
       if (auto && auto.toLowerCase() !== 'off') {
         autocompleteInputCount++;

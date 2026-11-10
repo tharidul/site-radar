@@ -131,7 +131,6 @@ describe('SEO & AEO Rules Evaluation (Option 2)', () => {
 
     const findings = analyzer.analyze(context);
 
-    // Verify all 4 AEO rules exist and belong to 'seo' category
     const aeoFaq = findings.find((f) => f.ruleId === 'aeo-faq-schema');
     expect(aeoFaq).toBeDefined();
     expect(aeoFaq?.category).toBe('seo');
@@ -180,7 +179,7 @@ describe('SEO & AEO Rules Evaluation (Option 2)', () => {
             openGraph: {},
             twitterCards: {},
             structuredDataCount: 0,
-            hasNoAiDirective: true, // Blocks AI crawlers
+            hasNoAiDirective: true,
             hasLlmsTxtLink: false,
           },
         },
@@ -226,19 +225,15 @@ describe('SEO & AEO Rules Evaluation (Option 2)', () => {
 
     const findings = analyzer.analyze(context);
 
-    // aeo-ai-crawlers should be warning due to hasNoAiDirective
     const aeoCrawlers = findings.find((f) => f.ruleId === 'aeo-ai-crawlers');
     expect(aeoCrawlers?.status).toBe('warning');
 
-    // aeo-faq-schema should be warning due to missing Q&A schema
     const aeoFaq = findings.find((f) => f.ruleId === 'aeo-faq-schema');
     expect(aeoFaq?.status).toBe('warning');
 
-    // aeo-llms-txt should be info
     const aeoLlms = findings.find((f) => f.ruleId === 'aeo-llms-txt');
     expect(aeoLlms?.status).toBe('info');
 
-    // aeo-question-headings should be info since no question headings exist
     const aeoHeadings = findings.find((f) => f.ruleId === 'aeo-question-headings');
     expect(aeoHeadings?.status).toBe('info');
   });

@@ -1,8 +1,3 @@
-/**
- * @file src/collectors/page/technology.collector.ts
- * @description Comprehensive fingerprinting for modern frontend frameworks (React, Next.js, Vue, Nuxt,
- * Svelte, Angular, Solid, Alpine, HTMX, Remix, Gatsby, etc.), UI libraries, CMS platforms, and CDNs.
- */
 
 import type { DetectedTechnology, TechnologyData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -20,14 +15,10 @@ interface TechSignature {
 }
 
 const TECH_SIGNATURES: TechSignature[] = [
-  // ==========================================
-  // Modern Frontend & Web Frameworks
-  // ==========================================
   {
     name: 'React',
     category: 'JavaScript Framework',
     matches: (doc, scripts, links, win) => {
-      // 1. Next.js / Remix / Gatsby indicators guarantee React
       if (doc.querySelector('script[id="__NEXT_DATA__"]') || doc.querySelector('#__next')) {
         return { matched: true, evidence: 'Next.js application runtime (React-based)', confidence: 1.0 };
       }
@@ -35,7 +26,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         return { matched: true, evidence: 'Gatsby application root (React-based)', confidence: 1.0 };
       }
 
-      // 2. Next.js App Router (Next 13/14/15) Server Components stream
       for (const script of scripts) {
         const text = script.textContent || '';
         if (text.includes('self.__next_f') || text.includes('__next_f.push')) {
@@ -46,7 +36,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         }
       }
 
-      // 3. React DOM attributes & component tags
       if (doc.querySelector('[data-reactroot], [data-reactid], [data-react-helmet]')) {
         return { matched: true, evidence: 'React DOM attributes (data-reactroot / data-react-helmet)', confidence: 0.98 };
       }
@@ -57,7 +46,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         return { matched: true, evidence: 'CSS-in-JS style tags (styled-components / Emotion for React)', confidence: 0.9 };
       }
 
-      // 4. Script sources matching react bundles
       for (const script of scripts) {
         const src = script.getAttribute('src') || '';
         if (/(?:^|\/|[._-])react(?:[-._]dom)?(?:\.production|\.development)?(?:\.min)?\.js/i.test(src) ||
@@ -68,7 +56,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         }
       }
 
-      // 5. Inline script content keywords
       for (const script of scripts) {
         const text = script.textContent || '';
         if (text.includes('__REACT_DEVTOOLS_GLOBAL_HOOK__') || text.includes('_reactRootContainer') ||
@@ -78,10 +65,8 @@ const TECH_SIGNATURES: TechSignature[] = [
         }
       }
 
-      // 6. Root element mount point convention (#root with children)
       const rootEl = doc.querySelector('#root, #__next');
       if (rootEl && rootEl.children.length > 0) {
-        // If there's an id="root" or id="__next" populated with elements and modern JS scripts
         const hasModuleScripts = scripts.some((s) => s.type === 'module' || (s.src && s.src.includes('assets/')));
         if (hasModuleScripts) {
           return { matched: true, evidence: '#root mount container with client script bundle', confidence: 0.85 };
@@ -105,7 +90,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         return { matched: true, evidence: '#__next mounting container', confidence: 0.98 };
       }
 
-      // Check for /_next/static assets in scripts and preload links
       for (const script of scripts) {
         const src = script.getAttribute('src') || '';
         if (src.includes('/_next/static/')) {
@@ -185,7 +169,6 @@ const TECH_SIGNATURES: TechSignature[] = [
     name: 'Svelte',
     category: 'JavaScript Framework',
     matches: (doc, scripts, links) => {
-      // Svelte compiler adds scoped class names formatted as svelte-[hash]
       if (doc.querySelector('[class*="svelte-"]')) {
         return { matched: true, evidence: 'Scoped svelte-* class name patterns on DOM elements', confidence: 0.98 };
       }
@@ -196,7 +179,6 @@ const TECH_SIGNATURES: TechSignature[] = [
         return { matched: true, evidence: 'script[data-sveltekit-hydrate] SvelteKit tag', confidence: 1.0 };
       }
 
-      // SvelteKit bundles asset path
       for (const script of scripts) {
         const src = script.getAttribute('src') || '';
         if (src.includes('/_app/immutable/') || src.includes('svelte-')) {
@@ -395,14 +377,10 @@ const TECH_SIGNATURES: TechSignature[] = [
     },
   },
 
-  // ==========================================
-  // UI & CSS Frameworks
-  // ==========================================
   {
     name: 'Tailwind CSS',
     category: 'CSS Framework',
     matches: (doc, scripts, links) => {
-      // Check for presence of atomic utility patterns
       const hasLayout = doc.querySelector('[class*="flex"], [class*="grid"]');
       const hasSpacing = doc.querySelector('[class*="mx-auto"], [class*="p-"], [class*="gap-"]');
       const hasSizing = doc.querySelector('[class*="max-w-"], [class*="w-full"], [class*="h-"]');
@@ -476,9 +454,6 @@ const TECH_SIGNATURES: TechSignature[] = [
     },
   },
 
-  // ==========================================
-  // CMS & Site Builders
-  // ==========================================
   {
     name: 'WordPress',
     category: 'CMS',
@@ -558,9 +533,6 @@ const TECH_SIGNATURES: TechSignature[] = [
     },
   },
 
-  // ==========================================
-  // CDNs & Security
-  // ==========================================
   {
     name: 'Cloudflare',
     category: 'CDN & Security',
@@ -588,7 +560,6 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
 
     const detectedMap = new Map<string, DetectedTechnology>();
 
-    // 1. Process main-world probe results if forwarded via options
     const mainWorldTech = (context.options?.mainWorldTech as DetectedTechnology[]) || [];
     if (Array.isArray(mainWorldTech)) {
       for (const t of mainWorldTech) {
@@ -598,7 +569,6 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
       }
     }
 
-    // 2. Evaluate in-DOM deterministic signatures
     for (const sig of TECH_SIGNATURES) {
       try {
         const result = sig.matches(doc, scripts, links, win);
@@ -616,11 +586,9 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
           }
         }
       } catch {
-        // Individual signature evaluation failure contained
       }
     }
 
-    // 2.5 Evaluate in-DOM backend signatures (cookies, CSRF tokens, backend meta tags)
     try {
       const backendDomTech = detectBackendFromDom(doc, win);
       for (const b of backendDomTech) {
@@ -631,11 +599,8 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
         }
       }
     } catch {
-      // Backend in-DOM signature failure contained
     }
 
-    // 3. Implied framework associations
-    // E.g. Next.js, Remix, Gatsby imply React
     if (detectedMap.has('next.js') || detectedMap.has('remix') || detectedMap.has('gatsby')) {
       if (!detectedMap.has('react')) {
         const framework = detectedMap.get('next.js') ? 'Next.js' : detectedMap.get('remix') ? 'Remix' : 'Gatsby';
@@ -648,7 +613,6 @@ export class TechnologyCollector implements PageCollector<TechnologyData> {
       }
     }
 
-    // Nuxt implies Vue
     if (detectedMap.has('nuxt.js') && !detectedMap.has('vue.js')) {
       detectedMap.set('vue.js', {
         name: 'Vue.js',

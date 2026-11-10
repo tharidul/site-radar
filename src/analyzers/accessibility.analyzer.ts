@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/accessibility.analyzer.ts
- * @description Evaluates accessibility rules, image accessible names, semantic landmarks,
- * zooming restrictions, and maps axe-core automated WCAG 2.2 AA evaluation violations.
- */
 
 import type {
   AuditFinding,
@@ -25,7 +20,6 @@ export class AccessibilityAnalyzer implements Analyzer {
     const findings: AuditFinding[] = [];
     const { modules, mode } = context;
 
-    // 1. Language Attribute
     const identityRes = getModuleData<IdentityData>(modules, 'identity');
     if (identityRes.data) {
       const lang = identityRes.data.language?.trim();
@@ -51,7 +45,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       }
     }
 
-    // 2. Semantic Landmarks
     const domRes = getModuleData<DomSemanticData>(modules, 'dom');
     if (domRes.data) {
       const hasMain = Boolean(
@@ -80,7 +73,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       }
     }
 
-    // 3. Image Accessible Names (WCAG 2.2 AA SC 1.1.1)
     const mediaRes = getModuleData<ImagesData>(modules, 'media');
     if (mediaRes.data) {
       if (mediaRes.data.totalImages === 0) {
@@ -114,7 +106,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       }
     }
 
-    // 4. Viewport Zooming Restrictions (WCAG 2.2 AA SC 1.4.4 Resize Text)
     const respRes = getModuleData<ResponsiveData>(modules, 'responsive');
     const viewportContent = respRes.data?.viewportContent || identityRes.data?.viewport;
     if (viewportContent) {
@@ -141,7 +132,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       }
     }
 
-    // 5. axe-core Suite Evaluation
     const a11yRes = getModuleData<AccessibilityData>(modules, 'accessibility');
     if (mode === 'quick' && !a11yRes.data) {
       findings.push(
@@ -180,7 +170,6 @@ export class AccessibilityAnalyzer implements Analyzer {
             .build(),
         );
 
-        // Map individual axe-core violations with a11y-axe-${id} ruleId
         for (const v of violations.slice(0, 10)) {
           const ruleId = `a11y-axe-${v.id}`;
           const severity =
@@ -204,7 +193,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       }
     }
 
-    // 6. AGO: Agentic Form Labels & Autocomplete (ago-form-labels)
     const formsRes = getModuleData<FormsData>(modules, 'forms');
     const totalInputs = formsRes.data?.totalInputCount ?? 0;
     const unlabeledInputs = formsRes.data?.unlabeledInputCount ?? 0;
@@ -244,7 +232,6 @@ export class AccessibilityAnalyzer implements Analyzer {
       );
     }
 
-    // 7. AGO: Semantic Interactive Elements (ago-interactive-elements)
     if (domRes.data) {
       const nonSemanticCount = domRes.data.nonSemanticClickableCount ?? 0;
       const nativeButtons = domRes.data.nativeButtonsCount ?? 0;
@@ -275,7 +262,6 @@ export class AccessibilityAnalyzer implements Analyzer {
         );
       }
 
-      // 8. AGO: Agent Context Window DOM Complexity (ago-dom-token-bloat)
       const maxDepth = domRes.data.maxDomDepth ?? 0;
       const elementCount = domRes.data.elementCount ?? 0;
 

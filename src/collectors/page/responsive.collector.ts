@@ -1,8 +1,3 @@
-/**
- * @file src/collectors/page/responsive.collector.ts
- * @description Analyzes viewport configuration, mobile zoom accessibility, tap target sizing,
- * and horizontal layout overflow. (Pruned bloat: removed cloneNode word count and text ratio).
- */
 
 import type { ResponsiveData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -15,7 +10,6 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
     const doc = context.document;
     const win = context.window || (doc.defaultView as Window | null);
 
-    // 1. Viewport Meta Tag & Zoom Settings
     const viewportMeta = doc.querySelector('meta[name="viewport" i]');
     const hasViewportTag = Boolean(viewportMeta);
     const viewportContent = viewportMeta?.getAttribute('content') || undefined;
@@ -24,20 +18,18 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       ? !/user-scalable\s*=\s*(no|0)|maximum-scale\s*=\s*1(\.0)?/i.test(viewportContent)
       : true;
 
-    // 2. Tap Targets Evaluation (WCAG 2.5.5 / 2.5.8 mobile touch sizing)
     const interactiveElements = doc.querySelectorAll('a, button, input:not([type="hidden"]), select');
     let undersizedCount = 0;
 
     interactiveElements.forEach((el) => {
       try {
         const rect = el.getBoundingClientRect();
-        if (rect.width > 0 && rect.height > 0) { // Element is visible
+        if (rect.width > 0 && rect.height > 0) {
           if (rect.width < 44 || rect.height < 44) {
             undersizedCount++;
           }
         }
       } catch {
-        // Handle bounding client rect failures in simulated DOM
       }
     });
 
@@ -46,7 +38,6 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       undersized: undersizedCount,
     };
 
-    // 3. Horizontal Overflow Detection (identifies broken mobile horizontal scrolling)
     let horizontalOverflowDetected = false;
 
     if (doc.documentElement) {

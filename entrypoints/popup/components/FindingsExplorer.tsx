@@ -1,9 +1,3 @@
-/**
- * @file entrypoints/popup/components/FindingsExplorer.tsx
- * @description Clean, editorial findings explorer with unified list layout,
- * inline accordion inspection, compact filter controls, and category context banners.
- * Eliminates "too much card" visual clutter (Feature 45).
- */
 
 import React, { useState, useMemo, useDeferredValue, useEffect } from 'react';
 import {
@@ -54,7 +48,6 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'best-practices': Layers,
 };
 
-// Static status filter options hoisted to module level (rendering-hoist-jsx)
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
   { value: 'failed', label: 'Failed' },
@@ -115,7 +108,6 @@ function renderFindingStatusIcon(finding: AuditFinding) {
     );
   }
 
-  // not-applicable / not-available
   return (
     <span
       data-status="not-available"
@@ -146,7 +138,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   );
   const [copiedFindingId, setCopiedFindingId] = useState<string | null>(null);
 
-  // Return to list when Escape key is pressed
   useEffect(() => {
     if (!selectedFindingId) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -158,7 +149,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedFindingId]);
 
-  // Lookup active finding for dedicated view
   const selectedFinding = useMemo(() => {
     if (!selectedFindingId) return null;
     return findings.find((f) => f.id === selectedFindingId) || null;
@@ -177,7 +167,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     }
   };
 
-  // Discover distinct categories
   const categories = useMemo(() => {
     const set = new Set<string>();
     for (const f of findings) {
@@ -186,18 +175,14 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return Array.from(set).sort();
   }, [findings]);
 
-  // Filter and sort findings: Issues on TOP, passed on BOTTOM.
-  // Uses deferredQuery for responsive 60 FPS input typing (rerender-use-deferred-value)
   const filteredFindings = useMemo(() => {
     const q = deferredQuery.toLowerCase().trim();
 
     const matches = findings.filter((f) => {
-      // Severity filter
       if (activeSeverityFilter !== 'all' && f.severity !== activeSeverityFilter) {
         return false;
       }
 
-      // Category filter (derived from activeCategoryFilter prop: rerender-derived-state-no-effect)
       if (activeCategoryFilter !== 'all') {
         const cat = activeCategoryFilter.toLowerCase();
         if (cat === 'aeo') {
@@ -213,12 +198,10 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         }
       }
 
-      // Status filter
       if (statusFilter !== 'all' && f.status !== statusFilter) {
         return false;
       }
 
-      // Search text query
       if (q) {
         const titleMatch = f.title?.toLowerCase().includes(q);
         const descMatch = f.description?.toLowerCase().includes(q);
@@ -235,7 +218,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return sortFindingsByPriority(matches);
   }, [findings, activeSeverityFilter, activeCategoryFilter, statusFilter, deferredQuery]);
 
-  // Count actual issues (failed + warning)
   const actualIssuesInFiltered = useMemo(
     () => filteredFindings.filter((f) => f.status === 'failed' || f.status === 'warning'),
     [filteredFindings],
@@ -254,7 +236,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     onSelectSeverityFilter('all');
   };
 
-  // Category Dropdown Options
   const categoryOptions = useMemo(() => {
     const hasAeo = findings.some((f) => f.ruleId.startsWith('aeo-'));
     const hasAgo = findings.some((f) => f.ruleId.startsWith('ago-'));
@@ -287,7 +268,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     return baseOptions;
   }, [categories, findings]);
 
-  // Category Score Data for Banner (derived during render: rerender-derived-state-no-effect)
   const currentCategoryScore = useMemo(() => {
     if (!activeCategoryFilter || activeCategoryFilter === 'all') return undefined;
     const cat = activeCategoryFilter.toLowerCase();
@@ -351,20 +331,17 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   const CategoryIcon =
     (activeCategoryFilter !== 'all' && CATEGORY_ICONS[activeCategoryFilter.toLowerCase()]) || Layers;
 
-  // First non-issue index to render clean section header
   const firstNonIssueIndex = useMemo(() => {
     if (actualIssuesInFiltered.length === 0) return -1;
     return filteredFindings.findIndex((f) => f.status !== 'failed' && f.status !== 'warning');
   }, [filteredFindings, actualIssuesInFiltered]);
 
-  // Dedicated Finding Detail View: Transitions cleanly without inline accordion repaints
   if (selectedFinding) {
     const FindingCategoryIcon =
       (selectedFinding.category && CATEGORY_ICONS[selectedFinding.category.toLowerCase()]) || Layers;
 
     return (
       <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in-0 duration-150">
-        {/* Top Navigation Bar: Back button + Badges */}
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
@@ -377,7 +354,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </button>
 
           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
-            {/* Category Pill */}
             {selectedFinding.category && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                 <FindingCategoryIcon className="w-3 h-3" />
@@ -385,7 +361,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               </span>
             )}
 
-            {/* Severity Pill */}
             {selectedFinding.status !== 'passed' &&
               selectedFinding.status !== 'not-available' &&
               selectedFinding.status !== 'not-applicable' &&
@@ -409,9 +384,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </div>
         </div>
 
-        {/* Dedicated Finding Card Container */}
         <Card padding="md" className="space-y-4 shadow-xs">
-          {/* Finding Header */}
           <div className="space-y-2 border-b border-zinc-200/80 dark:border-zinc-800 pb-3.5">
             <div className="flex items-start gap-2.5">
               <div className="mt-0.5 shrink-0">
@@ -439,7 +412,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             </p>
           </div>
 
-          {/* Full Inspector Body */}
           <FindingDetailInspector
             finding={selectedFinding}
             onBack={() => setSelectedFindingId(null)}
@@ -451,7 +423,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      {/* Streamlined Filter Toolbar (Single Row: Search + Category + Status) */}
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-zinc-400" />
@@ -473,7 +444,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           ) : null}
         </div>
 
-        {/* Custom Category Dropdown */}
         <CustomSelect
           value={activeCategoryFilter}
           options={categoryOptions}
@@ -483,7 +453,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           className="min-w-[125px]"
         />
 
-        {/* Custom Status Dropdown (Hoisted static options: rendering-hoist-jsx) */}
         <CustomSelect
           value={statusFilter}
           options={STATUS_OPTIONS}
@@ -492,7 +461,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         />
       </div>
 
-      {/* Category Overview Card (visible when filtered to a specific category) */}
       {currentCategoryScore && (
         <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2">
           <div className="flex items-center justify-between">
@@ -518,7 +486,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             </div>
           </div>
 
-          {/* Quick Metrics Strip */}
           <div className="flex items-center gap-1.5 flex-wrap text-[11px]">
             {currentCategoryScore.failed > 0 && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
@@ -547,7 +514,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             )}
           </div>
 
-          {/* Context note: Shown when all evaluated checks passed cleanly */}
           {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
             <div className="text-[11px] rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
@@ -559,7 +525,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         </div>
       )}
 
-      {/* Header bar: Count & Active filter reset */}
       <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400 px-0.5">
         <span>
           Showing <span className="font-semibold text-zinc-800 dark:text-zinc-200 tabular-nums">{filteredFindings.length}</span> checks{' '}
@@ -579,7 +544,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         )}
       </div>
 
-      {/* Unified Findings List (Single container, zero individual floating cards) */}
       <Card padding="none" className="overflow-hidden divide-y divide-zinc-200/80 dark:divide-zinc-800/80">
         {filteredFindings.length === 0 ? (
           <div className="p-8 text-center text-zinc-500 dark:text-zinc-400 text-xs space-y-2">
@@ -609,7 +573,6 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                   className="transition-colors"
                   style={{ contentVisibility: 'auto', containIntrinsicSize: '0 56px' }}
                 >
-                  {/* Unified Row Item */}
                   <div
                     onClick={() => {
                       setSelectedFindingId(finding.id);

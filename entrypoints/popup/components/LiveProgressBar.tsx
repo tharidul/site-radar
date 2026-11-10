@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/LiveProgressBar.tsx
- * @description Real-time scan progress indicators and cancellation control (Feature 42).
- * Adheres strictly to anti-slop guidelines: compact, honest, non-decorative.
- */
 
 import React from 'react';
 import { X, Loader2 } from 'lucide-react';
@@ -42,7 +37,6 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
         </span>
       </div>
 
-      {/* Progress Bar Container */}
       <div className="h-2 w-full rounded-sm bg-zinc-200 dark:bg-zinc-800 overflow-hidden">
         <div
           className="h-full bg-orange-500 transition-[width] duration-200 ease-out rounded-sm"
@@ -57,7 +51,6 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
           <span> / {total}</span>
           {moduleName && (
             <span className="ml-2 text-zinc-500 dark:text-zinc-400">
-              {/* deslop-ignore-next-line 34 */}
               (<code className="font-mono text-[11px]">{moduleName}</code>)
             </span>
           )}

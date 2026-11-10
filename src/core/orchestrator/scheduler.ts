@@ -1,9 +1,3 @@
-/**
- * @file src/core/orchestrator/scheduler.ts
- * @description Task execution scheduler with bounded concurrency, per-module timeouts,
- * retry guards, and isolated error boundaries.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 9.
- */
 
 import type { CollectionResult } from '../../types/inspection';
 import type { ModulePlanItem } from './mode-plans';
@@ -55,7 +49,6 @@ export class TaskScheduler {
     const totalCount = tasks.length;
     let completedCount = 0;
 
-    // Check if scan is already aborted
     if (this.signal?.aborted) {
       for (const task of tasks) {
         results[task.planItem.id] = this.createAbortedResult(task.planItem, 'Scan cancelled before execution');
@@ -63,11 +56,9 @@ export class TaskScheduler {
       return results;
     }
 
-    // Partition tasks: standard tasks vs heavy tasks (e.g. axe-core)
     const standardTasks = tasks.filter((t) => !t.planItem.heavy);
     const heavyTasks = tasks.filter((t) => t.planItem.heavy);
 
-    // 1. Execute standard tasks with bounded concurrency
     const taskQueue = [...standardTasks];
     const inFlight = new Set<Promise<void>>();
 
@@ -95,7 +86,6 @@ export class TaskScheduler {
 
     while (taskQueue.length > 0 || inFlight.size > 0) {
       if (this.signal?.aborted) {
-        // Drain pending queue as skipped
         while (taskQueue.length > 0) {
           const task = taskQueue.shift()!;
           results[task.planItem.id] = this.createAbortedResult(task.planItem, 'Scan cancelled by user');
@@ -117,10 +107,8 @@ export class TaskScheduler {
       }
     }
 
-    // Await all standard in-flight completions
     await Promise.allSettled(Array.from(inFlight));
 
-    // 2. Execute heavy tasks sequentially (concurrency = 1) to eliminate DOM thrashing
     for (const heavyTask of heavyTasks) {
       if (this.signal?.aborted) {
         results[heavyTask.planItem.id] = this.createAbortedResult(heavyTask.planItem, 'Scan cancelled before heavy task');
@@ -192,18 +180,15 @@ export class TaskScheduler {
           this.signal.removeEventListener('abort', onParentAbort);
         }
 
-        // If parent scan is cancelled, abort immediately without retrying
         if (this.signal?.aborted) {
           return this.createAbortedResult(planItem, 'Scan cancelled during execution');
         }
 
-        // If retries remain, back off briefly
         if (attempt < maxAttempts) {
           await new Promise((resolve) => setTimeout(resolve, 200 * attempt));
           continue;
         }
 
-        // Return isolated failure result
         const isTimeout = childController.signal.aborted && /timeout/i.test(childController.signal.reason?.message || '');
         return this.createFailureResult(planItem, err?.message || 'Module execution threw unexpected error', isTimeout);
       }

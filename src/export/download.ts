@@ -1,17 +1,8 @@
-/**
- * @file src/export/download.ts
- * @description Safe cross-browser Blob download trigger utility for Chrome MV3 and Firefox MV3.
- * Adheres strictly to least privilege: does not require chrome.downloads permission.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 13.
- */
 
 import type { WebsiteInspection, AuditFinding } from '@/types/inspection';
 import { exportToJson, type JsonExportOptions } from './json.exporter';
 import { exportToHtml } from './html.exporter';
 
-/**
- * Sanitizes an arbitrary string into a safe filename component.
- */
 export function sanitizeFilenamePart(name: string): string {
   if (!name || typeof name !== 'string') return 'audit';
   return name
@@ -22,10 +13,6 @@ export function sanitizeFilenamePart(name: string): string {
     .toLowerCase() || 'audit';
 }
 
-/**
- * Generates standard report filenames conforming to project pattern:
- * website-intelligence-${hostname}-${mode}-${date}.${extension}
- */
 export function generateReportFilename(
   hostname: string,
   mode: string,
@@ -38,10 +25,6 @@ export function generateReportFilename(
   return `website-intelligence-${safeHost}-${safeMode}-${dateStr}.${extension}`;
 }
 
-/**
- * Initiates a browser Blob download using temporary DOM anchor click.
- * Universal across Chrome and Firefox extension contexts without requiring 'downloads' permission.
- */
 export function triggerBlobDownload(content: string, filename: string, mimeType: string): void {
   if (typeof window === 'undefined' || typeof document === 'undefined') {
     return;
@@ -66,9 +49,6 @@ export function triggerBlobDownload(content: string, filename: string, mimeType:
   }
 }
 
-/**
- * Exports and downloads the current inspection as a sanitized JSON file.
- */
 export function downloadJsonReport(
   inspection: WebsiteInspection,
   options?: JsonExportOptions,
@@ -83,9 +63,6 @@ export function downloadJsonReport(
   triggerBlobDownload(json, filename, 'application/json;charset=utf-8');
 }
 
-/**
- * Copies the sanitized JSON audit report directly to the system clipboard without triggering a file download.
- */
 export async function copyJsonReport(
   inspection: WebsiteInspection,
   options?: JsonExportOptions,
@@ -100,7 +77,6 @@ export async function copyJsonReport(
     console.warn('navigator.clipboard.writeText failed, using textarea fallback:', err);
   }
 
-  // Fallback for browser extension contexts where navigator.clipboard might be restricted
   try {
     if (typeof document !== 'undefined') {
       const textarea = document.createElement('textarea');
@@ -122,9 +98,6 @@ export async function copyJsonReport(
   return false;
 }
 
-/**
- * Copies a single audit finding / issue directly to the clipboard as formatted JSON.
- */
 export async function copyFindingJson(finding: AuditFinding): Promise<boolean> {
   const json = JSON.stringify(finding, null, 2);
   try {
@@ -136,7 +109,6 @@ export async function copyFindingJson(finding: AuditFinding): Promise<boolean> {
     console.warn('navigator.clipboard.writeText failed, using textarea fallback:', err);
   }
 
-  // Fallback for browser extension contexts where navigator.clipboard might be restricted
   try {
     if (typeof document !== 'undefined') {
       const textarea = document.createElement('textarea');
@@ -158,9 +130,6 @@ export async function copyFindingJson(finding: AuditFinding): Promise<boolean> {
   return false;
 }
 
-/**
- * Exports and downloads the current inspection as a self-contained HTML file.
- */
 export function downloadHtmlReport(inspection: WebsiteInspection): void {
   const html = exportToHtml(inspection);
   const filename = generateReportFilename(

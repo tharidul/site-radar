@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/ExportDropdown.tsx
- * @description Sleek, accessible dropdown menu for report export and copy actions.
- * Eliminates button spam in footers by grouping actions into a unified popover menu.
- */
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Download, ChevronDown, Copy, FileCode, FileText, Check } from 'lucide-react';
@@ -26,7 +21,6 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
   const [feedback, setFeedback] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close on outside click or Escape key
   useEffect(() => {
     if (!isOpen) return;
 
@@ -78,7 +72,6 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
 
   return (
     <div ref={containerRef} className={`relative inline-block text-left select-none ${className}`}>
-      {/* Unified Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -106,7 +99,6 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
         />
       </button>
 
-      {/* Popover Menu */}
       {isOpen && (
         <div
           role="menu"
@@ -115,12 +107,10 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
             direction === 'up' ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
           } ${align === 'right' ? 'right-0' : 'left-0'}`}
         >
-          {/* Section Header */}
           <div className="px-2.5 py-1 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
             Report Actions
           </div>
 
-          {/* Option 1: Copy JSON */}
           <button
             type="button"
             role="menuitem"
@@ -143,7 +133,6 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
             </span>
           </button>
 
-          {/* Option 2: Download JSON */}
           <button
             type="button"
             role="menuitem"
@@ -166,7 +155,6 @@ export const ExportDropdown: React.FC<ExportDropdownProps> = ({
             </span>
           </button>
 
-          {/* Option 3: Download HTML */}
           <button
             type="button"
             role="menuitem"

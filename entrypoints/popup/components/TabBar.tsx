@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/TabBar.tsx
- * @description Tab navigation bar matching the Website Intelligence dashboard standard.
- * Provides instant switching between Overview, Issues, Rules, Resources, and Report.
- */
 
 import React from 'react';
 import {
@@ -22,7 +17,6 @@ interface TabBarProps {
   issuesCount: number;
 }
 
-// Hoisted static tab definitions (rendering-hoist-jsx)
 const STATIC_TABS: Array<{
   id: DashboardTab;
   label: string;
@@ -74,7 +68,6 @@ export const TabBar: React.FC<TabBarProps> = ({
                   </span>
                 ) : null}
               </button>
-              {/* Active Tab Underline Indicator - positioned absolutely so it never forces vertical overflow */}
               <div
                 className={`absolute bottom-0 left-0.5 right-0.5 h-0.5 rounded-full transition-all duration-200 ease-out pointer-events-none ${
                   isActive ? 'bg-[#152E40] dark:bg-[#CEFF52] opacity-100 scale-x-100' : 'bg-transparent opacity-0 scale-x-75'

@@ -1,15 +1,7 @@
-/**
- * @file entrypoints/popup/components/PageVitalsCard.tsx
- * @description Dedicated dashboard component displaying page loading times
- * and total data/resource usage. Designed with a clean, elegant, unified surface layout.
- */
 
-import React, { useState, useCallback } from 'react';
-import { Clock, ArrowDownToLine, Loader2 } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Clock } from 'lucide-react';
 import type { WebsiteInspection, PerformanceData } from '@/types/inspection';
-import { messageBus } from '../../../src/messaging/bus';
-import { MESSAGE_CHANNELS } from '../../../src/types/messaging';
-import { getBrowserAdapter } from '../../../src/browser/adapters';
 
 interface PageVitalsCardProps {
   inspection: WebsiteInspection;
@@ -26,20 +18,17 @@ function formatBytes(bytes?: number): string {
 export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) => {
   const findings = inspection.findings || [];
 
-  // Helper to extract evidence values as fallback for imported inspections
   const getEvidence = (ruleId: string, label: string): string | undefined => {
     const f = findings.find((item) => item.ruleId === ruleId);
     const ev = f?.evidence?.find((e) => e.label.toLowerCase() === label.toLowerCase());
     return ev?.value !== undefined ? String(ev.value) : undefined;
   };
 
-  // Performance data extraction
   const perfData = inspection.modules?.performance?.data as PerformanceData | undefined;
   const navTiming = perfData?.navigationTiming;
   const paintTiming = perfData?.paintTiming;
   const webVitals = perfData?.webVitals;
 
-  // Loading times
   const ttfb = navTiming?.ttfbMs !== undefined ? `${navTiming.ttfbMs}ms` : getEvidence('perf-ttfb', 'TTFB');
   const fcp = paintTiming?.fcpMs !== undefined ? `${paintTiming.fcpMs}ms` : getEvidence('perf-slow-fcp', 'FCP');
   const lcp = webVitals?.lcpMs !== undefined ? `${webVitals.lcpMs}ms` : getEvidence('perf-lcp', 'LCP');
@@ -59,10 +48,8 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
         : `${domLoadRaw}ms`
       : undefined;
 
-  // Primary load time highlight (prefer fullLoad -> LCP -> FCP -> TTFB)
   const primaryTime = fullLoad || lcp || fcp || ttfb || '—';
 
-  // Data & resource usage extraction
   const resModule = inspection.modules?.resources?.data as any;
   const totalRequests =
     perfData?.resourceCount ??
@@ -73,69 +60,20 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
   const transferBytes = perfData?.transferSizeApprox;
   const decodedBytes = perfData?.decodedSizeApprox;
 
-  // Scrolled full page measurement state
-  const [scrolledData, setScrolledData] = useState<{
-    transferBytes?: number;
-    resourceCount?: number;
-    decodedBytes?: number;
-    isInfiniteScroll?: boolean;
-  } | null>(
-    perfData?.scrolledTransferSizeApprox !== undefined
-      ? {
-          transferBytes: perfData.scrolledTransferSizeApprox,
-          resourceCount: perfData.scrolledResourceCount,
-          decodedBytes: perfData.scrolledDecodedSizeApprox,
-          isInfiniteScroll: perfData.isInfiniteScrollDetected,
-        }
-      : null
-  );
-  const [isMeasuring, setIsMeasuring] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  const handleMeasureScrolled = useCallback(async () => {
-    setIsMeasuring(true);
-    setErrorMessage(null);
-    try {
-      const adapter = getBrowserAdapter();
-      const tab = await adapter.getActiveTab();
-      if (!tab?.id) {
-        throw new Error('Active tab not found');
-      }
-
-      const res = await messageBus.sendToTab(
-        tab.id,
-        MESSAGE_CHANNELS.MEASURE_SCROLLED_PAGE,
-        undefined
-      );
-
-      if (res && res.success) {
-        const data = {
-          transferBytes: res.scrolledTransferSizeApprox,
-          resourceCount: res.scrolledResourceCount,
-          decodedBytes: res.scrolledDecodedSizeApprox,
-          isInfiniteScroll: res.isInfiniteScroll,
-        };
-        setScrolledData(data);
-        if (perfData) {
-          perfData.scrolledTransferSizeApprox = res.scrolledTransferSizeApprox;
-          perfData.scrolledResourceCount = res.scrolledResourceCount;
-          perfData.scrolledDecodedSizeApprox = res.scrolledDecodedSizeApprox;
-          perfData.isInfiniteScrollDetected = res.isInfiniteScroll;
-        }
-      } else {
-        throw new Error(res?.error || 'Scroll measurement failed');
-      }
-    } catch (err: any) {
-      setErrorMessage(err?.message || 'Could not measure page scroll');
-      setTimeout(() => setErrorMessage(null), 3500);
-    } finally {
-      setIsMeasuring(false);
+  const scrolledData = useMemo(() => {
+    if (perfData?.scrolledTransferSizeApprox !== undefined) {
+      return {
+        transferBytes: perfData.scrolledTransferSizeApprox,
+        resourceCount: perfData.scrolledResourceCount,
+        decodedBytes: perfData.scrolledDecodedSizeApprox,
+        isInfiniteScroll: perfData.isInfiniteScrollDetected,
+      };
     }
+    return null;
   }, [perfData]);
 
   return (
     <div className="rounded-md bg-white dark:bg-zinc-900 p-5 shadow-xs">
-      {/* Panel Header */}
       <div className="flex items-center justify-between pb-3.5 border-b border-zinc-200/70 dark:border-zinc-800">
         <div>
           <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
@@ -153,9 +91,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
         )}
       </div>
 
-      {/* Speed Timing Grid (Seamless 4-column ticker without nested boxes) */}
       <div className="grid grid-cols-4 divide-x divide-zinc-200/70 dark:divide-zinc-800 py-3.5">
-        {/* TTFB */}
         <div className="pr-3 pl-0">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             TTFB
@@ -172,7 +108,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
           </div>
         </div>
 
-        {/* FCP */}
         <div className="px-3">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             FCP
@@ -185,7 +120,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
           </div>
         </div>
 
-        {/* LCP */}
         <div className="px-3">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             LCP
@@ -198,7 +132,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
           </div>
         </div>
 
-        {/* Load Event */}
         <div className="pl-3 pr-0">
           <div className="text-[10px] font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
             Load Event
@@ -212,10 +145,8 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
         </div>
       </div>
 
-      {/* Data Usage & Payload Footer Bar */}
       <div className="border-t border-zinc-200/70 dark:border-zinc-800 pt-3 flex items-center justify-between gap-3 text-xs">
         <div className="flex items-center gap-3 min-w-0 flex-wrap">
-          {/* 1. Initial Load Usage */}
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-zinc-700 dark:text-zinc-300 shrink-0">
               Data Usage:
@@ -235,8 +166,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
             </span>
           </div>
 
-          {/* 2. Full Page (Scrolled) Usage */}
-          {scrolledData ? (
+          {scrolledData && (
             <div className="flex items-center gap-1.5 pl-3 border-l border-zinc-200 dark:border-zinc-800">
               <span className="font-semibold text-zinc-700 dark:text-zinc-300 shrink-0">
                 Full Page:
@@ -266,32 +196,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
                 </span>
               )}
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={handleMeasureScrolled}
-              disabled={isMeasuring}
-              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer disabled:opacity-50 transition-colors"
-              title="Scroll the page to bottom to trigger and measure below-the-fold lazy-loaded assets and infinite scroll"
-            >
-              {isMeasuring ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin text-[#152E40] dark:text-[#CEFF52]" />
-                  <span>Slowly scrolling page...</span>
-                </>
-              ) : (
-                <>
-                  <ArrowDownToLine className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
-                  <span>Scroll &amp; measure full page</span>
-                </>
-              )}
-            </button>
-          )}
-
-          {errorMessage && (
-            <span className="text-[10px] text-rose-600 dark:text-rose-400">
-              {errorMessage}
-            </span>
           )}
         </div>
       </div>

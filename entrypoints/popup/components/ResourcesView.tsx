@@ -1,7 +1,3 @@
-/**
- * @file entrypoints/popup/components/ResourcesView.tsx
- * @description Resources tab displaying scripts, stylesheets, media assets, and third-party origins.
- */
 
 import React, { useMemo, useState } from 'react';
 import { FileCode, FileSpreadsheet, Image as ImageIcon, Globe, Database, Cpu, Search, Check, AlertTriangle, ExternalLink } from 'lucide-react';
@@ -25,7 +21,6 @@ type ResourceTab = 'scripts' | 'stylesheets' | 'images' | 'origins';
 
 function openResourceUrl(url?: string) {
   if (!url) return;
-  // Security validation: Only allow http, https, and data:image schemes
   if (!/^https?:\/\//i.test(url) && !url.startsWith('data:image/')) return;
 
   try {
@@ -103,7 +98,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
             }
           }
         } catch {
-          // ignore
         }
       });
     }
@@ -151,7 +145,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
         </div>
       </div>
 
-      {/* 4 Interactive Resource Filter Cards */}
       <div className="grid grid-cols-4 gap-2 text-center text-xs">
         <button
           type="button"
@@ -268,9 +261,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
         </button>
       </div>
 
-      {/* Active Resource Details Explorer Card */}
       <div className="rounded-md bg-white dark:bg-zinc-900 p-3.5 shadow-xs space-y-3">
-        {/* Header & Filter Search Input */}
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             {activeTab === 'scripts' && <FileCode className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />}
@@ -297,9 +288,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           </div>
         </div>
 
-        {/* Scrollable Resource List */}
         <div className="max-h-[220px] overflow-y-auto divide-y divide-zinc-100 dark:divide-zinc-800/60 pr-1 text-xs">
-          {/* 1. SCRIPTS LIST */}
           {activeTab === 'scripts' &&
             (filteredScripts.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
@@ -365,7 +354,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
               ))
             ))}
 
-          {/* 2. STYLESHEETS LIST */}
           {activeTab === 'stylesheets' &&
             (filteredStylesheets.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
@@ -421,7 +409,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
               ))
             ))}
 
-          {/* 3. IMAGES LIST (With Thumbnail Preview & Click-to-Open) */}
           {activeTab === 'images' &&
             (filteredImages.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
@@ -435,7 +422,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                   className="group py-2 flex items-center gap-2.5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 px-2 rounded-lg cursor-pointer transition-colors"
                   title="Click to open image in new tab"
                 >
-                  {/* Thumbnail Preview */}
                   <div className="w-9 h-9 rounded-md bg-zinc-100 dark:bg-zinc-800 shrink-0 overflow-hidden border border-zinc-200/60 dark:border-zinc-700/60 flex items-center justify-center relative">
                     <img
                       src={img.src}
@@ -449,7 +435,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                     <ImageIcon className="w-4 h-4 text-zinc-400 dark:text-zinc-500 absolute pointer-events-none" />
                   </div>
 
-                  {/* Image Details */}
                   <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                     <div className="flex items-center justify-between gap-2 min-w-0">
                       <span
@@ -499,7 +484,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
               ))
             ))}
 
-          {/* 4. ORIGINS LIST */}
           {activeTab === 'origins' &&
             (filteredOrigins.length === 0 ? (
               <p className="py-5 text-center text-xs text-zinc-500 dark:text-zinc-400">
@@ -526,7 +510,6 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
         </div>
       </div>
 
-      {/* Detected Technologies Card */}
       {technologies.length > 0 && (
         <div className="rounded-md bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2.5">
           <div className="flex items-center justify-between">
@@ -583,5 +566,4 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
     </div>
   );
 };
-
 

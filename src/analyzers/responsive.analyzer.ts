@@ -1,7 +1,3 @@
-/**
- * @file src/analyzers/responsive.analyzer.ts
- * @description Evaluates mobile viewport settings and layout overflow under Best Practices.
- */
 
 import type { AuditFinding, IdentityData, ResponsiveData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -16,7 +12,6 @@ export class ResponsiveAnalyzer implements Analyzer {
     const findings: AuditFinding[] = [];
     const { modules } = context;
 
-    // Viewport tag from Responsive or Identity
     const respRes = getModuleData<ResponsiveData>(modules, 'responsive');
     const idRes = getModuleData<IdentityData>(modules, 'identity');
 
@@ -46,7 +41,6 @@ export class ResponsiveAnalyzer implements Analyzer {
       );
     }
 
-    // Responsive / layout overflow
     if (respRes.data) {
       if (respRes.data.horizontalOverflowDetected) {
         findings.push(

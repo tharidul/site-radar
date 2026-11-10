@@ -55,14 +55,12 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Responsive outer layout */
     .layout-wrapper {
       width: 100%;
       max-width: 1380px;
       margin: 0 auto;
     }
 
-    /* Sidebar Navigation (Sticky on desktop, hidden on small screens) */
     .sidebar {
       display: none;
     }
@@ -96,7 +94,6 @@
       }
     }
 
-    /* Sidebar Brand & Navigation */
     .sidebar-brand {
       display: flex;
       align-items: center;
@@ -214,7 +211,6 @@
       text-decoration: underline;
     }
 
-    /* Mobile/Tablet Horizontal Section Scroller */
     .mobile-nav {
       display: flex;
       gap: 8px;
@@ -254,7 +250,6 @@
       }
     }
 
-    /* Article Header */
     header {
       padding-bottom: 24px;
       margin-bottom: 28px;
@@ -296,7 +291,6 @@
       font-weight: 600;
     }
 
-    /* 4-Card Responsive Highlights Grid */
     .highlights-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -325,7 +319,6 @@
       line-height: 1.55;
     }
 
-    /* Headings & Typography */
     h2 {
       font-size: 20px;
       font-weight: 700;
@@ -391,7 +384,6 @@
       color: var(--accent-text);
     }
 
-    /* Tables (Fully fluid across wide and small displays) */
     .table-wrap {
       border: 1px solid var(--border);
       border-radius: 6px;
@@ -495,7 +487,6 @@
 </head>
 <body>
   <div class="layout-wrapper">
-    <!-- Desktop Sticky Sidebar (TOC + Project Meta) -->
     <aside class="sidebar" aria-label="Documentation Sidebar">
       <div class="sidebar-brand">
         <div class="brand-mark" aria-hidden="true">SR</div>
@@ -506,8 +497,8 @@
       </div>
 
       <div class="sidebar-meta">
-        <div><span>Version</span> <strong>0.1.0</strong></div>
-        <div><span>Effective</span> <strong>Nov 9, 2026</strong></div>
+        <div><span>Version</span> <strong>0.2.0</strong></div>
+        <div><span>Effective</span> <strong>Nov 10, 2026</strong></div>
         <div><span>Developer</span> <strong>LKML</strong></div>
         <div><span>License</span> <strong>MIT</strong></div>
       </div>
@@ -533,7 +524,6 @@
       </div>
     </aside>
 
-    <!-- Main Content Area -->
     <main class="main-content">
       <header>
         <div class="mobile-brand-row">
@@ -541,13 +531,12 @@
           <h1>SiteRadar — Privacy Policy</h1>
         </div>
         <div class="meta-bar">
-          <span><strong>Effective:</strong> November 9, 2026</span>
-          <span><strong>Version:</strong> 0.1.0</span>
+          <span><strong>Effective:</strong> November 10, 2026</span>
+          <span><strong>Version:</strong> 0.2.0</span>
           <span><strong>Developer:</strong> Tharidu Lakmal (LKML)</span>
         </div>
       </header>
 
-      <!-- Mobile/Tablet Quick-Jump Nav -->
       <nav class="mobile-nav" aria-label="Quick Navigation">
         <a href="#overview">Overview</a>
         <a href="#not-collected">Not Collected</a>
@@ -559,7 +548,6 @@
         <a href="#contact">Contact</a>
       </nav>
 
-      <!-- Privacy Posture Key Highlights -->
       <div class="highlights-grid">
         <div class="highlight-card">
           <div class="highlight-title">100% Local-First</div>
@@ -739,7 +727,7 @@
       </ul>
 
       <footer>
-        <span>SiteRadar v0.1.0</span>
+        <span>SiteRadar v0.2.0</span>
         <span><a href="https://github.com/tharidul/site-radar" target="_blank" rel="noopener">GitHub</a> &bull; <a href="https://tharidulakmal.com" target="_blank" rel="noopener">tharidulakmal.com</a></span>
       </footer>
     </main>

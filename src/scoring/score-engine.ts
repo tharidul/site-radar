@@ -1,10 +1,3 @@
-/**
- * @file src/scoring/score-engine.ts
- * @description Calibrated category scoring engine calculating 0–100 scores across Security,
- * Performance, SEO, Accessibility, and Best Practices.
- * Incorporates confidence-weighting, duplicate prevention, and clean N/A / ERROR exclusions.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 11.
- */
 
 import type { AuditFinding } from '../types/inspection';
 import { getRuleDefinition } from '../analyzers/rule-catalog';
@@ -26,7 +19,6 @@ const CATEGORY_WEIGHTS: Record<string, number> = {
   'best-practices': 0.10,
 };
 
-// Aliases for duplicate rule deduplication
 const RULE_CANONICAL_ALIASES: Record<string, string> = {
   'sec-missing-https': 'sec-https-enforced',
   'sec-insecure-form-action': 'sec-form-action-secure',
@@ -62,7 +54,6 @@ export function calculateCategoryScore(
   let maxPossiblePoints = 0;
   const deductionsExplanation: string[] = [];
 
-  // Track scored canonical rules to strictly prevent duplicate penalties
   const seenCanonicalRules = new Set<string>();
 
   for (const finding of categoryFindings) {
@@ -108,15 +99,12 @@ export function calculateCategoryScore(
         );
         break;
       case 'info':
-        // Informational observation - zero penalty, zero denominator impact
         break;
       case 'not-available':
       case 'error':
-        // Missing evidence or unobservable property - never deducted as failure
         unavailable++;
         break;
       case 'not-applicable':
-        // Not applicable to inspected page context - excluded from scoring
         notApplicable++;
         break;
     }
@@ -129,14 +117,11 @@ export function calculateCategoryScore(
 
   let rawScore = maxPossiblePoints > 0 ? (earnedPoints / maxPossiblePoints) * 100 : 100;
 
-  // Guardrail 1: Confirmed critical failure prevents passing score (cap <= 49)
   if (hasCriticalFailure && rawScore > 49) {
     rawScore = 49;
     deductionsExplanation.push('Critical failure override applied: score capped at 49');
   }
 
-  // Guardrail 2: Coverage ceiling (Do not give a perfect 100 score when substantial checks unavailable < 70%)
-  // Capping ceiling prevents false 100% certification while never unfairly penalizing clean sites with a failing grade.
   let finalScore = rawScore;
   if (coverageRate < 0.70 && totalApplicable > 0) {
     const coverageCeiling = Math.round(75 + 25 * coverageRate);

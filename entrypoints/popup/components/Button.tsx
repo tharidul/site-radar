@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/Button.tsx
- * @description Unified, accessible Button primitive following the single-component rule.
- * Eliminates redundant ad-hoc button styling across views and dialogs.
- */
 
 import React from 'react';
 import { Loader2 } from 'lucide-react';

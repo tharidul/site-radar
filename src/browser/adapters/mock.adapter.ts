@@ -1,7 +1,3 @@
-/**
- * @file src/browser/adapters/mock.adapter.ts
- * @description In-memory browser adapter implementation for isolated testing without browser globals.
- */
 
 import type {
   BrowserAdapter,

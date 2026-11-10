@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/identity.collector.ts
- * @description Extracts page identity, title, language, viewport, and canonical link signals.
- */
 
 import type { IdentityData } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -15,7 +11,6 @@ export class IdentityCollector implements PageCollector<IdentityData> {
     const doc = context.document;
     const rawUrl = context.url || (doc.location?.href !== 'about:blank' ? doc.location?.href : '') || '';
     
-    // Scrub any credentials and sensitive query tokens from the URL
     let sanitizedUrl = rawUrl;
     let origin = '';
     try {

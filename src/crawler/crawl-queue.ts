@@ -1,9 +1,3 @@
-/**
- * @file src/crawler/crawl-queue.ts
- * @description In-memory crawl frontier queue managing deduplication, same-origin filtering,
- * max depth traversal, and exclusion reason tracking.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 10.
- */
 
 import type { CrawlLimits, ExcludedUrl, CrawlExclusionReason } from '@/types/crawler';
 import { normalizeUrl } from '@/security/url-normalizer';
@@ -28,25 +22,21 @@ export class CrawlQueue {
     const parsed = new URL(seedUrl);
     this.origin = parsed.origin;
 
-    // Enqueue root seed
     this.enqueue(seedUrl, 0);
   }
 
   enqueue(rawUrl: string, depth: number, parentUrl?: string): boolean {
-    // 1. Boundary check: Max depth
     if (depth > this.limits.maxDepth) {
       this.recordExclusion(rawUrl, 'max-depth-exceeded', `Depth ${depth} exceeds maxDepth ${this.limits.maxDepth}`);
       return false;
     }
 
-    // 2. Scheme check
     const schemeCheck = validateScheme(rawUrl);
     if (!schemeCheck.valid) {
       this.recordExclusion(rawUrl, 'scheme-disallowed', schemeCheck.reason);
       return false;
     }
 
-    // 3. Normalize URL
     let normalized: string;
     try {
       normalized = normalizeUrl(rawUrl);
@@ -55,7 +45,6 @@ export class CrawlQueue {
       return false;
     }
 
-    // 4. Same-origin boundary check
     if (this.limits.sameOriginOnly) {
       try {
         const u = new URL(normalized);
@@ -69,12 +58,10 @@ export class CrawlQueue {
       }
     }
 
-    // 5. Deduplication check
     if (this.seen.has(normalized)) {
       return false;
     }
 
-    // 6. Max pages reached check
     if (this.seen.size >= this.limits.maxPages) {
       this.recordExclusion(normalized, 'max-pages-reached', `Crawl capacity limit ${this.limits.maxPages} reached`);
       return false;

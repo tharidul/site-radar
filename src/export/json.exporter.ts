@@ -1,18 +1,9 @@
-/**
- * @file src/export/json.exporter.ts
- * @description Sanitized JSON audit report exporter.
- * Applies zero-secret redaction, ISO-8601 normalization, and produces structured,
- * schema-compliant audit exports.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 13, Feature 48.
- */
 
 import type { WebsiteInspection, CollectionStatus, CollectionCoverage, Severity, FindingStatus, Evidence } from '@/types/inspection';
 import { redactSecrets } from '@/security/secret-redactor';
 
 export interface JsonExportOptions {
-  /** If true, includes raw module payloads; if false, exports module execution summaries. Default: false */
   includeRawModules?: boolean;
-  /** If true, formats output with 2-space indentation. Default: true */
   pretty?: boolean;
 }
 
@@ -137,7 +128,6 @@ export function exportToJson(
         : undefined,
   };
 
-  // Rigorous invariant: recursive zero-secret scrub
   const sanitized = redactSecrets(exportPayload);
 
   return JSON.stringify(sanitized, null, pretty ? 2 : 0);

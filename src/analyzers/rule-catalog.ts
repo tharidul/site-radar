@@ -1,10 +1,3 @@
-/**
- * @file src/analyzers/rule-catalog.ts
- * @description Centralized authoritative catalog of audit rules with stable ruleIds,
- * categories, default severities, weights, recommendations, and references.
- * Professionally calibrated across 5 core categories: Security, Performance, SEO, Accessibility, Best Practices.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 8, 11.
- */
 
 import type { Severity } from '../types/inspection';
 
@@ -25,9 +18,6 @@ export interface RuleDefinition {
 }
 
 export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
-  // =========================================================================
-  // 1. Security (sec-*)
-  // =========================================================================
   'sec-https-enforced': {
     ruleId: 'sec-https-enforced',
     category: 'security',
@@ -227,9 +217,6 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     references: ['https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity'],
   },
 
-  // =========================================================================
-  // 2. Performance (perf-*)
-  // =========================================================================
   'perf-lcp': {
     ruleId: 'perf-lcp',
     category: 'performance',
@@ -385,9 +372,6 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     references: ['https://web.dev/dom-size/'],
   },
 
-  // =========================================================================
-  // 3. SEO (seo-*)
-  // =========================================================================
   'seo-title-present': {
     ruleId: 'seo-title-present',
     category: 'seo',
@@ -585,9 +569,6 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     references: ['https://web.dev/learn/seo/headings'],
   },
 
-  // =========================================================================
-  // 4. Accessibility (a11y-*)
-  // =========================================================================
   'a11y-missing-alt': {
     ruleId: 'a11y-missing-alt',
     category: 'accessibility',
@@ -718,9 +699,6 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     references: ['https://web.dev/dom-size/'],
   },
 
-  // =========================================================================
-  // 5. Best Practices (bp-*)
-  // =========================================================================
   'resp-viewport-valid': {
     ruleId: 'resp-viewport-valid',
     category: 'best-practices',
@@ -903,7 +881,6 @@ export function getRuleDefinition(ruleId: string): RuleDefinition | undefined {
     return RULE_DEFINITIONS[ruleId];
   }
 
-  // Handle dynamic a11y-axe-* rules mapped from axe-core
   if (ruleId.startsWith('a11y-axe-')) {
     const axeId = ruleId.replace('a11y-axe-', '');
     return {

@@ -1,9 +1,3 @@
-/**
- * @file src/collectors/page/links.collector.ts
- * @description Analyzes anchor links for actionable security and QA signals:
- * reverse tabnabbing vulnerabilities, dangerous protocols (javascript:, data:),
- * empty hrefs, and internal/external boundary counts. (Pruned: 100-item raw link dump).
- */
 
 import type { LinksData, LinkItem } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
@@ -48,7 +42,6 @@ export class LinksCollector implements PageCollector<LinksData> {
       const rel = el.getAttribute('rel') || undefined;
       const target = el.getAttribute('target') || undefined;
 
-      // Protocol analysis
       let protocol = '';
       const schemeMatch = trimmedHref.match(/^([a-zA-Z0-9+.-]+):/);
       if (schemeMatch && schemeMatch[1]) {
@@ -88,13 +81,11 @@ export class LinksCollector implements PageCollector<LinksData> {
       const hasNoopener = relLower.includes('noopener');
       const hasNoreferrer = relLower.includes('noreferrer');
 
-      // Check reverse tabnabbing (target="_blank" without noopener)
       const isVulnerableTabnabbing = Boolean(target === '_blank' && isExternal && !hasNoopener && !hasNoreferrer);
       if (isVulnerableTabnabbing) {
         tabnabbingVulnerableCount++;
       }
 
-      // Store only actionable links (vulnerable tabnabbing or sample external links up to 25)
       if (isExternal && (isVulnerableTabnabbing || externalLinks.length < 25)) {
         externalLinks.push({
           url: sanitizedHref,
@@ -111,7 +102,7 @@ export class LinksCollector implements PageCollector<LinksData> {
 
     const data: LinksData = {
       totalLinks,
-      internalLinks: [], // Zero bloat: raw internal links omitted
+      internalLinks: [],
       externalLinks,
       invalidProtocols: Array.from(invalidProtocols),
       emptyHrefs,

@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/security.analyzer.ts
- * @description Evaluates security signals, HTTPS, mixed content, SRI, form actions, and observable security headers.
- * Professionally calibrated according to OWASP and browser security best practices.
- */
 
 import type { AuditFinding, SecuritySignalsData, FormsData, JavaScriptData, CssData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -20,7 +15,6 @@ export class SecurityAnalyzer implements Analyzer {
     const secRes = getModuleData<SecuritySignalsData>(modules, 'securitySignals', 'security');
     const secData = secRes.data;
 
-    // 1. HTTPS Encryption
     const isHttps = target.url.startsWith('https://');
     if (!isHttps) {
       findings.push(
@@ -58,7 +52,6 @@ export class SecurityAnalyzer implements Analyzer {
           .build(),
       );
     } else {
-      // 2. Mixed Content
       const hasMixed = Boolean(secData.mixedContentDetected);
       if (!isHttps) {
         findings.push(
@@ -91,11 +84,9 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // 3. Security Headers Evaluation (Observable evidence vs unobservable network headers)
       const headers = secData.securityHeaders;
       const headersObservable = headers !== undefined && typeof headers === 'object';
 
-      // CSP: can be declared via HTTP response header OR in-DOM <meta http-equiv="Content-Security-Policy">
       const cspHeader = headersObservable
         ? Object.entries(headers).find(([k]) => k.toLowerCase() === 'content-security-policy')?.[1]
         : undefined;
@@ -132,7 +123,6 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // Strict-Transport-Security (HSTS)
       if (headersObservable) {
         const hstsHeader = Object.entries(headers).find(
           ([k]) => k.toLowerCase() === 'strict-transport-security',
@@ -179,7 +169,6 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // X-Content-Type-Options
       if (headersObservable) {
         const xcto = Object.entries(headers).find(
           ([k]) => k.toLowerCase() === 'x-content-type-options',
@@ -213,7 +202,6 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // X-Frame-Options & Clickjacking
       if (headersObservable) {
         const xfo = Object.entries(headers).find(
           ([k]) => k.toLowerCase() === 'x-frame-options',
@@ -248,7 +236,6 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // Referrer-Policy: Observable via HTTP header or in-DOM <meta name="referrer">
       const refPol = headersObservable
         ? Object.entries(headers).find(([k]) => k.toLowerCase() === 'referrer-policy')?.[1]
         : undefined;
@@ -295,7 +282,6 @@ export class SecurityAnalyzer implements Analyzer {
         );
       }
 
-      // Permissions-Policy
       if (headersObservable) {
         const permPol = Object.entries(headers).find(
           ([k]) => k.toLowerCase() === 'permissions-policy' || k.toLowerCase() === 'feature-policy',
@@ -330,7 +316,6 @@ export class SecurityAnalyzer implements Analyzer {
       }
     }
 
-    // 4. Subresource Integrity (SRI) checks on external scripts and styles
     const scriptsRes = getModuleData<JavaScriptData>(modules, 'scripts');
     if (scriptsRes.data?.scripts) {
       const externalScripts = scriptsRes.data.scripts.filter(
@@ -404,7 +389,6 @@ export class SecurityAnalyzer implements Analyzer {
       }
     }
 
-    // 5. Form Action Security & Plaintext Password Transmission
     const formsRes = getModuleData<FormsData>(modules, 'forms');
     const forms = formsRes.data?.forms;
     if (forms && forms.length > 0) {

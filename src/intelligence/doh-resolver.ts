@@ -1,8 +1,3 @@
-/**
- * @file src/intelligence/doh-resolver.ts
- * @description DNS over HTTPS (DoH) resolver client with DNSSEC verification and rebinding protection.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, Feature 34.
- */
 
 import type { DnsLookupResult, DnsAnswer, DnsRecordType } from '@/types/intelligence';
 import { isPrivateIp, isProhibitedHostname } from '@/security/private-network.guard';
@@ -47,9 +42,6 @@ export class DohResolver {
     this.skipConsentCheck = options?.skipConsentCheck ?? false;
   }
 
-  /**
-   * Performs a DoH lookup for a given domain and DNS record type.
-   */
   async resolve(
     domain: string,
     type: DnsRecordType = 'A',
@@ -58,12 +50,10 @@ export class DohResolver {
     const cleanDomain = domain.toLowerCase().trim().replace(/\.+$/, '');
     const effectiveOrigin = origin || `https://${cleanDomain}`;
 
-    // 1. Enforce user consent check OUTSIDE try/catch so unconsented queries reject
     if (!this.skipConsentCheck) {
       consentManager.assertConsent(effectiveOrigin, 'doh');
     }
 
-    // 2. Pre-flight SSRF & private/loopback check on input domain/IP
     if (isPrivateIp(cleanDomain) || isProhibitedHostname(cleanDomain)) {
       return {
         domain: cleanDomain,
@@ -102,7 +92,7 @@ export class DohResolver {
       const json = await response.json();
       const responseCode = typeof json.Status === 'number' ? json.Status : 0;
       const isTruncated = Boolean(json.TC);
-      const isDnssecValidated = Boolean(json.AD); // Authenticated Data flag
+      const isDnssecValidated = Boolean(json.AD);
 
       const rawAnswers = Array.isArray(json.Answer) ? json.Answer : [];
       const answers: DnsAnswer[] = [];
@@ -112,7 +102,6 @@ export class DohResolver {
         const typeName = DNS_NUM_TO_TYPE[ansTypeNum] || String(ansTypeNum);
         const data = String(ans.data || '');
 
-        // Security Guard: Check A and AAAA answers against private network rebinding
         if ((typeName === 'A' || typeName === 'AAAA') && isPrivateIp(data)) {
           throw new Error(
             `DNS rebinding detected: DoH resolution returned private IP '${data}' for domain '${cleanDomain}'.`,
@@ -146,16 +135,13 @@ export class DohResolver {
         resolver: this.endpoint,
         answers: [],
         queriedAt: Date.now(),
-        responseCode: 2, // SERVFAIL
+        responseCode: 2,
         status: 2,
         error: err?.message || 'DoH lookup failed',
       };
     }
   }
 
-  /**
-   * Helper to resolve IPv4 addresses for SSRF pre-flight validation.
-   */
   async resolveIps(domain: string): Promise<string[]> {
     const resA = await this.resolve(domain, 'A');
     const resAaaa = await this.resolve(domain, 'AAAA');

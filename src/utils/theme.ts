@@ -1,7 +1,3 @@
-/**
- * @file src/utils/theme.ts
- * @description Theme state manager supporting 'dark' and 'light' modes with storage persistence.
- */
 
 import { getBrowserAdapter } from '@/browser/adapters';
 
@@ -18,9 +14,8 @@ export async function loadSavedTheme(): Promise<AppTheme> {
       return val;
     }
   } catch {
-    // Fallback if storage access is restricted
   }
-  return 'dark'; // Default to anti-slop dark theme standard
+  return 'dark';
 }
 
 export async function saveTheme(theme: AppTheme): Promise<void> {
@@ -28,7 +23,6 @@ export async function saveTheme(theme: AppTheme): Promise<void> {
     const adapter = getBrowserAdapter();
     await adapter.setStorage({ [THEME_STORAGE_KEY]: theme });
   } catch {
-    // Ignore storage failure
   }
 }
 

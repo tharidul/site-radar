@@ -1,8 +1,3 @@
-/**
- * @file src/services/cookie.service.ts
- * @description Cookie manager service providing retrieval, editing,
- * deletion, security auditing, and import/export capabilities.
- */
 
 import type {
   InspectedCookie,
@@ -11,7 +6,6 @@ import type {
   SameSiteStatus,
 } from '@/types/cookies';
 
-// In-memory mock store for unit testing and non-extension environments
 let mockCookiesStore: InspectedCookie[] = [];
 
 export function setMockCookies(cookies: InspectedCookie[]) {
@@ -26,9 +20,6 @@ export function clearMockCookies() {
   mockCookiesStore = [];
 }
 
-/**
- * Builds a valid target URL for chrome.cookies operations from domain and path.
- */
 export function buildCookieUrl(url: string, domain?: string, path?: string, secure?: boolean): string {
   try {
     const parsed = new URL(url);
@@ -43,9 +34,6 @@ export function buildCookieUrl(url: string, domain?: string, path?: string, secu
   }
 }
 
-/**
- * Analyzes security and privacy posture of a single cookie.
- */
 export function auditCookie(cookie: InspectedCookie): CookieSecurityAudit {
   const nowSec = Date.now() / 1000;
   const isExpired = cookie.expirationDate !== undefined && cookie.expirationDate > 0 && cookie.expirationDate < nowSec;
@@ -84,9 +72,6 @@ function formatRelativeTime(seconds: number): string {
   return `${years}y ${months % 12}mo`;
 }
 
-/**
- * Formats a cookie's lifetime into human-readable relative duration and date.
- */
 export function formatCookieLifetime(cookie: { session: boolean; expirationDate?: number }): FormattedCookieLifetime {
   if (cookie.session || !cookie.expirationDate || cookie.expirationDate <= 0) {
     return {
@@ -134,9 +119,6 @@ export function formatCookieLifetime(cookie: { session: boolean; expirationDate?
   };
 }
 
-/**
- * Generates aggregated security and lifecycle summary across all active cookies.
- */
 export function computeAuditSummary(cookies: InspectedCookie[]): CookieAuditSummary {
   let sessionCount = 0;
   let persistentCount = 0;
@@ -194,9 +176,6 @@ export class CookieService {
     return true;
   }
 
-  /**
-   * Retrieves all cookies associated with the given active tab URL and domain.
-   */
   async getCookies(targetUrl: string): Promise<InspectedCookie[]> {
     try {
       if (typeof chrome === 'undefined' || !chrome.cookies?.getAll) {
@@ -206,16 +185,13 @@ export class CookieService {
       const urlObj = new URL(targetUrl);
       const urlCookies = await chrome.cookies.getAll({ url: targetUrl });
 
-      // Also query by domain to capture subdomains/root domain cookies
       const domain = urlObj.hostname;
       let domainCookies: chrome.cookies.Cookie[] = [];
       try {
         domainCookies = await chrome.cookies.getAll({ domain });
       } catch {
-        // Domain query might fail on ip/file URLs; fallback to urlCookies
       }
 
-      // Merge and deduplicate by name + domain + path
       const map = new Map<string, InspectedCookie>();
       const allRaw = [...urlCookies, ...domainCookies];
 
@@ -249,9 +225,6 @@ export class CookieService {
     }
   }
 
-  /**
-   * Creates or updates a cookie.
-   */
   async setCookie(targetUrl: string, cookie: Partial<InspectedCookie>): Promise<boolean> {
     if (!cookie.name) {
       throw new Error('Cookie name is required');
@@ -292,9 +265,6 @@ export class CookieService {
     }
   }
 
-  /**
-   * Deletes a single cookie by name and domain/path.
-   */
   async deleteCookie(targetUrl: string, cookie: InspectedCookie): Promise<boolean> {
     try {
       if (typeof chrome === 'undefined' || !chrome.cookies?.remove) {
@@ -317,9 +287,6 @@ export class CookieService {
     }
   }
 
-  /**
-   * Clears all cookies matching the inspected target site.
-   */
   async clearAll(targetUrl: string, cookies: InspectedCookie[]): Promise<number> {
     let deleted = 0;
     for (const c of cookies) {
@@ -327,29 +294,19 @@ export class CookieService {
         await this.deleteCookie(targetUrl, c);
         deleted++;
       } catch {
-        // Continue clearing remaining
       }
     }
     return deleted;
   }
 
-  /**
-   * Exports cookies as formatted JSON array.
-   */
   exportJson(cookies: InspectedCookie[]): string {
     return JSON.stringify(cookies, null, 2);
   }
 
-  /**
-   * Exports cookies as an HTTP Cookie header string (e.g. for curl or Postman).
-   */
   exportHeaderString(cookies: InspectedCookie[]): string {
     return cookies.map((c) => `${c.name}=${c.value}`).join('; ');
   }
 
-  /**
-   * Imports cookies from a JSON string representation.
-   */
   async importJson(targetUrl: string, jsonString: string): Promise<{ success: number; failed: number }> {
     let parsed: any[];
     try {

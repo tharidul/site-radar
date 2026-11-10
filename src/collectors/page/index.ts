@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/index.ts
- * @description Central registry and runner for in-tab page collectors.
- */
 
 import type { CollectionResult } from '../../types/inspection';
 import type { CollectorContext, PageCollector } from './types';
@@ -59,9 +55,6 @@ export const PAGE_COLLECTORS: Record<string, PageCollector> = {
   accessibility: accessibilityCollector,
 };
 
-/**
- * Runs a single registered page collector with timeout and error containment.
- */
 export async function runPageCollector(
   moduleId: string,
   context: CollectorContext,

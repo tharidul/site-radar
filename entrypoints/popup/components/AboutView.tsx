@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/AboutView.tsx
- * @description Simple, clean About view with author details for LKML.
- * Minimal, intentional, and does not use "developer" labeling.
- */
 
 import React from 'react';
 import { ExternalLink, ShieldCheck } from 'lucide-react';
@@ -52,7 +47,6 @@ const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5
 export const AboutView: React.FC = () => {
   return (
     <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      {/* Author Card */}
       <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs">
         <div className="flex items-center justify-between">
           <button
@@ -82,7 +76,6 @@ export const AboutView: React.FC = () => {
         </div>
       </div>
 
-      {/* Privacy & Security Card */}
       <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs space-y-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -105,9 +98,8 @@ export const AboutView: React.FC = () => {
         </p>
       </div>
 
-      {/* Version & Direct Link Footer */}
       <div className="flex items-center justify-between text-[11px] text-zinc-500 dark:text-zinc-500 px-1">
-        <span>SiteRadar v0.1.0</span>
+        <span>SiteRadar v0.2.0</span>
         <button
           type="button"
           onClick={openPrivacyPolicy}

@@ -1,7 +1,3 @@
-/**
- * @file src/collectors/page/styles.collector.ts
- * @description Audits stylesheets, inline styles, CSS custom properties, typography, and dark mode support.
- */
 
 import type { CssData, StylesheetItem } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
@@ -34,7 +30,6 @@ export class StylesCollector implements PageCollector<CssData> {
     let printStylesPresent = false;
     let darkModeSupported = false;
 
-    // Check meta color-scheme
     const colorSchemeMeta = doc.querySelector('meta[name="color-scheme" i]');
     if (colorSchemeMeta) {
       const content = (colorSchemeMeta.getAttribute('content') || '').toLowerCase();
@@ -43,7 +38,6 @@ export class StylesCollector implements PageCollector<CssData> {
       }
     }
 
-    // Inspect link elements
     linkSheets.forEach((el) => {
       const href = el.getAttribute('href') || undefined;
       const media = el.getAttribute('media') || undefined;
@@ -75,7 +69,6 @@ export class StylesCollector implements PageCollector<CssData> {
       });
     });
 
-    // Inspect inline style elements
     inlineStyles.forEach((el) => {
       const media = el.getAttribute('media') || undefined;
       if (media && media.toLowerCase().includes('print')) {
@@ -91,7 +84,6 @@ export class StylesCollector implements PageCollector<CssData> {
       }
     });
 
-    // Inspect document.styleSheets CSSOM (with cross-origin try/catch isolation)
     let cssomRestricted = false;
     if (doc.styleSheets) {
       try {
@@ -104,7 +96,7 @@ export class StylesCollector implements PageCollector<CssData> {
               for (let j = 0; j < rules.length; j++) {
                 const rule = rules[j] as any;
                 if (!rule) continue;
-                if (rule.type === 4) { // CSSMediaRule
+                if (rule.type === 4) {
                   const mediaText = (rule as CSSMediaRule).media?.mediaText || '';
                   if (mediaText.includes('prefers-color-scheme: dark')) {
                     darkModeSupported = true;
@@ -124,7 +116,6 @@ export class StylesCollector implements PageCollector<CssData> {
       }
     }
 
-    // Body font family
     if (doc.body) {
       try {
         const computedStyle = win?.getComputedStyle?.(doc.body);
@@ -136,7 +127,6 @@ export class StylesCollector implements PageCollector<CssData> {
           });
         }
       } catch {
-        // In happy-dom getComputedStyle might not be fully functional
       }
     }
 

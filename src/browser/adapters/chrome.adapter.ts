@@ -1,7 +1,3 @@
-/**
- * @file src/browser/adapters/chrome.adapter.ts
- * @description Chrome Manifest V3 browser adapter wrapping chrome.* APIs.
- */
 
 import type {
   BrowserAdapter,

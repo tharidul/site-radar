@@ -1,8 +1,3 @@
-/**
- * @file src/types/cookies.ts
- * @description Strongly-typed interfaces for cookie inspection, editing,
- * security auditing, and import/export operations.
- */
 
 export type SameSiteStatus = 'no_restriction' | 'lax' | 'strict' | 'unspecified';
 

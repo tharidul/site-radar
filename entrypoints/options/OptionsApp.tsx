@@ -1,10 +1,3 @@
-/**
- * @file entrypoints/options/OptionsApp.tsx
- * @description Dedicated options and settings page (Feature 47).
- * Manages external intelligence consent, provider disclosures,
- * and bounded crawl boundaries.
- * Adheres strictly to anti-slop guidelines: compact, intentional, zero decorative fluff.
- */
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -77,7 +70,6 @@ const PROVIDER_LIST: ProviderItem[] = [
 ];
 
 export function OptionsApp() {
-  // Consent states
   const [globalConsent, setGlobalConsent] = useState(false);
   const [providerConsents, setProviderConsents] = useState<Record<string, boolean>>({
     doh: false,
@@ -86,17 +78,13 @@ export function OptionsApp() {
     tls: false,
   });
 
-  // Crawl boundaries
   const [crawlConfig, setCrawlConfig] = useState<CrawlConfig>(DEFAULT_CRAWL_CONFIG);
   const [crawlFeedback, setCrawlFeedback] = useState<string | null>(null);
 
-  // Selected provider disclosure inline toggle
   const [expandedDisclosureProviderId, setExpandedDisclosureProviderId] = useState<string | null>(null);
 
-  // Theme management
   const [theme, setTheme] = useState<AppTheme>('dark');
 
-  // Initial load
   useEffect(() => {
     let mounted = true;
 
@@ -145,7 +133,6 @@ export function OptionsApp() {
     };
   }, []);
 
-  // Toggle individual provider consent
   const handleToggleProviderConsent = async (provider: IntelligenceProviderType) => {
     const nextGranted = !providerConsents[provider];
     setProviderConsents((prev) => ({ ...prev, [provider]: nextGranted }));
@@ -160,7 +147,6 @@ export function OptionsApp() {
     }
   };
 
-  // Revoke all consent
   const handleRevokeAllConsent = async () => {
     const cleared: Record<string, boolean> = {
       doh: false,
@@ -181,7 +167,6 @@ export function OptionsApp() {
     }
   };
 
-  // Clamp and save crawl limits
   const handleUpdateCrawlLimit = (field: keyof CrawlConfig, value: number) => {
     setCrawlConfig((prev) => {
       let clamped = value;
@@ -221,7 +206,6 @@ export function OptionsApp() {
   return (
     <div data-theme={theme} className={`min-h-screen overflow-y-auto bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans p-4 sm:p-6 md:p-8 select-none ${theme}`}>
       <div className="max-w-2xl mx-auto space-y-6">
-        {/* Header */}
         <header className="border-b border-zinc-200 dark:border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <Shield className="w-6 h-6 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
@@ -252,7 +236,6 @@ export function OptionsApp() {
           </Button>
         </header>
 
-        {/* Section 1: External Intelligence Opt-In */}
         <section className="rounded-md bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
           <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
             <div>
@@ -302,7 +285,6 @@ export function OptionsApp() {
                     </p>
                   </div>
 
-                  {/* Modern, accessible toggle switch */}
                   <button
                     type="button"
                     role="switch"
@@ -322,7 +304,6 @@ export function OptionsApp() {
                   </button>
                 </div>
 
-                {/* Expandable Provider Disclosure */}
                 {isDisclosureOpen && (
                   <div className="pt-2 text-xs space-y-1 text-zinc-500 dark:text-zinc-400">
                     <div className="flex items-center gap-2">
@@ -354,7 +335,6 @@ export function OptionsApp() {
           })}
         </section>
 
-        {/* Section 2: Bounded Deep Crawl Limits Configuration */}
         <section className="rounded-md bg-white dark:bg-zinc-900/60 p-4 sm:p-5 space-y-3.5 shadow-xs">
           <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
             <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
@@ -456,7 +436,6 @@ export function OptionsApp() {
           </div>
         </section>
 
-        {/* Author & Privacy Footer */}
         <footer className="pt-4 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
           <div className="inline-flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
             <a

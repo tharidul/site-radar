@@ -11,7 +11,6 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
   it('getSession strictly isolates scan results by tabId and targetUrl', () => {
     const orchestrator = new InspectionOrchestrator();
 
-    // Directly seed activeSessions map via session additions
     (orchestrator as any).activeSessions.set('scan_apple', {
       scanId: 'scan_apple',
       mode: 'quick',
@@ -30,19 +29,14 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
       startedAt: Date.now(),
     });
 
-    // 1. Query for apple.com tab
     const appleSession = orchestrator.getSession(undefined, 101, 'https://www.apple.com/');
     expect(appleSession).toBeDefined();
     expect(appleSession?.targetUrl).toBe('https://www.apple.com/');
 
-    // 2. Query for new tab (apple.com) that re-used tabId 102 or opened new tab
     const mismatchedSession = orchestrator.getSession(undefined, 103, 'https://www.apple.com/');
-    // No session exists for tabId 103 on apple.com
     expect(mismatchedSession).toBeUndefined();
 
-    // 3. Tab 102 navigated from tharidulakmal.com to google.com
     const navigatedSession = orchestrator.getSession(undefined, 102, 'https://www.google.com/');
-    // URL changed! Old session must NOT be returned
     expect(navigatedSession).toBeUndefined();
   });
 
@@ -69,9 +63,7 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
       />
     );
 
-    // Should render NOT-AVAILABLE status badge
     expect(html).toContain('not-available');
-    // Should NOT render the HIGH severity badge right next to it
     expect(html).not.toMatch(/>high<\/span>/i);
   });
 
@@ -98,9 +90,7 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
       />
     );
 
-    // Should render clean check icon
     expect(html).toContain('Check passed');
-    // Should NOT render bloated text pills [LOW] or [PASSED]
     expect(html).not.toMatch(/>low<\/span>/i);
     expect(html).not.toMatch(/>passed<\/span>/i);
   });
@@ -123,7 +113,7 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
           errors: [],
           data: {
             resourceCount: 10,
-            webVitals: undefined, // Browser had no recorded LCP
+            webVitals: undefined,
           },
           coverage: { expected: 4, collected: 2, unavailable: 2, supported: true },
           limitations: [],
@@ -149,11 +139,9 @@ describe('Cross-Site Data Isolation & Web Vitals Clarifications', () => {
 
     const html = renderToString(<ModuleAccordions modules={modules} />);
 
-    // In the HTML, Overview & Identity, SEO & Metadata, Security & Headers, and Content & DOM Structure must show Ready, NOT SKIPPED
     const readyMatches = html.match(/>Ready<\/span>/g);
     expect(readyMatches?.length).toBe(4);
 
-    // Un-executed modules like DNS still show skipped
     expect(html).toContain('Infrastructure &amp; DNS');
     expect(html).toContain('skipped');
   });

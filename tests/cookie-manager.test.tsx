@@ -34,8 +34,8 @@ describe('CookieService and Cookie Security Inspector', () => {
       value: 'track_9988',
       domain: 'example.com',
       path: '/',
-      secure: false, // Insecure!
-      httpOnly: false, // Script accessible!
+      secure: false,
+      httpOnly: false,
       sameSite: 'lax',
       session: false,
       expirationDate: Math.floor(Date.now() / 1000) + 86400 * 30,
@@ -47,7 +47,7 @@ describe('CookieService and Cookie Security Inspector', () => {
       path: '/api',
       secure: false,
       httpOnly: false,
-      sameSite: 'no_restriction', // SameSite=None without Secure!
+      sameSite: 'no_restriction',
       session: true,
     },
   ];
@@ -152,14 +152,12 @@ describe('CookieService and Cookie Security Inspector', () => {
   });
 
   it('formatCookieLifetime formats session, persistent, and expired lifetimes correctly', () => {
-    // 1. Session Cookie
     const sessionRes = formatCookieLifetime({ session: true });
     expect(sessionRes.isSession).toBe(true);
     expect(sessionRes.isExpired).toBe(false);
     expect(sessionRes.label).toBe('Session');
     expect(sessionRes.relative).toBe('Until browser closes');
 
-    // 2. Persistent Cookie (7 days in future)
     const future7dSec = Math.floor(Date.now() / 1000) + 86400 * 7;
     const persistentRes = formatCookieLifetime({ session: false, expirationDate: future7dSec });
     expect(persistentRes.isSession).toBe(false);
@@ -167,12 +165,10 @@ describe('CookieService and Cookie Security Inspector', () => {
     expect(persistentRes.label).toMatch(/^In (6|7)d$/);
     expect(persistentRes.fullDate).not.toBe('Until session ends');
 
-    // 2b. Persistent Cookie (35 days in future -> 1mo)
     const future35dSec = Math.floor(Date.now() / 1000) + 86400 * 35;
     const persistent35dRes = formatCookieLifetime({ session: false, expirationDate: future35dSec });
     expect(persistent35dRes.label).toBe('In 1mo');
 
-    // 3. Expired Cookie (2 hours in past)
     const pastSec = Math.floor(Date.now() / 1000) - 7200;
     const expiredRes = formatCookieLifetime({ session: false, expirationDate: pastSec });
     expect(expiredRes.isSession).toBe(false);
@@ -184,16 +180,13 @@ describe('CookieService and Cookie Security Inspector', () => {
     setMockCookies(sampleCookies);
     const html = renderToString(<CookiesView targetUrl="https://example.com/" />);
 
-    // Check title and domain
     expect(html).toContain('Cookie Manager &amp; Inspector');
     expect(html).toContain('example.com');
 
-    // Check action controls
     expect(html).toContain('Add Cookie');
     expect(html).toContain('Export');
     expect(html).toContain('Import');
 
-    // Check loading state and search controls
     expect(html).toContain('Search cookies by name or value...');
     expect(html).toContain('Total');
     expect(html).toContain('Session');

@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/Card.tsx
- * @description Unified Card primitive following the single-component rule.
- * Standardizes card containers, borders, backgrounds, and padding with zero redundancy.
- */
 
 import React from 'react';
 

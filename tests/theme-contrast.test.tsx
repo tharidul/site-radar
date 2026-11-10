@@ -24,9 +24,6 @@ import { AboutView } from '../entrypoints/popup/components/AboutView';
 import { OptionsApp } from '../entrypoints/options/OptionsApp';
 import type { WebsiteInspection } from '../src/types/inspection';
 
-/**
- * Calculates relative luminance according to WCAG 2.1 specs
- */
 function getLuminance(r: number, g: number, b: number): number {
   const [rs = 0, gs = 0, bs = 0] = [r, g, b].map((c) => {
     const s = c / 255;
@@ -35,9 +32,6 @@ function getLuminance(r: number, g: number, b: number): number {
   return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
 }
 
-/**
- * Calculates WCAG contrast ratio between two RGB colors
- */
 function getContrastRatio(rgb1: [number, number, number], rgb2: [number, number, number]): number {
   const lum1 = getLuminance(...rgb1);
   const lum2 = getLuminance(...rgb2);
@@ -83,7 +77,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
     it('verifies light mode defines zinc-900 as deep dark charcoal, NOT faint off-white', () => {
       expect(cssContent).toContain('.light, [data-theme=\'light\']');
-      // In light mode, zinc-900 must be dark (var(--color-3) = #152E40)
       const lightSection = cssContent.slice(cssContent.indexOf(".light, [data-theme='light']"));
       expect(lightSection).toMatch(/--color-zinc-900:\s*var\(--color-3\)/);
       expect(lightSection).not.toMatch(/--color-zinc-900:\s*var\(--color-4\)/);
@@ -93,28 +86,23 @@ describe('Light Theme Contrast & Style Integrity', () => {
       const whiteRgb: [number, number, number] = [255, 255, 255];
       const pageBgRgb: [number, number, number] = hexToRgb('#f8f8fa');
 
-      // Zinc-900 (#152E40)
       const zinc900Rgb = hexToRgb('#152E40');
       const contrast900 = getContrastRatio(zinc900Rgb, whiteRgb);
-      expect(contrast900).toBeGreaterThan(14.0); // AAA requires 7.0:1
+      expect(contrast900).toBeGreaterThan(14.0);
 
-      // Zinc-800 (#26262b)
       const zinc800Rgb = hexToRgb('#26262b');
       const contrast800 = getContrastRatio(zinc800Rgb, whiteRgb);
-      expect(contrast800).toBeGreaterThan(10.0); // AAA requires 7.0:1
+      expect(contrast800).toBeGreaterThan(10.0);
 
-      // Zinc-700 (#3f3f46)
       const zinc700Rgb = hexToRgb('#3f3f46');
       const contrast700 = getContrastRatio(zinc700Rgb, whiteRgb);
-      expect(contrast700).toBeGreaterThan(7.0); // AAA requires 7.0:1
+      expect(contrast700).toBeGreaterThan(7.0);
 
-      // Zinc-600 (#52525b)
       const zinc600Rgb = hexToRgb('#52525b');
       const contrast600 = getContrastRatio(zinc600Rgb, whiteRgb);
-      expect(contrast600).toBeGreaterThan(5.5); // AA requires 4.5:1
+      expect(contrast600).toBeGreaterThan(5.5);
 
-      // Contrast against off-white page background (#f8f8fa)
-      expect(getContrastRatio(zinc900Rgb, pageBgRgb)).toBeGreaterThan(13.0); // Far exceeds AAA 7.0:1
+      expect(getContrastRatio(zinc900Rgb, pageBgRgb)).toBeGreaterThan(13.0);
       expect(getContrastRatio(zinc700Rgb, pageBgRgb)).toBeGreaterThan(6.5);
     });
 
@@ -205,18 +193,15 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // 1. Header container has adaptive light/dark backgrounds and borders
       const headerEl = div.querySelector('header');
       expect(headerEl?.className).toContain('bg-white');
       expect(headerEl?.className).toContain('dark:bg-zinc-950');
       expect(headerEl?.className).toContain('border-zinc-200');
       expect(headerEl?.className).toContain('dark:border-zinc-800');
 
-      // 2. Decorative gradient overlay is removed
       const waveEl = div.querySelector('.pointer-events-none.absolute');
       expect(waveEl).toBeNull();
 
-      // 3. Brand title and subtitle have crisp dark text in light mode
       const titleEl = div.querySelector('h1');
       expect(titleEl?.className).toContain('text-zinc-900');
       expect(titleEl?.className).toContain('dark:text-white');
@@ -225,7 +210,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(subtitleEl?.className).toContain('text-zinc-500');
       expect(subtitleEl?.className).toContain('dark:text-zinc-400');
 
-      // 4. Action buttons (Clear, Theme toggle, Settings, Close) render adaptive light/dark classes
       const actionButtons = div.querySelectorAll('header .relative.z-10.flex.items-center.justify-between button');
       expect(actionButtons.length).toBe(4);
       actionButtons.forEach((btn) => {
@@ -241,7 +225,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
         expect(btn.className).toContain('dark:hover:text-white');
       });
 
-      // 5. Embedded target URL bar renders crisp borders and high-contrast text
       const urlBar = div.querySelector('.relative.z-10.mt-2\\.5');
       expect(urlBar?.className).toContain('border-zinc-200/80');
       expect(urlBar?.className).toContain('dark:border-zinc-800');
@@ -321,7 +304,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
       );
       const options = div.querySelectorAll('.rounded-md.p-3\\.5');
       expect(options.length).toBe(3);
-      // Unselected options must have clean surfaces in light mode
       const unselectedOption = options[1];
       expect(unselectedOption?.className).toContain('bg-white');
       expect(unselectedOption?.className).toContain('dark:bg-zinc-900');
@@ -367,10 +349,8 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(tabBarRoot.className).toContain('dark:bg-zinc-950');
 
       const buttons = div.querySelectorAll('button');
-      // Overview (active)
       expect(buttons[0]?.className).toContain('text-[#152E40]');
       expect(buttons[0]?.className).toContain('dark:text-[#CEFF52]');
-      // Issues (inactive with badge)
       expect(buttons[1]?.className).toContain('text-zinc-600');
       expect(buttons[1]?.className).toContain('dark:text-zinc-400');
     });
@@ -432,7 +412,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // Verify category cards have clean surfaces and distinct contrast
       const categoryCards = div.querySelectorAll('.grid.grid-cols-5 button');
       expect(categoryCards.length).toBe(5);
       categoryCards.forEach((card) => {
@@ -441,7 +420,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
         expect(card.className).toContain('dark:bg-zinc-900');
       });
 
-      // Verify tech card has clean background in light mode
       const techCards = div.querySelectorAll('[title^="Detected via"]');
       expect(techCards.length).toBeGreaterThan(0);
       techCards.forEach((card) => {
@@ -496,7 +474,6 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // Search input has crisp border and light background
       const searchInput = div.querySelector('input[type="text"]');
       expect(searchInput?.className).toContain('border-zinc-200');
       expect(searchInput?.className).toContain('dark:border-zinc-800');
@@ -505,17 +482,14 @@ describe('Light Theme Contrast & Style Integrity', () => {
       expect(searchInput?.className).toContain('text-zinc-900');
       expect(searchInput?.className).toContain('dark:text-zinc-100');
 
-      // Category banner score /100 has high-contrast text
       const scoreDenominator = div.querySelector('.flex.items-baseline.gap-1 span:last-child');
       expect(scoreDenominator?.className).toContain('text-zinc-500');
       expect(scoreDenominator?.className).toContain('dark:text-zinc-400');
 
-      // Issue description has legible contrast
       const issueDesc = div.querySelector('p.text-xs');
       expect(issueDesc?.className).toContain('text-zinc-500');
       expect(issueDesc?.className).toContain('dark:text-zinc-400');
 
-      // Individual issue has dedicated copy icon button
       const copyIssueBtn = div.querySelector('button[aria-label="Copy JSON for issue csp-missing"]');
       expect(copyIssueBtn).not.toBeNull();
     });
@@ -546,11 +520,9 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // Back to Issues button is rendered
       const backBtn = div.querySelector('button[title*="Return to issues"], button[title*="Back to issues"]');
       expect(backBtn).not.toBeNull();
 
-      // Rule ID badge is displayed
       expect(div.textContent).toContain('rule: csp-missing');
       expect(div.textContent).toContain('Recommended Remediation');
     });
@@ -579,12 +551,10 @@ describe('Light Theme Contrast & Style Integrity', () => {
         />,
       );
 
-      // Evidence table row separator has crisp border
       const tbody = div.querySelector('tbody');
       expect(tbody?.className).toContain('divide-zinc-200/80');
       expect(tbody?.className).toContain('dark:divide-zinc-800/60');
 
-      // Action buttons have high-contrast text and borders
       const buttons = Array.from(div.querySelectorAll('button'));
       const collapseBtn = buttons.find((b) => b.textContent?.includes('Collapse'));
       expect(collapseBtn?.className).toContain('text-zinc-600');
@@ -634,18 +604,15 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       const div = renderComponent(<ResourcesView inspection={mockInspection} />);
 
-      // Filter tab buttons have clean surfaces in light mode
       const tabButtons = div.querySelectorAll('.grid.grid-cols-4 button');
       expect(tabButtons.length).toBe(4);
       expect(tabButtons[1]?.className).toContain('bg-white');
       expect(tabButtons[1]?.className).toContain('dark:bg-zinc-900');
 
-      // Technology container has clean surface in light mode
       const techContainer = div.querySelector('.rounded-md.p-4.space-y-2\\.5');
       expect(techContainer?.className).toContain('bg-white');
       expect(techContainer?.className).toContain('dark:bg-zinc-900');
 
-      // Resource path subtext has high-contrast text
       const pathSubtext = div.querySelector('span.text-\\[10px\\]');
       expect(pathSubtext?.className).toContain('text-zinc-500');
       expect(pathSubtext?.className).toContain('dark:text-zinc-400');
@@ -664,14 +631,12 @@ describe('Light Theme Contrast & Style Integrity', () => {
 
       const div = renderComponent(<ReportView inspection={mockInspection} />);
 
-      // Root container is theme aware
       const rootEl = div.firstElementChild as HTMLElement;
       expect(rootEl.className).toContain('bg-[#f8f8fa]');
       expect(rootEl.className).toContain('dark:bg-zinc-950');
       expect(rootEl.className).toContain('text-zinc-900');
       expect(rootEl.className).toContain('dark:text-zinc-100');
 
-      // Export and copy buttons are rendered
       const buttons = div.querySelectorAll('button');
       expect(buttons.length).toBe(3);
       expect(buttons[1]?.className).toContain('bg-[#CEFF52]');
@@ -681,17 +646,14 @@ describe('Light Theme Contrast & Style Integrity', () => {
     it('AboutView renders clean author card and brand identity for LKML', () => {
       const div = renderComponent(<AboutView />);
 
-      // Root container is theme aware
       const rootEl = (div.querySelector('.bg-\\[\\#f8f8fa\\]') || div.firstElementChild) as HTMLElement;
       expect(rootEl.className).toContain('bg-[#f8f8fa]');
       expect(rootEl.className).toContain('dark:bg-zinc-950');
 
-      // Brand is rendered
       expect(div.textContent).toContain('LKML');
       expect(div.textContent).not.toContain('developer');
       expect(div.textContent).not.toContain('Developer');
 
-      // Card has clean surface planes in light and dark modes
       const card = div.querySelector('.rounded-md.p-4');
       expect(card?.className).toContain('bg-white');
       expect(card?.className).toContain('dark:bg-zinc-900');
@@ -708,12 +670,10 @@ describe('Light Theme Contrast & Style Integrity', () => {
       const buttons = div.querySelectorAll('button');
       expect(buttons.length).toBe(6);
 
-      // 5th tab is Cookies and active
       expect(buttons[4]?.textContent).toContain('Cookies');
       expect(buttons[4]?.className).toContain('text-[#152E40]');
       expect(buttons[4]?.className).toContain('dark:text-[#CEFF52]');
 
-      // 6th tab is About
       expect(buttons[5]?.textContent).toContain('About');
     });
   });

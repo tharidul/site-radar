@@ -1,8 +1,3 @@
-/**
- * @file src/analyzers/privacy.analyzer.ts
- * @description Evaluates privacy policies, third-party tracker domains, and consent banners
- * under the Best Practices category with calibrated heuristic handling.
- */
 
 import type { AuditFinding, PrivacySignalsData } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
@@ -31,7 +26,6 @@ export class PrivacyAnalyzer implements Analyzer {
       return findings;
     }
 
-    // 1. Privacy Policy Link
     const hasPrivacyPolicy = privData.privacyPolicyLinks && privData.privacyPolicyLinks.length > 0;
     if (hasPrivacyPolicy) {
       findings.push(
@@ -56,7 +50,6 @@ export class PrivacyAnalyzer implements Analyzer {
       );
     }
 
-    // 2. Trackers & Consent Banner
     const trackerDomains = privData.thirdPartyTrackers || [];
     const hasConsentBanner = privData.consentBannerDetected;
 

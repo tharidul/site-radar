@@ -1,9 +1,3 @@
-/**
- * @file src/analyzers/finding-builder.ts
- * @description Fluent builder for constructing AuditFinding instances with automatic
- * secret redaction and validation against the rule catalog.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 8, 14.
- */
 
 import type { AuditFinding, Evidence, FindingStatus, Severity } from '../types/inspection';
 import { redactSecrets } from '../security/secret-redactor';

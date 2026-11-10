@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/ExportBar.tsx
- * @description Export controls triggering browser Blob downloads for sanitized JSON and HTML reports (Features 48 & 49).
- * Adheres strictly to anti-slop guidelines: compact, functional, high information density.
- */
 
 import React, { useState } from 'react';
 import { FileCode, FileText, Check, Copy } from 'lucide-react';

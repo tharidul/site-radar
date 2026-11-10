@@ -1,9 +1,3 @@
-/**
- * @file src/intelligence/ct-logs.ts
- * @description Certificate Transparency (CT) log query client for crt.sh.
- * Extracts historical TLS certificates, issuing CAs, and discovers subdomains.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, Feature 36.
- */
 
 import type {
   CertificateTransparencyResult,
@@ -25,9 +19,6 @@ export class CtLogsClient {
     this.skipConsentCheck = options?.skipConsentCheck ?? false;
   }
 
-  /**
-   * Queries crt.sh Certificate Transparency logs for the specified domain.
-   */
   async query(domain: string): Promise<CertificateTransparencyResult> {
     const cleanDomain = domain.toLowerCase().trim().replace(/\.+$/, '');
     const origin = `https://${cleanDomain}`;
@@ -57,7 +48,6 @@ export class CtLogsClient {
       const records: CertificateTransparencyRecord[] = [];
 
       if (Array.isArray(json)) {
-        // Limit to most recent 50 certificates to prevent memory bloat
         for (const item of json.slice(0, 50)) {
           records.push({
             id: item.id || item.min_cert_id || Math.random().toString(36).slice(2),
@@ -102,9 +92,6 @@ export class CtLogsClient {
     }
   }
 
-  /**
-   * Extracts unique, deduplicated subdomains from Certificate Transparency SANs.
-   */
   extractSubdomains(ctResult: CertificateTransparencyResult): string[] {
     const subdomains = new Set<string>();
     const baseDomain = ctResult.domain.toLowerCase();

@@ -1,8 +1,3 @@
-/**
- * @file entrypoints/popup/components/CustomSelect.tsx
- * @description Sleek, accessible custom dropdown select matching the Website Intelligence design system.
- * Replaces ugly browser-native <select> popups with theme-aware custom menus.
- */
 
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown, Check } from 'lucide-react';
@@ -37,7 +32,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
 
   const selectedOption = options.find((opt) => opt.value === value);
 
-  // Close on outside click or Escape key (rerender-split-combined-hooks)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -67,7 +61,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
       ref={containerRef}
       className={`relative inline-block text-left select-none ${fullWidth ? 'w-full' : ''}`}
     >
-      {/* Trigger Button */}
       <button
         type="button"
         onClick={() => setIsOpen((prev) => !prev)}
@@ -87,7 +80,6 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         />
       </button>
 
-      {/* Dropdown Menu - Follows rules 1, 2, 10, 11 (origin-top, 200ms, starts at 0.95 scale, ease-out) */}
       {isOpen && (
         <div
           role="listbox"

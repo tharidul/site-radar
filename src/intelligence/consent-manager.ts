@@ -1,9 +1,3 @@
-/**
- * @file src/intelligence/consent-manager.ts
- * @description User consent gatekeeper and transient clear-key manager for external intelligence.
- * Strictly guarantees no third-party network lookups execute without explicit user opt-in.
- * Authoritative specification according to WEBSITE-INTELLIGENCE-ARCHITECTURE.md § 6, 14, Feature 38.
- */
 
 import type { IntelligenceProviderType, ConsentDisclosure } from '@/types/intelligence';
 import type { BrowserAdapter } from '@/browser/adapters/types';
@@ -32,9 +26,6 @@ export class ConsentManager {
     this.adapter = adapter;
   }
 
-  /**
-   * Checks whether consent is granted for a specific provider, either globally or per-origin.
-   */
   hasConsent(provider: IntelligenceProviderType): boolean;
   hasConsent(origin: string, provider: IntelligenceProviderType): boolean;
   hasConsent(arg1: string, arg2?: IntelligenceProviderType): boolean {
@@ -52,9 +43,6 @@ export class ConsentManager {
     return Boolean(this.globalConsent[provider]);
   }
 
-  /**
-   * Sets consent preferences either globally for a provider or for a specific origin.
-   */
   setConsent(provider: IntelligenceProviderType, granted: boolean): void;
   setConsent(origin: string, consent: Partial<IntelligenceConsentState>): void;
   setConsent(
@@ -79,9 +67,6 @@ export class ConsentManager {
     this.consentStore.set(origin, { ...existing, ...consent } as IntelligenceConsentState);
   }
 
-  /**
-   * Revokes all consent for a specific origin or clears all stored consent entirely.
-   */
   revokeConsent(origin?: string): void {
     if (origin) {
       this.consentStore.delete(origin);
@@ -97,10 +82,6 @@ export class ConsentManager {
     }
   }
 
-  /**
-   * Throws an explicit error if user consent has not been granted for the requested operation.
-   * Matches /User consent required/i pattern.
-   */
   assertConsent(origin: string, provider: IntelligenceProviderType): void {
     if (!this.hasConsent(origin, provider)) {
       throw new Error(
@@ -109,9 +90,6 @@ export class ConsentManager {
     }
   }
 
-  /**
-   * Generates a clear, informative consent disclosure object for user presentation.
-   */
   getDisclosure(provider: IntelligenceProviderType, targetHost: string): ConsentDisclosure {
     switch (provider) {
       case 'doh':

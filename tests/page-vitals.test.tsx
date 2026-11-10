@@ -66,7 +66,7 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
             paintTiming: { fcpMs: 812 },
             webVitals: { lcpMs: 812, clsScore: 0.001 },
             resourceCount: 24,
-            transferSizeApprox: 1258291, // ~1.2 MB
+            transferSizeApprox: 1258291,
           },
         },
       },
@@ -74,13 +74,11 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
 
     const html = renderToString(<PageVitalsCard inspection={mockInspection} />);
 
-    // 1. Loading times
     expect(html).toContain('Page Loading Times &amp; Data Usage');
-    expect(html).toContain('42ms'); // TTFB
-    expect(html).toContain('812ms'); // FCP & LCP
+    expect(html).toContain('42ms');
+    expect(html).toContain('812ms');
 
-    // 2. Data usage
-    expect(html).toContain('1.2 MB'); // Transferred size
+    expect(html).toContain('1.2 MB');
     expect(html).toContain('Data Usage:');
   });
 
@@ -134,7 +132,6 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
       />
     );
 
-    // Verify Export dropdown trigger is rendered with proper accessible attributes
     expect(html).toContain('Export');
     expect(html).toContain('title="Export or copy audit report"');
     expect(html).toContain('aria-haspopup="menu"');
@@ -195,9 +192,9 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
           collectedAt: Date.now(),
           data: {
             resourceCount: 20,
-            transferSizeApprox: 400 * 1024, // 400 KB initial
+            transferSizeApprox: 400 * 1024,
             scrolledResourceCount: 65,
-            scrolledTransferSizeApprox: 1800 * 1024, // 1.8 MB full page
+            scrolledTransferSizeApprox: 1800 * 1024,
           },
           coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
           limitations: [],
@@ -209,12 +206,10 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
 
     const html = renderToString(<PageVitalsCard inspection={scrolledInspection} />);
 
-    // Initial usage
     expect(html).toContain('Data Usage:');
     expect(html).toContain('400 KB');
     expect(html).toContain('Initial');
 
-    // Full page scrolled usage
     expect(html).toContain('Full Page:');
     expect(html).toContain('1.8 MB');
     expect(html).toContain('Scrolled');
@@ -222,7 +217,7 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
     expect(html).toContain('lazy');
   });
 
-  it('PageVitalsCard provides option to scroll and measure full page when unmeasured', () => {
+  it('PageVitalsCard renders clean data usage without separate manual scroll button', () => {
     const unscrolledInspection: WebsiteInspection = {
       id: 'unscrolled-id',
       mode: 'quick',
@@ -254,7 +249,9 @@ describe('PageVitalsCard and Performance/Metadata Collectors', () => {
     };
 
     const html = renderToString(<PageVitalsCard inspection={unscrolledInspection} />);
-    expect(html).toContain('Scroll &amp; measure full page');
+    expect(html).toContain('Data Usage:');
+    expect(html).toContain('300 KB');
+    expect(html).not.toContain('Scroll &amp; measure full page');
   });
 
   it('PageVitalsCard displays Infinite Feed (Bounded) badge when infinite scroll is detected', () => {

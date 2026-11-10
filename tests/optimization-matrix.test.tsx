@@ -7,7 +7,6 @@ import type { AuditFinding } from '../src/types/inspection';
 
 describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
   const mockFindings: AuditFinding[] = [
-    // SEO
     {
       id: 'f-seo-1',
       ruleId: 'seo-title-present',
@@ -30,7 +29,6 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
       evidence: [],
       source: 'MetadataCollector',
     },
-    // AEO
     {
       id: 'f-aeo-1',
       ruleId: 'aeo-llms-txt',
@@ -64,7 +62,6 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
       evidence: [],
       source: 'StructuredDataCollector',
     },
-    // AGO
     {
       id: 'f-ago-1',
       ruleId: 'ago-form-labels',
@@ -110,11 +107,9 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
       />
     );
 
-    // Title and Index
     expect(html).toContain('AI &amp; Search Optimization (The O&#x27;s)');
     expect(html).toContain('index');
 
-    // 3 Pillars
     expect(html).toContain('SEO');
     expect(html).toContain('Search Engines');
     expect(html).toContain('AEO');
@@ -122,7 +117,6 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
     expect(html).toContain('AGO');
     expect(html).toContain('AI Web Agents');
 
-    // Factual diagnosis text without slop
     expect(html).toContain('Metadata, canonical, and heading hierarchy verified');
     expect(html).toContain('Q&amp;A and FAQ Schema Missing');
   });
@@ -138,12 +132,11 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
       />
     );
 
-    // Verify AEO header and banner
     expect(divAeo.textContent).toContain('AEO Audit');
     expect(divAeo.textContent).toContain('AEO llms.txt Present');
     expect(divAeo.textContent).toContain('AI Web Crawler Access Permitted');
-    expect(divAeo.textContent).not.toContain('Document Title Tag Present'); // SEO excluded
-    expect(divAeo.textContent).not.toContain('Agentic Form Labels'); // AGO excluded
+    expect(divAeo.textContent).not.toContain('Document Title Tag Present');
+    expect(divAeo.textContent).not.toContain('Agentic Form Labels');
 
     const divAgo = document.createElement('div');
     divAgo.innerHTML = renderToString(
@@ -155,10 +148,9 @@ describe('OptimizationMatrixCard (SEO · AEO · AGO)', () => {
       />
     );
 
-    // Verify AGO header and banner
     expect(divAgo.textContent).toContain('AGO Audit');
     expect(divAgo.textContent).toContain('Agentic Form Labels & Autocomplete');
     expect(divAgo.textContent).toContain('Semantic Interactive Element Structure');
-    expect(divAgo.textContent).not.toContain('AEO llms.txt Present'); // AEO excluded
+    expect(divAgo.textContent).not.toContain('AEO llms.txt Present');
   });
 });
