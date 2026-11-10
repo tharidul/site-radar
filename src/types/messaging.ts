@@ -18,6 +18,7 @@ export const MESSAGE_CHANNELS = {
   EXECUTE_COLLECTOR: 'COLLECTOR_EXECUTE',
   PING_CONTENT_SCRIPT: 'CONTENT_SCRIPT_PING',
   MEASURE_SCROLLED_PAGE: 'PAGE_MEASURE_SCROLLED',
+  GET_LIVE_METRICS: 'PAGE_GET_LIVE_METRICS',
 
   CHECK_EXTERNAL_CONSENT: 'CONSENT_CHECK',
   SET_EXTERNAL_CONSENT: 'CONSENT_SET',
@@ -123,6 +124,20 @@ export interface MessageProtocol {
       scrolledCacheHitBytes?: number;
       scrolledOpaqueResourceCount?: number;
       isInfiniteScroll?: boolean;
+      error?: string;
+    };
+  };
+
+  [MESSAGE_CHANNELS.GET_LIVE_METRICS]: {
+    request: void;
+    response: {
+      success: boolean;
+      resourceCount: number;
+      wireTransferBytes: number;
+      decodedBytes: number;
+      cacheHitCount: number;
+      cacheHitBytes: number;
+      opaqueResourceCount: number;
       error?: string;
     };
   };

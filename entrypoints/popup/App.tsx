@@ -86,6 +86,14 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
   const [refreshPage, setRefreshPage] = useState<boolean>(true);
+  const [liveMetrics, setLiveMetrics] = useState<{
+    resourceCount: number;
+    wireTransferBytes: number;
+    decodedBytes: number;
+    cacheHitCount: number;
+    cacheHitBytes: number;
+    opaqueResourceCount: number;
+  } | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -239,12 +247,46 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     };
   }, []);
 
+  useEffect(() => {
+    if (scanStatus !== 'completed' || !activeTab?.id) {
+      setLiveMetrics(null);
+      return;
+    }
+
+    let isSubscribed = true;
+
+    const pollLiveMetrics = async () => {
+      try {
+        if (!activeTab.id) return;
+        const res = await messageBus.sendToTab(
+          activeTab.id,
+          MESSAGE_CHANNELS.GET_LIVE_METRICS,
+          undefined,
+        );
+        if (isSubscribed && res && res.success && typeof res.resourceCount === 'number') {
+          setLiveMetrics(res);
+        }
+      } catch {
+        // Tab may have navigated or content script not ready
+      }
+    };
+
+    pollLiveMetrics();
+    const interval = setInterval(pollLiveMetrics, 1200);
+
+    return () => {
+      isSubscribed = false;
+      clearInterval(interval);
+    };
+  }, [scanStatus, activeTab?.id]);
+
   const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
 
     setScanStatus('running');
     setErrorMessage(null);
     setInspection(null);
+    setLiveMetrics(null);
     setProgress({
       scanId: `scan_${Date.now()}`,
       mode: selectedMode,
@@ -300,6 +342,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       setScanStatus('idle');
       setInspection(null);
       setProgress(null);
+      setLiveMetrics(null);
       setErrorMessage(null);
       setActiveSeverityFilter('all');
       setActiveCategoryFilter('all');
@@ -457,6 +500,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 <OverviewDashboard
                   inspection={inspection}
                   onNavigateToIssues={handleNavigateToIssues}
+                  liveMetrics={liveMetrics}
                 />
               ) : (
                 <ModeSelector

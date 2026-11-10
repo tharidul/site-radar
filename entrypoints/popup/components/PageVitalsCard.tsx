@@ -1,9 +1,26 @@
 import React, { useMemo } from 'react';
-import { Layers, Globe } from 'lucide-react';
+import {
+  Timer,
+  Zap,
+  Image as ImageIcon,
+  CheckCircle2,
+  HardDrive,
+  Layers,
+  Globe,
+  Activity,
+} from 'lucide-react';
 import type { WebsiteInspection, PerformanceData } from '@/types/inspection';
 
 interface PageVitalsCardProps {
   inspection: WebsiteInspection;
+  liveMetrics?: {
+    resourceCount: number;
+    wireTransferBytes: number;
+    decodedBytes: number;
+    cacheHitCount: number;
+    cacheHitBytes: number;
+    opaqueResourceCount: number;
+  } | null;
 }
 
 function formatBytes(bytes?: number): string {
@@ -68,7 +85,7 @@ function getSpeedRating(metric: 'ttfb' | 'fcp' | 'lcp' | 'load', ms?: number) {
   }
 }
 
-export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) => {
+export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, liveMetrics }) => {
   const findings = inspection.findings || [];
 
   const getEvidence = (ruleId: string, label: string): string | undefined => {
@@ -133,245 +150,305 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection }) =>
       ? scrolledData.wireBytes - wireBytes
       : 0;
 
+  const lazyReqs =
+    scrolledData?.resourceCount !== undefined && scrolledData.resourceCount > totalRequests
+      ? scrolledData.resourceCount - totalRequests
+      : 0;
+
+  const lazyDecoded =
+    scrolledData?.decodedBytes !== undefined && decodedBytes !== undefined && scrolledData.decodedBytes > decodedBytes
+      ? scrolledData.decodedBytes - decodedBytes
+      : 0;
+
+  const hasLazyDelta = Boolean(
+    scrolledData && (lazyWire > 0 || lazyReqs > 0 || lazyDecoded > 0 || scrolledData.isInfiniteScroll)
+  );
+
+  const isLive = Boolean(liveMetrics && liveMetrics.resourceCount > 0);
+  const effectiveScrolledReqs = liveMetrics?.resourceCount
+    ? Math.max(liveMetrics.resourceCount, scrolledData?.resourceCount || totalRequests)
+    : scrolledData?.resourceCount || totalRequests;
+
+  const hasDelta = Boolean(hasLazyDelta || effectiveScrolledReqs > totalRequests);
+
+  const scrolledWire = scrolledData?.wireBytes ?? wireBytes;
+  const scrolledDecoded = scrolledData?.decodedBytes ?? decodedBytes;
+  const initialWire = wireBytes;
+  const initialDecoded = decodedBytes;
+
+  const effectiveWire = liveMetrics?.wireTransferBytes && liveMetrics.wireTransferBytes > 0
+    ? Math.max(liveMetrics.wireTransferBytes, scrolledWire || initialWire || 0)
+    : scrolledWire;
+
+  const effectiveDecoded = liveMetrics?.decodedBytes && liveMetrics.decodedBytes > 0
+    ? Math.max(liveMetrics.decodedBytes, scrolledDecoded || initialDecoded || 0)
+    : scrolledDecoded;
+
+  const totalWire = hasDelta ? effectiveWire : initialWire;
+  const totalDecoded = hasDelta ? effectiveDecoded : initialDecoded;
+
+  const displayCacheCount = Math.max(cacheHitCount ?? 0, scrolledData?.cacheHitCount ?? 0);
+  const displayCacheBytes = Math.max(cacheHitBytes ?? 0, scrolledData?.cacheHitBytes ?? 0);
+  const displayOpaqueCount = Math.max(opaqueResourceCount ?? 0, scrolledData?.opaqueResourceCount ?? 0);
+
+  const compressionSavingsPct =
+    totalDecoded && totalWire && totalDecoded > totalWire
+      ? Math.round(((totalDecoded - totalWire) / totalDecoded) * 100)
+      : 0;
+
+  const timingMetrics = [
+    {
+      key: 'ttfb',
+      label: 'TTFB',
+      name: 'Time to First Byte',
+      value: ttfb || '—',
+      rating: ttfbRating,
+      icon: Timer,
+      target: '≤ 800ms',
+    },
+    {
+      key: 'fcp',
+      label: 'FCP',
+      name: 'First Contentful Paint',
+      value: fcp || '—',
+      rating: fcpRating,
+      icon: Zap,
+      target: '≤ 1.8s',
+    },
+    {
+      key: 'lcp',
+      label: 'LCP',
+      name: 'Largest Contentful Paint',
+      value: lcp || '—',
+      rating: lcpRating,
+      icon: ImageIcon,
+      target: '≤ 2.5s',
+    },
+    {
+      key: 'load',
+      label: 'Load',
+      name: 'Window Load Event',
+      value: fullLoad || domLoad || 'Complete',
+      rating: loadRating,
+      icon: CheckCircle2,
+      target: '≤ 2.5s',
+    },
+  ];
+
   return (
-    <div className="rounded-md bg-white dark:bg-zinc-900 p-4 min-[400px]:p-5 shadow-xs">
-      <div className="pb-3 border-b border-zinc-200/70 dark:border-zinc-800">
-        <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">
-          Page Loading Times &amp; Data Usage
-        </h3>
-      </div>
-
-      <div className="grid grid-cols-4 divide-x divide-zinc-200/70 dark:divide-zinc-800 py-3.5">
-        <div className="pr-2.5 pl-0">
-          <div className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            TTFB
+    <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-4 space-y-3.5 shadow-xs">
+      {/* Header with Title */}
+      <div className="flex items-center justify-between pb-3 border-b border-zinc-200/70 dark:border-zinc-800">
+        <div className="flex items-center gap-2">
+          <div className="p-1 rounded bg-[#152E40]/10 dark:bg-[#CEFF52]/10 text-[#152E40] dark:text-[#CEFF52]">
+            <Activity className="w-4 h-4" />
           </div>
-          <div className="text-lg min-[400px]:text-xl font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
-            {ttfb || '—'}
-          </div>
-          <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full mt-1.5 overflow-hidden">
-            <div
-              className={`h-full ${ttfbRating.barClass}`}
-              style={{ width: `${ttfbRating.pct}%` }}
-            />
-          </div>
-          <div className="text-xs font-semibold mt-1 truncate">
-            <span className={ttfbRating.colorClass}>{ttfbRating.label}</span>
-          </div>
-        </div>
-
-        <div className="px-2.5">
-          <div className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            FCP
-          </div>
-          <div className="text-lg min-[400px]:text-xl font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
-            {fcp || '—'}
-          </div>
-          <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full mt-1.5 overflow-hidden">
-            <div
-              className={`h-full ${fcpRating.barClass}`}
-              style={{ width: `${fcpRating.pct}%` }}
-            />
-          </div>
-          <div className="text-xs font-semibold mt-1 truncate">
-            <span className={fcpRating.colorClass}>{fcpRating.label}</span>
-          </div>
-        </div>
-
-        <div className="px-2.5">
-          <div className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            LCP
-          </div>
-          <div className="text-lg min-[400px]:text-xl font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
-            {lcp || '—'}
-          </div>
-          <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full mt-1.5 overflow-hidden">
-            <div
-              className={`h-full ${lcpRating.barClass}`}
-              style={{ width: `${lcpRating.pct}%` }}
-            />
-          </div>
-          <div className="text-xs font-semibold mt-1 truncate">
-            <span className={lcpRating.colorClass}>{lcpRating.label}</span>
-          </div>
-        </div>
-
-        <div className="pl-2.5 pr-0">
-          <div className="text-xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-            Load Event
-          </div>
-          <div className="text-lg min-[400px]:text-xl font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight mt-1">
-            {fullLoad || domLoad || 'Complete'}
-          </div>
-          <div className="h-0.5 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full mt-1.5 overflow-hidden">
-            <div
-              className={`h-full ${loadRating.barClass}`}
-              style={{ width: `${loadRating.pct}%` }}
-            />
-          </div>
-          <div className="text-xs font-semibold mt-1 truncate">
-            <span className={loadRating.colorClass}>{loadRating.label}</span>
+          <div>
+            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+              Page Loading Times &amp; Data Usage
+            </h3>
+            <p className="text-2xs text-zinc-500 dark:text-zinc-400">
+              Core vitals, network transfer, and payload telemetry
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="border-t border-zinc-200/70 dark:border-zinc-800 pt-3 space-y-2.5">
-        <div className="space-y-1">
-          <div className="flex items-center justify-between gap-2 text-sm">
-            <div className="flex items-center gap-2 min-w-0">
-              <span className="font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">
-                Data Usage:
-              </span>
-              <span
-                className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0 font-mono"
-                title="Assets fetched up to the initial viewport. Below-the-fold assets load dynamically on scroll."
-              >
-                {`(Initial • ${totalRequests} reqs)`}
-              </span>
-            </div>
+      {/* 4 Performance Metric Cards: Clean unclipped layout */}
+      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 gap-2.5">
+        {timingMetrics.map((m) => {
+          const Icon = m.icon;
+          const isGood = ['Fast', 'Good'].includes(m.rating.label);
+          const isWarn = ['Moderate', 'Normal', 'Needs Work'].includes(m.rating.label);
+          const isBad = ['Slow', 'Poor'].includes(m.rating.label);
 
-            <div className="text-right font-mono shrink-0">
-              {wireBytes && wireBytes > 0 ? (
-                <>
-                  <span
-                    className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm"
-                    title="Transfer reflects compressed bytes received over network. Uncompressed reflects in-memory size."
-                  >
-                    {`Transfer: ${formatBytes(wireBytes)}`}
+          const ratingPillClass = isGood
+            ? 'bg-emerald-500/10 text-emerald-600 dark:text-[#CEFF52]'
+            : isWarn
+            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+            : isBad
+            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+            : 'bg-zinc-500/10 text-zinc-500';
+
+          return (
+            <div
+              key={m.key}
+              title={`${m.name} (Target: ${m.target})`}
+              className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800/80 flex flex-col justify-between"
+            >
+              {/* Row 1: Label + Target threshold */}
+              <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Icon className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
+                  <span className="text-2xs font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wider whitespace-nowrap">
+                    {m.label}
                   </span>
-                  {decodedBytes && decodedBytes > 0 && (
-                    <span
-                      className="text-xs text-zinc-500 dark:text-zinc-400 ml-2.5 tabular-nums"
-                      title="Uncompressed reflects in-memory size."
-                    >
-                      {`Uncompressed: ${formatBytes(decodedBytes)}`}
-                    </span>
-                  )}
-                </>
-              ) : decodedBytes && decodedBytes > 0 ? (
-                <span
-                  className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm"
-                  title="Transfer reflects compressed bytes received over network. Uncompressed reflects in-memory size."
-                >
-                  {`~${formatBytes(decodedBytes)}`}
+                </div>
+                <span className="text-2xs font-mono text-zinc-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">
+                  {m.target}
                 </span>
-              ) : (
-                <span className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm">
-                  {`${totalRequests} reqs`}
-                </span>
-              )}
+              </div>
+
+              {/* Row 2: Metric Value */}
+              <div className="my-1.5">
+                <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
+                  {m.value}
+                </div>
+              </div>
+
+              {/* Row 3: Status rating badge + calibrated gauge */}
+              <div className="space-y-1.5 pt-1.5 border-t border-zinc-200/40 dark:border-zinc-800/50">
+                <div className="flex items-center justify-between gap-1">
+                  <span className={`text-2xs font-semibold px-1.5 py-0.2 rounded shrink-0 ${ratingPillClass}`}>
+                    {m.rating.label}
+                  </span>
+                  <span className="text-2xs font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
+                    {m.rating.pct}%
+                  </span>
+                </div>
+                <div className="h-1 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full ${m.rating.barClass} transition-all duration-300`}
+                    style={{ width: `${m.rating.pct}%` }}
+                  />
+                </div>
+              </div>
             </div>
+          );
+        })}
+      </div>
+
+      {/* Simple, Unified Data Usage Section (Single Card - No Overlaps, No Duplicate Boxes) */}
+      <div className="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800/80 space-y-3">
+        {/* Header */}
+        <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200/50 dark:border-zinc-800/60">
+          <div className="flex items-center gap-2">
+            <HardDrive className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Data Usage</span>
           </div>
 
-          {((cacheHitCount ?? 0) > 0 || (opaqueResourceCount ?? 0) > 0) && (
-            <div className="flex items-center gap-3 min-w-0 flex-wrap pt-0.5">
-              {(cacheHitCount ?? 0) > 0 && (
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-700 dark:text-emerald-400 shrink-0"
-                  title="Assets served from local browser cache without network transfer."
-                >
-                  <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  {`${cacheHitCount} cached (${formatBytes(cacheHitBytes ?? 0)})`}
-                </span>
-              )}
-              {(opaqueResourceCount ?? 0) > 0 && (
-                <span
-                  className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-700 dark:text-amber-400 shrink-0"
-                  title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers. Wire total reflects measured assets only."
-                >
-                  <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                  {`${opaqueResourceCount} cross-origin (no TAO)`}
-                </span>
-              )}
-            </div>
+          {isLive && (
+            <span className="text-2xs font-mono font-bold text-emerald-600 dark:text-[#CEFF52] uppercase tracking-wider">
+              Live
+            </span>
           )}
         </div>
 
-        {scrolledData && (
-          <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 space-y-1">
-            <div className="flex items-center justify-between gap-2 text-sm">
-              <div className="flex items-center gap-2 min-w-0">
-                <span className="font-semibold text-zinc-800 dark:text-zinc-200 shrink-0">
-                  Full Page:
+        {/* Content: Initial vs Full Page (if delta exists) or Single Viewport */}
+        {hasDelta ? (
+          <div className="grid grid-cols-2 gap-3">
+            {/* Initial Load */}
+            <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 space-y-1.5 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Initial Load
                 </span>
-                <span
-                  className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0 font-mono"
-                  title="Total assets transferred after scrolling the webpage to trigger all lazy-loaded content."
-                >
-                  {`(Scrolled • ${scrolledData.resourceCount || totalRequests} reqs)`}
+                <span className="text-2xs font-mono font-bold text-zinc-600 dark:text-zinc-300">
+                  {totalRequests} {totalRequests === 1 ? 'Request' : 'Requests'}
                 </span>
               </div>
+              <div className="flex items-baseline gap-1.5 font-mono">
+                <span className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight">
+                  {formatBytes(initialWire)}
+                </span>
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                  transferred
+                </span>
+              </div>
+              {initialDecoded && initialDecoded > 0 && (
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                  {formatBytes(initialDecoded)} extracted
+                </div>
+              )}
+            </div>
 
-              <div className="text-right font-mono shrink-0">
-                {scrolledData.wireBytes && scrolledData.wireBytes > 0 ? (
-                  <>
-                    <span
-                      className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm"
-                      title="Transfer reflects compressed bytes received over network. Uncompressed reflects in-memory size."
-                    >
-                      {`Transfer: ${formatBytes(scrolledData.wireBytes)}`}
-                    </span>
-                    {scrolledData.decodedBytes && scrolledData.decodedBytes > 0 && (
-                      <span
-                        className="text-xs text-zinc-500 dark:text-zinc-400 ml-2.5 tabular-nums"
-                        title="Uncompressed reflects in-memory size."
-                      >
-                        {`Uncompressed: ${formatBytes(scrolledData.decodedBytes)}`}
-                      </span>
-                    )}
-                  </>
-                ) : scrolledData.decodedBytes && scrolledData.decodedBytes > 0 ? (
-                  <span
-                    className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm"
-                    title="Transfer reflects compressed bytes received over network. Uncompressed reflects in-memory size."
-                  >
-                    {`~${formatBytes(scrolledData.decodedBytes)}`}
-                  </span>
-                ) : (
-                  <span className="font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums text-sm">
-                    {`${scrolledData.resourceCount || 0} reqs`}
-                  </span>
-                )}
+            {/* Full Page */}
+            <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 space-y-1.5 min-w-0">
+              <div className="flex items-center justify-between">
+                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Full Page
+                </span>
+                <span className="text-2xs font-mono font-bold text-zinc-900 dark:text-[#CEFF52]">
+                  {effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'}
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1.5 font-mono">
+                <span className="text-lg font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight">
+                  {formatBytes(effectiveWire)}
+                </span>
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                  transferred
+                </span>
+              </div>
+              {effectiveDecoded && effectiveDecoded > 0 && (
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                  {formatBytes(effectiveDecoded)} extracted
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                  Total Transfer
+                </span>
+                <span className="text-2xs font-mono font-bold text-zinc-900 dark:text-[#CEFF52]">
+                  ({effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'})
+                </span>
+              </div>
+              <div className="flex items-baseline gap-1.5 font-mono">
+                <span className="text-lg font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight">
+                  {formatBytes(effectiveWire)}
+                </span>
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                  transferred
+                </span>
               </div>
             </div>
 
-            {(lazyWire > 0 ||
-              scrolledData.isInfiniteScroll ||
-              (scrolledData.cacheHitCount ?? 0) > 0 ||
-              (scrolledData.opaqueResourceCount ?? 0) > 0) && (
-              <div className="flex items-center gap-3 min-w-0 flex-wrap pt-0.5">
-                {lazyWire > 0 && (
-                  <span className="text-xs font-mono font-semibold text-amber-700 dark:text-amber-400 shrink-0">
-                    {`+${formatBytes(lazyWire)} lazy`}
-                  </span>
-                )}
-                {scrolledData.isInfiniteScroll && (
-                  <span
-                    className="text-xs font-mono text-sky-700 dark:text-sky-400 shrink-0"
-                    title="This site appends infinite content on scroll. Measurement was safely bounded to initial loaded viewports."
-                  >
-                    Infinite Feed (Bounded)
-                  </span>
-                )}
-                {(scrolledData.cacheHitCount ?? 0) > 0 && (
-                  <span
-                    className="inline-flex items-center gap-1.5 text-xs font-mono text-emerald-700 dark:text-emerald-400 shrink-0"
-                    title="Assets served from local browser cache without network transfer."
-                  >
-                    <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                    {`${scrolledData.cacheHitCount} cached (${formatBytes(scrolledData.cacheHitBytes ?? 0)})`}
-                  </span>
-                )}
-                {(scrolledData.opaqueResourceCount ?? 0) > 0 && (
-                  <span
-                    className="inline-flex items-center gap-1.5 text-xs font-mono text-amber-700 dark:text-amber-400 shrink-0"
-                    title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers. Wire total reflects measured assets only."
-                  >
-                    <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
-                    {`${scrolledData.opaqueResourceCount} cross-origin (no TAO)`}
-                  </span>
-                )}
+            {effectiveDecoded && effectiveDecoded > 0 && (
+              <div className="text-right space-y-1">
+                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
+                  Extracted in Memory
+                </span>
+                <div className="text-sm font-extrabold text-zinc-800 dark:text-zinc-200 font-mono tabular-nums">
+                  {formatBytes(effectiveDecoded)}
+                </div>
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Network Efficiency Chips (Cache & Cross-origin) */}
+        {(displayCacheCount > 0 || displayOpaqueCount > 0 || scrolledData?.isInfiniteScroll) && (
+          <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 flex items-center gap-2 flex-wrap">
+            {displayCacheCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md"
+                title="Assets served directly from browser cache without network transfer."
+              >
+                <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                {`${formatBytes(displayCacheBytes)} cached (${displayCacheCount} reqs)`}
+              </span>
+            )}
+            {displayOpaqueCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md"
+                title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers."
+              >
+                <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                {`${displayOpaqueCount} cross-origin`}
+              </span>
+            )}
+            {scrolledData?.isInfiniteScroll && (
+              <span
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-sky-700 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md"
+                title="Infinite scrolling detected; bounded to loaded content."
+              >
+                Infinite Feed (Bounded)
+              </span>
             )}
           </div>
         )}

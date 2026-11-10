@@ -22,11 +22,20 @@ import { ExportDropdown } from './ExportDropdown';
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
   onNavigateToIssues: (filter?: { severity?: Severity | 'all'; category?: string }) => void;
+  liveMetrics?: {
+    resourceCount: number;
+    wireTransferBytes: number;
+    decodedBytes: number;
+    cacheHitCount: number;
+    cacheHitBytes: number;
+    opaqueResourceCount: number;
+  } | null;
 }
 
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   inspection,
   onNavigateToIssues,
+  liveMetrics,
 }) => {
   const findings = inspection.findings || [];
   const scores = inspection.scores || {};
@@ -368,7 +377,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         </div>
       )}
 
-      <PageVitalsCard inspection={inspection} />
+      <PageVitalsCard inspection={inspection} liveMetrics={liveMetrics} />
     </div>
 
     <div className="shrink-0 relative z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">

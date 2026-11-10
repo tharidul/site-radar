@@ -207,5 +207,38 @@ export default defineContentScript({
         }
       },
     );
+
+    messageBus.onMessage(
+      MESSAGE_CHANNELS.GET_LIVE_METRICS,
+      async () => {
+        try {
+          const resources = (performance.getEntriesByType('resource') || []) as PerformanceResourceTiming[];
+          const navEntries = performance.getEntriesByType('navigation');
+          const navEntry = navEntries.length > 0 ? (navEntries[0] as PerformanceNavigationTiming) : undefined;
+          const aggregated = aggregateResourceMetrics(resources, navEntry, window.location.href);
+
+          return {
+            success: true,
+            resourceCount: aggregated.totalRequests,
+            wireTransferBytes: aggregated.wireTransferBytes,
+            decodedBytes: aggregated.decodedBytes,
+            cacheHitCount: aggregated.cacheHitCount,
+            cacheHitBytes: aggregated.cacheHitBytes,
+            opaqueResourceCount: aggregated.opaqueResourceCount,
+          };
+        } catch (err: any) {
+          return {
+            success: false,
+            resourceCount: 0,
+            wireTransferBytes: 0,
+            decodedBytes: 0,
+            cacheHitCount: 0,
+            cacheHitBytes: 0,
+            opaqueResourceCount: 0,
+            error: err?.message || 'Failed to get live metrics',
+          };
+        }
+      },
+    );
   },
 });
