@@ -1,25 +1,29 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   Shield,
-  Compass,
   FileText,
   Check,
-  AlertTriangle,
   ExternalLink,
   RotateCcw,
   Sun,
   Moon,
-  ChevronDown,
+  Copy,
+  Terminal,
+  Cpu,
+  Layers,
+  ArrowRight,
+  Database,
+  Radio,
+  Sliders,
 } from 'lucide-react';
 import { MESSAGE_CHANNELS } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
 import { getBrowserAdapter } from '@/browser/adapters';
-import { consentManager } from '../../src/intelligence/consent-manager';
-import type { IntelligenceProviderType, ConsentDisclosure } from '@/types/intelligence';
+import type { IntelligenceProviderType } from '@/types/intelligence';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
-import { Button } from '../popup/components/Button';
-import { Badge } from '../popup/components/Badge';
+import siteRadarLogo from '../../assets/icons/icon128.png';
+
+export type SettingsTab = 'overview' | 'mcp' | 'intelligence' | 'crawler';
 
 interface CrawlConfig {
   maxPages: number;
@@ -69,7 +73,18 @@ const PROVIDER_LIST: ProviderItem[] = [
   },
 ];
 
+const getTabFromHash = (): SettingsTab => {
+  if (typeof window === 'undefined') return 'overview';
+  const hash = window.location.hash.toLowerCase().replace(/^#/, '');
+  if (hash === 'mcp' || hash === 'welcome') return 'mcp';
+  if (hash === 'intelligence') return 'intelligence';
+  if (hash === 'crawler') return 'crawler';
+  if (hash === 'overview') return 'overview';
+  return 'overview';
+};
+
 export function OptionsApp() {
+  const [activeTab, setActiveTab] = useState<SettingsTab>(getTabFromHash);
   const [globalConsent, setGlobalConsent] = useState(false);
   const [providerConsents, setProviderConsents] = useState<Record<string, boolean>>({
     doh: false,
@@ -80,10 +95,11 @@ export function OptionsApp() {
 
   const [crawlConfig, setCrawlConfig] = useState<CrawlConfig>(DEFAULT_CRAWL_CONFIG);
   const [crawlFeedback, setCrawlFeedback] = useState<string | null>(null);
-
   const [expandedDisclosureProviderId, setExpandedDisclosureProviderId] = useState<string | null>(null);
 
   const [theme, setTheme] = useState<AppTheme>('dark');
+  const [activeMcpTab, setActiveMcpTab] = useState<'claude' | 'cursor' | 'cli'>('claude');
+  const [copiedSnippet, setCopiedSnippet] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -123,15 +139,35 @@ export function OptionsApp() {
           }
         }
       } catch (err) {
-        console.warn('Error loading settings concurrently:', err);
+        console.warn('Error loading settings:', err);
       }
     }
 
     loadSettings();
+
+    const handleHashChange = () => {
+      const next = getTabFromHash();
+      setActiveTab(next);
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+
     return () => {
       mounted = false;
+      window.removeEventListener('hashchange', handleHashChange);
     };
   }, []);
+
+  const handleTabChange = (tab: SettingsTab) => {
+    setActiveTab(tab);
+    if (window.history && window.history.replaceState) {
+      window.history.replaceState(null, '', `#${tab}`);
+    }
+    const mainEl = document.querySelector('.main-content');
+    if (mainEl) {
+      mainEl.scrollTop = 0;
+    }
+  };
 
   const handleToggleProviderConsent = async (provider: IntelligenceProviderType) => {
     const nextGranted = !providerConsents[provider];
@@ -142,29 +178,34 @@ export function OptionsApp() {
         provider,
         granted: nextGranted,
       });
+
+      const anyGranted = nextGranted || Object.entries(providerConsents).some(([k, v]) => k !== provider && v);
+      setGlobalConsent(anyGranted);
     } catch (err) {
-      console.error('Failed to update consent:', err);
+      console.warn('Failed to update consent:', err);
     }
   };
 
-  const handleRevokeAllConsent = async () => {
-    const cleared: Record<string, boolean> = {
-      doh: false,
-      'ip-asn': false,
-      'crt-sh': false,
-      tls: false,
-    };
-    setProviderConsents(cleared);
-    setGlobalConsent(false);
+  const handleToggleAllConsent = async (enable: boolean) => {
+    setGlobalConsent(enable);
+    const updated: Record<string, boolean> = {};
+    for (const p of PROVIDER_LIST) {
+      updated[p.id] = enable;
+    }
+    setProviderConsents(updated);
 
     for (const p of PROVIDER_LIST) {
       try {
         await messageBus.sendToBackground(MESSAGE_CHANNELS.SET_EXTERNAL_CONSENT, {
           provider: p.id,
-          granted: false,
+          granted: enable,
         });
       } catch {}
     }
+  };
+
+  const handleRevokeAllConsent = async () => {
+    await handleToggleAllConsent(false);
   };
 
   const handleUpdateCrawlLimit = (field: keyof CrawlConfig, value: number) => {
@@ -174,7 +215,6 @@ export function OptionsApp() {
       if (field === 'maxDepth') clamped = Math.max(1, Math.min(5, value || 1));
       if (field === 'concurrency') clamped = Math.max(1, Math.min(4, value || 1));
       if (field === 'timeoutSeconds') clamped = Math.max(5, Math.min(60, value || 5));
-
       return { ...prev, [field]: clamped };
     });
   };
@@ -184,7 +224,7 @@ export function OptionsApp() {
       const adapter = getBrowserAdapter();
       await adapter.setStorage({ crawlLimits: crawlConfig });
       setCrawlFeedback('Crawl boundaries saved');
-    } catch (err) {
+    } catch {
       setCrawlFeedback('Failed to save crawl limits');
     }
     setTimeout(() => setCrawlFeedback(null), 2500);
@@ -203,261 +243,764 @@ export function OptionsApp() {
     saveTheme(nextTheme);
   };
 
+  const handleCopySnippet = (text: string, id: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedSnippet(id);
+      setTimeout(() => setCopiedSnippet(null), 2000);
+    } catch {}
+  };
+
+  const claudeConfigJson = JSON.stringify(
+    {
+      mcpServers: {
+        siteradar: {
+          command: 'npx',
+          args: ['tsx', 'src/mcp/index.ts'],
+        },
+      },
+    },
+    null,
+    2,
+  );
+
   return (
-    <div data-theme={theme} className={`min-h-screen overflow-y-auto bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans p-4 sm:p-6 md:p-8 select-none ${theme}`}>
-      <div className="max-w-2xl mx-auto space-y-6">
-        <header className="border-b border-zinc-200 dark:border-zinc-800/80 pb-4 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <Shield className="w-6 h-6 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-base sm:text-lg font-bold tracking-tight text-zinc-900 dark:text-zinc-100 leading-tight">
-                SiteRadar Settings
-              </h1>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 truncate">
-                Privacy controls, intelligence opt-in, and audit boundaries
-              </p>
+    <div data-theme={theme} className={`options-page ${theme}`}>
+      <div className="layout-wrapper">
+        {/* Static Desktop Sidebar (Permanent, Immovable) */}
+        <aside className="sidebar" aria-label="Settings Navigation Sidebar">
+          <div className="sidebar-brand">
+            <img
+              src={siteRadarLogo}
+              alt="SiteRadar Logo"
+              className="brand-logo-img"
+            />
+            <div>
+              <div className="brand-title">SiteRadar</div>
+              <div className="brand-sub">Settings &amp; Documentation</div>
             </div>
           </div>
 
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={handleToggleTheme}
-            title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
-            aria-label="Toggle theme"
-            className="shrink-0 border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
-          >
-            {theme === 'light' ? (
-              <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
-            ) : (
-              <Sun className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
-            )}
-          </Button>
-        </header>
-
-        <section className="rounded-md bg-white dark:bg-zinc-900/60 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden shadow-xs">
-          <div className="p-4 sm:p-5 flex items-center justify-between gap-4">
-            <div>
-              <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-                <Shield className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                <span>External Intelligence Opt-In</span>
-              </h2>
-              <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-                SiteRadar runs 100% locally by default. Enable external lookups for deep network intelligence.
-              </p>
-            </div>
-            {Object.values(providerConsents).some(Boolean) && (
-              <button
-                type="button"
-                onClick={handleRevokeAllConsent}
-                className="text-xs font-semibold text-zinc-500 hover:text-[#152E40] dark:text-zinc-400 dark:hover:text-[#CEFF52] transition-colors cursor-pointer shrink-0"
-              >
-                Disable all
-              </button>
-            )}
+          <div className="sidebar-meta">
+            <div><span>Version</span> <strong>0.2.0</strong></div>
+            <div><span>Architecture</span> <strong>Local-First MV3</strong></div>
+            <div><span>Protocol</span> <strong>MCP 2025-03</strong></div>
+            <div><span>License</span> <strong>MIT</strong></div>
           </div>
 
-          {PROVIDER_LIST.map((provider) => {
-            const isGranted = Boolean(providerConsents[provider.id]);
-            const disclosure = consentManager.getDisclosure(provider.id, 'inspected host');
-            const isDisclosureOpen = expandedDisclosureProviderId === provider.id;
-
-            return (
-              <div key={provider.id} className="p-4 space-y-2">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="space-y-1 min-w-0 pr-2">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-                        {provider.name}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setExpandedDisclosureProviderId((prev) => (prev === provider.id ? null : provider.id))}
-                        className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer flex items-center gap-0.5"
-                      >
-                        <span>{isDisclosureOpen ? 'Hide' : 'Details'}</span>
-                        <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${isDisclosureOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                    </div>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-normal">
-                      {provider.summary}
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={isGranted}
-                    onClick={() => handleToggleProviderConsent(provider.id)}
-                    title={isGranted ? `Disable ${provider.name}` : `Enable ${provider.name}`}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-[#CEFF52]/50 active:scale-[0.97] ${
-                      isGranted ? 'bg-[#CEFF52]' : 'bg-zinc-300 dark:bg-zinc-700'
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-4 w-4 transform rounded-full ${isGranted ? 'bg-[#152E40]' : 'bg-white'} shadow-xs ring-0 transition duration-200 ease-in-out ${
-                        isGranted ? 'translate-x-4' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                {isDisclosureOpen && (
-                  <div className="pt-2 text-xs space-y-1 text-zinc-500 dark:text-zinc-400">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-zinc-600 dark:text-zinc-300">Endpoint:</span>
-                      <span className="text-zinc-800 dark:text-zinc-200 font-mono text-xs select-all">{provider.endpoint}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-zinc-600 dark:text-zinc-300">Data transmitted:</span>
-                      <span className="text-zinc-800 dark:text-zinc-200">{disclosure.dataToSend.join(', ')}</span>
-                    </div>
-                    {disclosure.privacyPolicyUrl && (
-                      <div className="flex items-center gap-2 pt-0.5">
-                        <span className="font-medium text-zinc-600 dark:text-zinc-300">Privacy Policy:</span>
-                        <a
-                          href={disclosure.privacyPolicyUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[#152E40] dark:text-[#CEFF52] hover:underline inline-flex items-center gap-1"
-                        >
-                          <span>{disclosure.providerName}</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </section>
-
-        <section className="rounded-md bg-white dark:bg-zinc-900/60 p-4 sm:p-5 space-y-3.5 shadow-xs">
-          <div className="border-b border-zinc-200/80 dark:border-zinc-800/80 pb-3">
-            <h2 className="text-sm sm:text-base font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-2">
-              <Compass className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-              <span>Deep Crawl Boundaries</span>
-            </h2>
-            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
-              Protects tab performance, memory, and battery during multi-page link exploration.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-            <div>
-              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                Max Pages
-              </label>
-              <input
-                type="number"
-                min={5}
-                max={200}
-                value={crawlConfig.maxPages}
-                onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
-              />
-              <span className="text-2xs text-zinc-400 mt-0.5 block">5–200 pages</span>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                Max Depth
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={5}
-                value={crawlConfig.maxDepth}
-                onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
-              />
-              <span className="text-2xs text-zinc-400 mt-0.5 block">1–5 hops</span>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                Concurrency
-              </label>
-              <input
-                type="number"
-                min={1}
-                max={4}
-                value={crawlConfig.concurrency}
-                onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
-              />
-              <span className="text-2xs text-zinc-400 mt-0.5 block">1–4 parallel</span>
-            </div>
-
-            <div>
-              <label className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 block mb-1">
-                Timeout
-              </label>
-              <input
-                type="number"
-                min={5}
-                max={60}
-                value={crawlConfig.timeoutSeconds}
-                onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
-                className="w-full rounded-lg border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-950 px-3 py-1.5 text-zinc-900 dark:text-zinc-100 font-medium tabular-nums focus:border-[#CEFF52] focus:outline-none transition-colors"
-              />
-              <span className="text-2xs text-zinc-400 mt-0.5 block">5–60 seconds</span>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-2 border-t border-zinc-200/80 dark:border-zinc-800/80">
-            <span className="text-xs text-[#152E40] dark:text-[#CEFF52] font-semibold">
-              {crawlFeedback}
-            </span>
-
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleResetCrawlLimits}
-                leftIcon={<RotateCcw className="w-3.5 h-3.5" />}
-              >
-                Reset
-              </Button>
-
-              <Button
-                type="button"
-                variant="primary"
-                size="sm"
-                onClick={handleSaveCrawlLimits}
-              >
-                Save Boundaries
-              </Button>
-            </div>
-          </div>
-        </section>
-
-        <footer className="pt-4 pb-2 text-center border-t border-zinc-200/80 dark:border-zinc-800/80">
-          <div className="inline-flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
-            <a
-              href="https://tharidulakmal.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 hover:text-[#152E40] dark:hover:text-[#CEFF52] transition-colors"
+          <div className="nav-heading">Navigation</div>
+          <nav className="sidebar-nav" aria-label="Main Sections">
+            <button
+              type="button"
+              onClick={() => handleTabChange('overview')}
+              className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
             >
-              <span className="font-semibold text-zinc-700 dark:text-zinc-200">LKML</span>
-              <ExternalLink className="w-3 h-3 opacity-70" />
-            </a>
-            <span className="text-zinc-400 dark:text-zinc-600">•</span>
+              <span>Overview &amp; Usage</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('mcp')}
+              className={`nav-link ${activeTab === 'mcp' ? 'active' : ''}`}
+            >
+              <span>AI &amp; MCP Integration</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('intelligence')}
+              className={`nav-link ${activeTab === 'intelligence' ? 'active' : ''}`}
+            >
+              <span>External Intelligence</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('crawler')}
+              className={`nav-link ${activeTab === 'crawler' ? 'active' : ''}`}
+            >
+              <span>Crawler Boundaries</span>
+            </button>
             <a
               href="privacy-policy.html"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[#152E40] dark:hover:text-[#CEFF52] transition-colors hover:underline"
+              className="nav-link"
             >
-              Privacy Policy
+              <span>Privacy Policy</span>
+              <ExternalLink style={{ width: '12px', height: '12px', opacity: 0.6 }} />
+            </a>
+          </nav>
+
+          <div className="sidebar-footer">
+            <a href="https://github.com/tharidul/site-radar" target="_blank" rel="noopener noreferrer">
+              GitHub Repository &rarr;
+            </a>
+            <a href="https://tharidulakmal.com" target="_blank" rel="noopener noreferrer">
+              Developer Website &rarr;
             </a>
           </div>
-        </footer>
+        </aside>
+
+        {/* Dynamic Main Content Pane (Switches per activeTab) */}
+        <main className="main-content" aria-label="Settings Content Area">
+          {/* Mobile Top Bar (< 1024px) */}
+          <div className="mobile-header mobile-only">
+            <div className="mobile-brand">
+              <img
+                src={siteRadarLogo}
+                alt="SiteRadar Logo"
+                className="brand-logo-img"
+              />
+              <div>
+                <div className="brand-title">SiteRadar</div>
+                <div className="brand-sub">Settings &amp; Documentation</div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              className="btn-secondary"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? (
+                <Moon style={{ width: '14px', height: '14px' }} />
+              ) : (
+                <Sun style={{ width: '14px', height: '14px' }} />
+              )}
+            </button>
+          </div>
+
+          {/* Mobile Navigation Bar (< 1024px) */}
+          <nav className="mobile-nav mobile-only" aria-label="Mobile Navigation Tabs">
+            <button
+              type="button"
+              onClick={() => handleTabChange('overview')}
+              className={`mobile-tab ${activeTab === 'overview' ? 'active' : ''}`}
+            >
+              Overview
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('mcp')}
+              className={`mobile-tab ${activeTab === 'mcp' ? 'active' : ''}`}
+            >
+              AI &amp; MCP
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('intelligence')}
+              className={`mobile-tab ${activeTab === 'intelligence' ? 'active' : ''}`}
+            >
+              Intelligence
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTabChange('crawler')}
+              className={`mobile-tab ${activeTab === 'crawler' ? 'active' : ''}`}
+            >
+              Crawler
+            </button>
+            <a
+              href="privacy-policy.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mobile-tab"
+            >
+              Privacy &rarr;
+            </a>
+          </nav>
+
+          {/* Desktop Content Header (>= 1024px) */}
+          <header className="content-header desktop-only">
+            <div className="header-titles">
+              {activeTab === 'overview' && (
+                <>
+                  <h1 className="page-title">Overview &amp; Usage</h1>
+                  <p className="page-subtitle">
+                    Local-first browser diagnostics, multi-pillar auditing engine, and execution workflows.
+                  </p>
+                </>
+              )}
+              {activeTab === 'mcp' && (
+                <>
+                  <h1 className="page-title">AI Assistant &amp; MCP Integration</h1>
+                  <p className="page-subtitle">
+                    Connect SiteRadar to Claude Desktop, Cursor, and autonomous AI pair programmers via the Model Context Protocol.
+                  </p>
+                </>
+              )}
+              {activeTab === 'intelligence' && (
+                <>
+                  <h1 className="page-title">External Intelligence &amp; Network Lookups</h1>
+                  <p className="page-subtitle">
+                    Granular consent controls for DNS-over-HTTPS, IP routing, ASN geolocation, and Certificate Transparency lookups.
+                  </p>
+                </>
+              )}
+              {activeTab === 'crawler' && (
+                <>
+                  <h1 className="page-title">Deep Crawler Boundaries</h1>
+                  <p className="page-subtitle">
+                    Safety limits and rate-limiting boundaries for origin-confined multi-page crawl audits.
+                  </p>
+                </>
+              )}
+              <div className="meta-bar">
+                <span><strong>Version:</strong> 0.2.0</span>
+                <span><strong>Mode:</strong> Local-first</span>
+                <span><strong>Engine:</strong> TypeScript + WXT</span>
+                <span><strong>Protocol:</strong> MCP 2025-03</span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleToggleTheme}
+              className="btn-secondary"
+              title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label="Toggle theme"
+            >
+              {theme === 'light' ? (
+                <>
+                  <Moon style={{ width: '14px', height: '14px' }} />
+                  <span>Dark</span>
+                </>
+              ) : (
+                <>
+                  <Sun style={{ width: '14px', height: '14px' }} />
+                  <span>Light</span>
+                </>
+              )}
+            </button>
+          </header>
+
+          {/* Tab 1: Overview & Usage */}
+          {activeTab === 'overview' && (
+            <div className="tab-pane">
+              {/* Highlights Grid */}
+              <div className="highlights-grid">
+                <div className="highlight-card">
+                  <div className="highlight-title">Local-First Execution</div>
+                  <div className="highlight-desc">
+                    All audits execute strictly within your browser context. No browsing history, cookies, or payloads leave your machine.
+                  </div>
+                </div>
+
+                <div className="highlight-card">
+                  <div className="highlight-title">5-Pillar Diagnostics</div>
+                  <div className="highlight-desc">
+                    Automated evaluation across Security, Core Web Vitals, SEO/AEO, WCAG 2.2 AA accessibility, and Best Practices.
+                  </div>
+                </div>
+
+                <div className="highlight-card">
+                  <div className="highlight-title">Model Context Protocol</div>
+                  <div className="highlight-desc">
+                    Native MCP server connects SiteRadar directly to Claude Desktop, Cursor, and Antigravity AI agents.
+                  </div>
+                </div>
+              </div>
+
+              <section>
+                <h2 className="section-heading">Execution Modes</h2>
+                <p className="section-desc">
+                  SiteRadar is a cross-browser technical and security auditor built for engineers, security analysts, and AI coding agents. It operates in three execution modes depending on your workflow:
+                </p>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Interface</th>
+                        <th>Activation</th>
+                        <th>Primary Use Case</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Toolbar Pop-up</strong></td>
+                        <td>Click extension icon in browser toolbar</td>
+                        <td>Instant single-tab inspection with score breakdown, headers, and quick fixes.</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Side Panel Mode</strong></td>
+                        <td>Right-click any page &gt; <em>Open SiteRadar in Side Panel</em></td>
+                        <td>Persistent side-by-side inspection while navigating or debugging multi-page workflows.</td>
+                      </tr>
+                      <tr>
+                        <td><strong>AI / MCP Server</strong></td>
+                        <td><code>pnpm mcp</code> or <code>claude_desktop_config.json</code></td>
+                        <td>Direct agent invocation from Claude Desktop, Cursor, and autonomous AI pair programmers.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <section style={{ marginTop: '28px' }}>
+                <h2 className="section-heading">5-Pillar Diagnostic Engine</h2>
+                <p className="section-desc">
+                  Every audit evaluates your web properties against modern web performance, security, and accessibility standards:
+                </p>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Pillar</th>
+                        <th>Core Metrics Audited</th>
+                        <th>Benchmark Standard</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>Security &amp; Headers</strong></td>
+                        <td>HSTS, CSP, X-Frame-Options, Referrer-Policy, nosniff, sensitive tokens</td>
+                        <td>OWASP Secure Headers &amp; TLS best practices</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Core Web Vitals</strong></td>
+                        <td>LCP, CLS, TTFB, DOM Interactive, network transfer sizes</td>
+                        <td>Google Core Web Vitals (CWV) thresholds</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Accessibility</strong></td>
+                        <td>Contrast ratios, ARIA attributes, semantic structure, image alt text</td>
+                        <td>W3C WCAG 2.2 Level AA standard via axe-core</td>
+                      </tr>
+                      <tr>
+                        <td><strong>SEO &amp; AEO</strong></td>
+                        <td>Meta tags, Open Graph, Twitter cards, semantic hierarchy, JSON-LD, llms.txt</td>
+                        <td>Search Engine &amp; AI Engine Optimization guidelines</td>
+                      </tr>
+                      <tr>
+                        <td><strong>Technology &amp; Standards</strong></td>
+                        <td>Framework fingerprinting, modern web APIs, console log anomaly capture</td>
+                        <td>W3C Web Platform &amp; Chromium engine standards</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <div className="callout" style={{ marginTop: '24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
+                <div>
+                  <strong>Looking to automate SiteRadar with AI?</strong>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: '2px' }}>
+                    Connect Claude Desktop, Cursor, or CLI tools directly to our local Model Context Protocol (MCP) server.
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('mcp')}
+                  className="btn-primary"
+                  style={{ flexShrink: 0 }}
+                >
+                  <span>Configure MCP</span>
+                  <ArrowRight style={{ width: '13px', height: '13px' }} />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Tab 2: AI & MCP Integration */}
+          {activeTab === 'mcp' && (
+            <div className="tab-pane">
+              <section>
+                <h2 className="section-heading">Model Context Protocol Server</h2>
+                <p className="section-desc">
+                  SiteRadar exposes its audit engine through the open <strong>Model Context Protocol (MCP)</strong>. This allows local AI assistants to inspect live web pages, audit security headers, analyze SEO, and evaluate WCAG accessibility directly from chat.
+                </p>
+
+                <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border)', marginBottom: '16px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMcpTab('claude')}
+                    className={`btn-tab ${activeMcpTab === 'claude' ? 'active' : ''}`}
+                  >
+                    Claude Desktop
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMcpTab('cursor')}
+                    className={`btn-tab ${activeMcpTab === 'cursor' ? 'active' : ''}`}
+                  >
+                    Cursor IDE
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveMcpTab('cli')}
+                    className={`btn-tab ${activeMcpTab === 'cli' ? 'active' : ''}`}
+                  >
+                    Terminal / CLI
+                  </button>
+                </div>
+
+                {activeMcpTab === 'claude' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                      Add this entry to your <code>claude_desktop_config.json</code> configuration file:
+                    </p>
+                    <div style={{ position: 'relative' }}>
+                      <pre className="code-block">{claudeConfigJson}</pre>
+                      <button
+                        type="button"
+                        onClick={() => handleCopySnippet(claudeConfigJson, 'claude')}
+                        className="btn-secondary"
+                        style={{ position: 'absolute', top: '10px', right: '10px' }}
+                      >
+                        {copiedSnippet === 'claude' ? (
+                          <>
+                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy style={{ width: '13px', height: '13px' }} />
+                            <span>Copy JSON</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeMcpTab === 'cursor' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                      Configure in <strong>Cursor &gt; Settings &gt; Features &gt; MCP &gt; Add New Server</strong>:
+                    </p>
+                    <div className="callout" style={{ margin: '8px 0 12px' }}>
+                      <div style={{ marginBottom: '4px' }}><strong>Server Name:</strong> <code>siteradar</code></div>
+                      <div style={{ marginBottom: '4px' }}><strong>Server Type:</strong> <code>command</code></div>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px' }}>
+                        <div><strong>Command:</strong> <code>npx tsx src/mcp/index.ts</code></div>
+                        <button
+                          type="button"
+                          onClick={() => handleCopySnippet('npx tsx src/mcp/index.ts', 'cursor')}
+                          className="btn-secondary"
+                        >
+                          {copiedSnippet === 'cursor' ? (
+                            <>
+                              <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                              <span>Copied</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy style={{ width: '13px', height: '13px' }} />
+                              <span>Copy</span>
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeMcpTab === 'cli' && (
+                  <div style={{ marginBottom: '20px' }}>
+                    <p style={{ fontSize: 'var(--font-size-sm)', color: 'var(--text-muted)', marginBottom: '8px' }}>
+                      Run the MCP server directly over standard input/output (stdio):
+                    </p>
+                    <div style={{ position: 'relative' }}>
+                      <pre className="code-block">pnpm mcp&#10;# or: npx tsx src/mcp/index.ts</pre>
+                      <button
+                        type="button"
+                        onClick={() => handleCopySnippet('pnpm mcp', 'cli')}
+                        className="btn-secondary"
+                        style={{ position: 'absolute', top: '10px', right: '10px' }}
+                      >
+                        {copiedSnippet === 'cli' ? (
+                          <>
+                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                            <span>Copied</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy style={{ width: '13px', height: '13px' }} />
+                            <span>Copy</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </section>
+
+              <section style={{ marginTop: '28px' }}>
+                <h3 className="sub-heading">Exposed MCP Tools</h3>
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Tool Identifier</th>
+                        <th>Runtime Mode</th>
+                        <th>Capabilities</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><code>siteradar_full_audit</code></td>
+                        <td>Hybrid (Fast / Deep)</td>
+                        <td>Complete 5-pillar technical audit with 0–100 scoring model, Core Web Vitals, and prioritized deductions.</td>
+                      </tr>
+                      <tr>
+                        <td><code>siteradar_audit_headers</code></td>
+                        <td>Fast (~150ms)</td>
+                        <td>Audits HSTS, CSP, X-Frame-Options, Referrer-Policy, nosniff, Permissions-Policy, and server banner leaks.</td>
+                      </tr>
+                      <tr>
+                        <td><code>siteradar_audit_seo</code></td>
+                        <td>Fast / Deep</td>
+                        <td>Evaluates title, meta descriptions, canonical match, heading hierarchy, JSON-LD schemas, and <code>llms.txt</code>.</td>
+                      </tr>
+                      <tr>
+                        <td><code>siteradar_detect_tech</code></td>
+                        <td>Fast / Deep</td>
+                        <td>Fingerprints React, Next.js, Vue, Tailwind, Nginx, Cloudflare, Vercel, and backend platform signatures.</td>
+                      </tr>
+                      <tr>
+                        <td><code>siteradar_audit_accessibility</code></td>
+                        <td>Deep (Playwright)</td>
+                        <td>In-page axe-core execution reporting WCAG 2.2 AA violations, contrast failures, and remediation links.</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+
+              <div className="callout" style={{ marginTop: '20px' }}>
+                <strong>Headless Browser &amp; Privacy Isolation:</strong> When deep audits or accessibility testing are requested, the MCP server launches Playwright Chromium in headless mode (<code>--no-sandbox</code>) with automated <code>axe-core</code> injection. This runs in a clean, ephemeral profile with zero access to your personal Chrome browser, history, or cookies. For complete data governance details, see our <a href="privacy-policy.html#mcp-governance" target="_blank" rel="noopener noreferrer">Privacy Policy (Section 5: AI &amp; MCP Auditing)</a>.
+              </div>
+            </div>
+          )}
+
+          {/* Tab 3: External Intelligence Opt-In */}
+          {activeTab === 'intelligence' && (
+            <div className="tab-pane">
+              <section>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', marginBottom: '8px' }}>
+                  <h2 className="section-heading" style={{ margin: 0, border: 'none' }}>
+                    Network Lookups &amp; Consent
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={() => handleToggleAllConsent(!globalConsent)}
+                    className="btn-secondary"
+                    style={{ fontSize: 'var(--font-size-xs)' }}
+                  >
+                    {globalConsent ? 'Disable All' : 'Enable All'}
+                  </button>
+                </div>
+
+                <p className="section-desc">
+                  SiteRadar runs 100% locally by default. You can selectively enable trusted third-party lookups to enrich audits with infrastructure DNS records, ASN routing, and historical SSL certificate logs.
+                </p>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Provider</th>
+                        <th>Endpoint</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {PROVIDER_LIST.map((provider) => {
+                        const isGranted = Boolean(providerConsents[provider.id]);
+                        const isExpanded = expandedDisclosureProviderId === provider.id;
+
+                        return (
+                          <React.Fragment key={provider.id}>
+                            <tr>
+                              <td>
+                                <div style={{ fontWeight: 600, color: 'var(--text)' }}>{provider.name}</div>
+                                <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)', marginTop: '2px' }}>
+                                  {provider.summary}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => setExpandedDisclosureProviderId(isExpanded ? null : provider.id)}
+                                  style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'var(--text-dim)',
+                                    fontSize: 'var(--font-size-2xs)',
+                                    padding: 0,
+                                    marginTop: '4px',
+                                    cursor: 'pointer',
+                                    textDecoration: 'underline',
+                                  }}
+                                >
+                                  {isExpanded ? 'Hide Details' : 'View Network Disclosure'}
+                                </button>
+                              </td>
+                              <td style={{ fontSize: 'var(--font-size-xs)', fontFamily: 'Roboto, monospace', color: 'var(--text-dim)' }}>
+                                {provider.endpoint}
+                              </td>
+                              <td style={{ verticalAlign: 'middle' }}>
+                                <label className="toggle-switch" aria-label={`Toggle consent for ${provider.name}`}>
+                                  <input
+                                    type="checkbox"
+                                    checked={isGranted}
+                                    onChange={() => handleToggleProviderConsent(provider.id)}
+                                  />
+                                  <span className="toggle-slider" />
+                                </label>
+                              </td>
+                            </tr>
+                            {isExpanded && (
+                              <tr>
+                                <td colSpan={3} style={{ background: 'var(--surface-hover)', padding: '12px 16px', fontSize: 'var(--font-size-xs)' }}>
+                                  <p style={{ margin: 0, color: 'var(--text-muted)' }}>
+                                    <strong>Technical Transparency:</strong> When enabled, SiteRadar transmits only the target hostname to <code>{provider.endpoint}</code> to retrieve public DNS, routing, or CT logs. No personal data, session tokens, or browser cookies are included.
+                                  </p>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                {Object.values(providerConsents).some(Boolean) && (
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+                    <button
+                      type="button"
+                      onClick={handleRevokeAllConsent}
+                      className="btn-secondary"
+                      style={{ color: '#f87171' }}
+                    >
+                      <RotateCcw style={{ width: '13px', height: '13px' }} />
+                      <span>Revoke All External Permissions</span>
+                    </button>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
+
+          {/* Tab 4: Deep Crawler Boundaries */}
+          {activeTab === 'crawler' && (
+            <div className="tab-pane">
+              <section>
+                <h2 className="section-heading">Multi-Page Crawler Boundaries</h2>
+                <p className="section-desc">
+                  Define the safety boundaries for multi-page crawl audits. SiteRadar strictly respects robots.txt, stays on the target origin, and rate-limits crawling to avoid impacting server workloads.
+                </p>
+
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Parameter</th>
+                        <th>Safety Range</th>
+                        <th>Active Value</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td>
+                          <strong>Maximum Pages</strong>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Upper bound of pages crawled per domain.</div>
+                        </td>
+                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>5 – 200 pages</td>
+                        <td>
+                          <input
+                            type="number"
+                            min={5}
+                            max={200}
+                            value={crawlConfig.maxPages}
+                            onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
+                            className="num-input"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Maximum Crawl Depth</strong>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Maximum link depth from seed origin.</div>
+                        </td>
+                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>1 – 5 levels</td>
+                        <td>
+                          <input
+                            type="number"
+                            min={1}
+                            max={5}
+                            value={crawlConfig.maxDepth}
+                            onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
+                            className="num-input"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Max Concurrency</strong>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Concurrent background fetch connections.</div>
+                        </td>
+                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>1 – 4 workers</td>
+                        <td>
+                          <input
+                            type="number"
+                            min={1}
+                            max={4}
+                            value={crawlConfig.concurrency}
+                            onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
+                            className="num-input"
+                          />
+                        </td>
+                      </tr>
+                      <tr>
+                        <td>
+                          <strong>Page Timeout</strong>
+                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Seconds before aborting unresponsive requests.</div>
+                        </td>
+                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>5 – 60 seconds</td>
+                        <td>
+                          <input
+                            type="number"
+                            min={5}
+                            max={60}
+                            value={crawlConfig.timeoutSeconds}
+                            onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
+                            className="num-input"
+                          />
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '14px' }}>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--accent-text)' }}>
+                    {crawlFeedback && <span>{crawlFeedback}</span>}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button type="button" onClick={handleResetCrawlLimits} className="btn-secondary">
+                      Reset Defaults
+                    </button>
+                    <button type="button" onClick={handleSaveCrawlLimits} className="btn-primary">
+                      Save Boundaries
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </div>
+          )}
+
+          {/* Clean Footer */}
+          <footer>
+            <div>SiteRadar &copy; 2026 Tharidu Lakmal (LKML). Released under the MIT License.</div>
+            <div style={{ display: 'flex', gap: '16px' }}>
+              <a href="privacy-policy.html" target="_blank" rel="noopener noreferrer">Privacy Policy</a>
+              <a href="https://github.com/tharidul/site-radar" target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="https://tharidulakmal.com" target="_blank" rel="noopener noreferrer">Developer</a>
+            </div>
+          </footer>
+        </main>
       </div>
     </div>
   );

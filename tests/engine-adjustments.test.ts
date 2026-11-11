@@ -1,7 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { SecurityAnalyzer } from '../src/analyzers/security.analyzer';
 import { PerformanceAnalyzer } from '../src/analyzers/performance.analyzer';
-import type { InspectionTarget } from '../src/types/inspection';
+import { SeoAnalyzer } from '../src/analyzers/seo.analyzer';
+import { isLocalDevelopmentHost } from '../src/security/private-network.guard';
+import { InspectionOrchestrator } from '../src/core/orchestrator/inspection-orchestrator';
+import { MockBrowserAdapter } from '../src/browser/adapters/mock.adapter';
+import type { WebsiteTarget } from '../src/types/inspection';
 
 describe('Engine Adjustments & Refinements', () => {
   describe('SecurityAnalyzer - SRI subresource domain classification', () => {
@@ -136,6 +140,163 @@ describe('Engine Adjustments & Refinements', () => {
       expect(notAvailableFindings).toBe(1);
       expect(errorFindings).toBe(0);
       expect(passedFindings).toBe(1);
+    });
+  });
+
+  describe('Localhost & Development Environment Adaptations', () => {
+    it('isLocalDevelopmentHost accurately identifies local development origins', () => {
+      expect(isLocalDevelopmentHost('localhost')).toBe(true);
+      expect(isLocalDevelopmentHost('app.localhost')).toBe(true);
+      expect(isLocalDevelopmentHost('127.0.0.1')).toBe(true);
+      expect(isLocalDevelopmentHost('127.0.1.1')).toBe(true);
+      expect(isLocalDevelopmentHost('0.0.0.0')).toBe(true);
+      expect(isLocalDevelopmentHost('::1')).toBe(true);
+      expect(isLocalDevelopmentHost('[::1]')).toBe(true);
+      expect(isLocalDevelopmentHost('myproject.local')).toBe(true);
+      expect(isLocalDevelopmentHost('testsite.test')).toBe(true);
+
+      expect(isLocalDevelopmentHost('digital3sixty.lk')).toBe(false);
+      expect(isLocalDevelopmentHost('google.com')).toBe(false);
+      expect(isLocalDevelopmentHost('stripe.com')).toBe(false);
+    });
+
+    it('SecurityAnalyzer passes HTTPS enforcement on localhost without critical failure', () => {
+      const analyzer = new SecurityAnalyzer();
+      const localTarget = {
+        url: 'http://localhost:3000/',
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        inspectedAt: Date.now(),
+      };
+
+      const findings = analyzer.analyze({
+        target: localTarget,
+        mode: 'standard',
+        modules: {},
+      } as any);
+
+      const httpsFinding = findings.find((f) => f.ruleId === 'sec-https-enforced');
+      expect(httpsFinding).toBeDefined();
+      expect(httpsFinding?.status).toBe('passed');
+      expect(httpsFinding?.explanation).toContain('Secure Context');
+    });
+
+    it('SecurityAnalyzer downgrades password field on localhost to info instead of critical failure', () => {
+      const analyzer = new SecurityAnalyzer();
+      const localTarget = {
+        url: 'http://localhost:3000/login',
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        inspectedAt: Date.now(),
+      };
+
+      const findings = analyzer.analyze({
+        target: localTarget,
+        mode: 'standard',
+        modules: {
+          forms: {
+            data: {
+              forms: [
+                {
+                  action: '/api/login',
+                  hasPasswordField: true,
+                  fieldTypes: ['text', 'password'],
+                },
+              ],
+            },
+          },
+        },
+      } as any);
+
+      const pwdFinding = findings.find((f) => f.ruleId === 'sec-password-over-http');
+      expect(pwdFinding).toBeDefined();
+      expect(pwdFinding?.status).toBe('info');
+      expect(pwdFinding?.severity).toBe('low');
+      expect(pwdFinding?.explanation).toContain('Safe on loopback');
+    });
+
+    it('SecurityAnalyzer still fails non-localhost unencrypted HTTP with password critically', () => {
+      const analyzer = new SecurityAnalyzer();
+      const remoteTarget = {
+        url: 'http://insecure-domain.com/login',
+        origin: 'http://insecure-domain.com',
+        hostname: 'insecure-domain.com',
+        inspectedAt: Date.now(),
+      };
+
+      const findings = analyzer.analyze({
+        target: remoteTarget,
+        mode: 'standard',
+        modules: {
+          forms: {
+            data: {
+              forms: [
+                {
+                  action: '/login',
+                  hasPasswordField: true,
+                  fieldTypes: ['password'],
+                },
+              ],
+            },
+          },
+        },
+      } as any);
+
+      const httpsFinding = findings.find((f) => f.ruleId === 'sec-https-enforced');
+      expect(httpsFinding?.status).toBe('failed');
+      expect(httpsFinding?.severity).toBe('critical');
+
+      const pwdFinding = findings.find((f) => f.ruleId === 'sec-password-over-http');
+      expect(pwdFinding?.status).toBe('failed');
+      expect(pwdFinding?.severity).toBe('critical');
+    });
+
+    it('SeoAnalyzer passes canonical check when localhost points to production domain', () => {
+      const analyzer = new SeoAnalyzer();
+      const localTarget = {
+        url: 'http://localhost:3000/',
+        origin: 'http://localhost:3000',
+        hostname: 'localhost',
+        inspectedAt: Date.now(),
+      };
+
+      const findings = analyzer.analyze({
+        target: localTarget,
+        mode: 'standard',
+        modules: {
+          metadata: {
+            data: {
+              title: 'My Project Homepage',
+              canonicalUrl: 'https://digital3sixty.lk/',
+              canonicalMatches: false,
+            },
+          },
+        },
+      } as any);
+
+      const canonicalFinding = findings.find((f) => f.ruleId === 'seo-canonical-matches');
+      expect(canonicalFinding).toBeDefined();
+      expect(canonicalFinding?.status).toBe('passed');
+      expect(canonicalFinding?.explanation).toContain('authoritative production domain');
+    });
+
+    it('InspectionOrchestrator executes Quick Scan on localhost without scope or runtime errors', async () => {
+      const adapter = new MockBrowserAdapter();
+      adapter.setMockTab({
+        id: 1,
+        url: 'http://localhost:3000/',
+        title: 'Localhost Dev',
+        active: true,
+        windowId: 1,
+        incognito: false,
+      });
+      const orchestrator = new InspectionOrchestrator({ browserAdapter: adapter });
+      const result = await orchestrator.startInspection('quick', 1, { refreshPage: false });
+      expect(result).toBeDefined();
+      expect(result.id).toBeDefined();
+      expect(result.target.isLocalDevelopment).toBe(true);
+      expect(result.summary.completedModules).toBeGreaterThan(0);
+      expect(result.scores?.security?.score).toBeDefined();
     });
   });
 });

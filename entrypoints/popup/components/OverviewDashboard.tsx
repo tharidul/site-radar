@@ -20,6 +20,7 @@ import { OptimizationMatrixCard } from './OptimizationMatrixCard';
 import { ExportDropdown } from './ExportDropdown';
 import type { DashboardTab } from './TabBar';
 import { getScoreColor } from '@/utils/colors';
+import { isLocalDevelopmentHost } from '@/security/private-network.guard';
 
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
@@ -184,9 +185,20 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
     };
   }), [scores]);
 
+  const isLocalDev = Boolean(
+    inspection.target?.isLocalDevelopment ||
+    (inspection.target?.hostname && isLocalDevelopmentHost(inspection.target.hostname))
+  );
+
   return (
     <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
+        {isLocalDev && (
+          <div className="flex items-center gap-2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
+            <span className="font-semibold shrink-0">🛠️ Localhost Dev Mode:</span>
+            <span>Security &amp; canonical rules adapted for loopback testing.</span>
+          </div>
+        )}
         <div className="rounded-md bg-white dark:bg-zinc-900 p-3 min-[400px]:p-4 sm:p-5 shadow-xs flex items-center justify-between gap-3 min-[400px]:gap-4">
           <div className="flex items-center gap-3 min-[400px]:gap-4 min-w-0 flex-1">
             <div className="relative w-22 h-22 min-[400px]:w-24 min-[400px]:h-24 min-[500px]:w-[102px] min-[500px]:h-[102px] shrink-0 flex items-center justify-center">

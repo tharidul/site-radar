@@ -42,7 +42,10 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
   async getActiveTab(): Promise<TabInfo | null> {
     const api = this.api;
     if (!api || !api.tabs) return null;
-    const tabs = await api.tabs.query({ active: true, currentWindow: true });
+    let tabs = await api.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || tabs.length === 0 || !tabs[0]?.url) {
+      tabs = await api.tabs.query({ active: true, lastFocusedWindow: true });
+    }
     if (!tabs || tabs.length === 0 || tabs[0].id === undefined) return null;
     const t = tabs[0];
     return {

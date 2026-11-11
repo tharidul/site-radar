@@ -213,10 +213,12 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <button
                         type="button"
                         onClick={() => {
-                          if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
+                          if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
+                            chrome.tabs.create({ url: chrome.runtime.getURL('options.html#intelligence'), active: true });
+                          } else if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
                             chrome.runtime.openOptionsPage();
                           } else {
-                            window.open('options.html', '_blank');
+                            window.open('options.html#intelligence', '_blank');
                           }
                         }}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer pt-0.5"

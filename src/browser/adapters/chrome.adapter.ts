@@ -30,7 +30,10 @@ export class ChromeMV3Adapter implements BrowserAdapter {
   }
 
   async getActiveTab(): Promise<TabInfo | null> {
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    let tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tabs || tabs.length === 0 || !tabs[0]?.url) {
+      tabs = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+    }
     if (!tabs || tabs.length === 0) return null;
     const t = tabs[0];
     if (!t || t.id === undefined) return null;

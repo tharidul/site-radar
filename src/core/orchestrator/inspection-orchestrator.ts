@@ -13,6 +13,7 @@ import type { ScanProgressEvent } from '../../types/messaging';
 import type { CrawlLimits } from '../../types/crawler';
 import { MESSAGE_CHANNELS } from '../../types/messaging';
 import { getBrowserAdapter, type BrowserAdapter } from '../../browser/adapters';
+import type { StorageArea } from '../../types/browser';
 import { messageBus, type IMessageBus } from '../../messaging/bus';
 import { validateScheme } from '../../security/scheme-validator';
 import { normalizeUrl, isSameOrigin } from '../../security/url-normalizer';
@@ -24,6 +25,7 @@ import { calculateInspectionScores } from '../../scoring';
 import { runPageCollector } from '../../collectors/page';
 import { detectBackendFromHeaders } from '../../collectors/page/backend-signatures';
 import { WebsiteCrawler } from '../../crawler/crawler';
+import { isLocalDevelopmentHost } from '../../security/private-network.guard';
 import {
   consentManager,
   DohResolver,
@@ -73,6 +75,100 @@ export class InspectionOrchestrator {
     this.cancellation = options?.cancellation || cancellationManager;
   }
 
+  private getStorageAreaName(): StorageArea {
+    return this.adapter.capabilities?.supportsSessionStorage ? 'session' : 'local';
+  }
+
+  async persistSession(session: ActiveScanSession): Promise<void> {
+    try {
+      const area = this.getStorageAreaName();
+      const payload: ActiveScanSession = {
+        scanId: session.scanId,
+        mode: session.mode,
+        targetUrl: session.targetUrl,
+        tabId: session.tabId,
+        state: session.state,
+        startedAt: session.startedAt,
+        completedAt: session.completedAt,
+        error: session.error,
+        progress: session.progress,
+        inspection: session.inspection,
+      };
+
+      const items: Record<string, unknown> = {
+        siteradar_session_latest: payload,
+      };
+
+      if (session.targetUrl) {
+        try {
+          const origin = new URL(session.targetUrl).origin;
+          items[`siteradar_session_origin_${origin}`] = payload;
+        } catch {}
+      }
+
+      if (session.tabId !== undefined) {
+        items[`siteradar_session_tab_${session.tabId}`] = payload;
+      }
+
+      await this.adapter.setStorage(items, area);
+    } catch (err) {
+      console.warn('Failed to persist session to storage:', err);
+    }
+  }
+
+  async restoreFromStorage(tabId?: number, url?: string): Promise<ActiveScanSession | undefined> {
+    try {
+      const area = this.getStorageAreaName();
+      const keysToFetch: string[] = ['siteradar_session_latest'];
+      if (tabId !== undefined) {
+        keysToFetch.push(`siteradar_session_tab_${tabId}`);
+      }
+      if (url) {
+        try {
+          const origin = new URL(url).origin;
+          keysToFetch.push(`siteradar_session_origin_${origin}`);
+        } catch {}
+      }
+
+      const stored = await this.adapter.getStorage<ActiveScanSession>(keysToFetch, area);
+
+      let candidate: ActiveScanSession | undefined;
+      if (url) {
+        try {
+          const origin = new URL(url).origin;
+          candidate = stored[`siteradar_session_origin_${origin}`];
+        } catch {}
+      }
+      if (!candidate && tabId !== undefined) {
+        candidate = stored[`siteradar_session_tab_${tabId}`];
+      }
+      if (!candidate) {
+        candidate = stored['siteradar_session_latest'];
+      }
+
+      if (candidate && candidate.scanId) {
+        this.activeSessions.set(candidate.scanId, candidate);
+        return candidate;
+      }
+    } catch (err) {
+      console.warn('Failed to restore session from storage:', err);
+    }
+    return undefined;
+  }
+
+  async clearStorageSession(): Promise<void> {
+    try {
+      const area = this.getStorageAreaName();
+      const all = await this.adapter.getStorage<unknown>(null, area);
+      const keysToRemove = Object.keys(all).filter((k) => k.startsWith('siteradar_session_'));
+      if (keysToRemove.length > 0) {
+        await this.adapter.removeStorage(keysToRemove, area);
+      }
+    } catch (err) {
+      console.warn('Failed to clear session storage:', err);
+    }
+  }
+
   getSession(scanId?: string, tabId?: number, url?: string): ActiveScanSession | undefined {
     if (scanId) {
       return this.activeSessions.get(scanId);
@@ -80,31 +176,49 @@ export class InspectionOrchestrator {
     const sessions = Array.from(this.activeSessions.values());
     if (sessions.length === 0) return undefined;
 
-    if (tabId !== undefined || url) {
+    // 1. Prioritize matching both tabId AND same origin URL
+    if (tabId !== undefined && url) {
       for (let i = sessions.length - 1; i >= 0; i--) {
         const s = sessions[i];
         if (!s) continue;
-        if (tabId !== undefined && s.tabId !== tabId) {
-          continue;
+        if (s.tabId === tabId && s.targetUrl && isSameOrigin(s.targetUrl, url)) {
+          return s;
         }
-        if (url && s.targetUrl) {
-          try {
-            if (!isSameOrigin(s.targetUrl, url)) {
-              continue;
-            }
-          } catch {
-            if (s.targetUrl !== url) continue;
-          }
-        }
-        return s;
       }
-      return undefined;
     }
 
-    return sessions[sessions.length - 1];
+    // 2. Prioritize matching same origin URL
+    if (url) {
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        const s = sessions[i];
+        if (!s) continue;
+        if (s.targetUrl && isSameOrigin(s.targetUrl, url)) {
+          return s;
+        }
+      }
+    }
+
+    // 3. Match on tabId
+    if (tabId !== undefined) {
+      for (let i = sessions.length - 1; i >= 0; i--) {
+        const s = sessions[i];
+        if (!s) continue;
+        if (s.tabId === tabId) {
+          return s;
+        }
+      }
+    }
+
+    // 4. Fallback to latest session if url is omitted or matches
+    const latest = sessions[sessions.length - 1];
+    if (!url || (latest?.targetUrl && isSameOrigin(latest.targetUrl, url))) {
+      return latest;
+    }
+
+    return undefined;
   }
 
-  clearSessions(): void {
+  async clearSessions(): Promise<void> {
     for (const [id, session] of this.activeSessions.entries()) {
       if (session.state === 'running') {
         this.cancellation.cancel(id, 'Session state cleared');
@@ -115,6 +229,7 @@ export class InspectionOrchestrator {
     }
     this.activeSessions.clear();
     BadgeService.clear();
+    await this.clearStorageSession();
   }
 
   async startInspection(
@@ -182,6 +297,8 @@ export class InspectionOrchestrator {
     };
     this.activeSessions.set(scanId, session);
 
+    const isLocalDev = isLocalDevelopmentHost(parsedUrl.hostname);
+
     const inspection: WebsiteInspection = {
       id: scanId,
       mode,
@@ -190,7 +307,9 @@ export class InspectionOrchestrator {
         origin: parsedUrl.origin,
         hostname: parsedUrl.hostname,
         inspectedAt: session.startedAt,
+        isLocalDevelopment: isLocalDev,
       },
+      isDevelopmentEnvironment: isLocalDev,
       browser: {
         name: this.adapter.browserType === 'firefox' ? 'firefox' : 'chrome',
       },
@@ -209,6 +328,7 @@ export class InspectionOrchestrator {
     };
 
     session.inspection = inspection;
+    this.persistSession(session).catch(() => {});
 
     if (tabId) {
       BadgeService.setScanning(tabId);
@@ -217,7 +337,7 @@ export class InspectionOrchestrator {
     try {
       const plan = getModePlan(mode);
 
-      const shouldRefresh = options?.refreshPage !== false;
+      const shouldRefresh = Boolean(options?.refreshPage);
       if (shouldRefresh) {
         const refreshProgress: ScanProgressEvent = {
           scanId,
@@ -617,65 +737,84 @@ export class InspectionOrchestrator {
           timestamp: Date.now(),
         });
 
-        const crawler = new WebsiteCrawler({
-          ...options?.crawlLimits,
-        });
-
-        const crawlResult = await crawler.crawl(inspection.target.origin, signal);
-
-        inspection.modules['crawler'] = {
-          module: 'crawler',
-          status:
-            crawlResult.status === 'error'
-              ? 'failed'
-              : crawlResult.status === 'aborted'
-              ? 'partial'
-              : 'completed',
-          collectedAt: crawlResult.finishedAt,
-          data: crawlResult,
-          coverage: {
-            expected: options?.crawlLimits?.maxPages || 50,
-            collected: crawlResult.pages.length,
-            unavailable: crawlResult.progress.excludedUrls.length,
-            supported: true,
-          },
-          limitations: [],
-          errors: crawlResult.error ? [crawlResult.error] : [],
-          sources: ['WebsiteCrawler'],
-        };
-
-        if (crawlResult.robots) {
-          inspection.modules['robots'] = {
-            module: 'robots',
-            status: 'completed',
+        if (isLocalDev) {
+          inspection.modules['crawler'] = {
+            module: 'crawler',
+            status: 'skipped',
             collectedAt: Date.now(),
-            data: crawlResult.robots,
-            coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
-            limitations: [],
-            errors: [],
-            sources: ['RobotsParser'],
-          };
-        }
-
-        if (crawlResult.sitemaps && crawlResult.sitemaps.length > 0) {
-          inspection.modules['sitemap'] = {
-            module: 'sitemap',
-            status: 'completed',
-            collectedAt: Date.now(),
-            data: {
-              sitemaps: crawlResult.sitemaps,
-              totalFound: crawlResult.sitemaps.length,
-            },
+            data: null,
             coverage: {
-              expected: 1,
-              collected: crawlResult.sitemaps.length,
+              expected: 0,
+              collected: 0,
               unavailable: 0,
+              supported: true,
+              message: 'Local development target (crawler skipped to prevent loopback recursion)',
+            },
+            limitations: ['Crawler disabled on local development hostnames to prevent private loopback traversal.'],
+            errors: [],
+            sources: ['WebsiteCrawler'],
+          };
+        } else {
+          const crawler = new WebsiteCrawler({
+            ...options?.crawlLimits,
+          });
+
+          const crawlResult = await crawler.crawl(inspection.target.origin, signal);
+
+          inspection.modules['crawler'] = {
+            module: 'crawler',
+            status:
+              crawlResult.status === 'error'
+                ? 'failed'
+                : crawlResult.status === 'aborted'
+                ? 'partial'
+                : 'completed',
+            collectedAt: crawlResult.finishedAt,
+            data: crawlResult,
+            coverage: {
+              expected: options?.crawlLimits?.maxPages || 50,
+              collected: crawlResult.pages.length,
+              unavailable: crawlResult.progress.excludedUrls.length,
               supported: true,
             },
             limitations: [],
-            errors: [],
-            sources: ['SitemapParser'],
+            errors: crawlResult.error ? [crawlResult.error] : [],
+            sources: ['WebsiteCrawler'],
           };
+
+          if (crawlResult.robots) {
+            inspection.modules['robots'] = {
+              module: 'robots',
+              status: 'completed',
+              collectedAt: Date.now(),
+              data: crawlResult.robots,
+              coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+              limitations: [],
+              errors: [],
+              sources: ['RobotsParser'],
+            };
+          }
+
+          if (crawlResult.sitemaps && crawlResult.sitemaps.length > 0) {
+            inspection.modules['sitemap'] = {
+              module: 'sitemap',
+              status: 'completed',
+              collectedAt: Date.now(),
+              data: {
+                sitemaps: crawlResult.sitemaps,
+                totalFound: crawlResult.sitemaps.length,
+              },
+              coverage: {
+                expected: 1,
+                collected: crawlResult.sitemaps.length,
+                unavailable: 0,
+                supported: true,
+              },
+              limitations: [],
+              errors: [],
+              sources: ['SitemapParser'],
+            };
+          }
         }
 
         if (signal.aborted) {
@@ -697,7 +836,22 @@ export class InspectionOrchestrator {
           consentManager.setConsent(inspection.target.origin, options.externalConsent);
         }
 
-        if (!options?.skipIntelligence) {
+        if (isLocalDev) {
+          const makeLocalDevSkipped = (name: string, source: string, desc: string): CollectionResult => ({
+            module: name,
+            status: 'skipped',
+            collectedAt: Date.now(),
+            data: null,
+            coverage: { expected: 0, collected: 0, unavailable: 0, supported: true, message: 'Local development target' },
+            limitations: [`External ${desc} lookups do not apply to local development environments.`],
+            errors: [],
+            sources: [source],
+          });
+          inspection.modules['dns'] = makeLocalDevSkipped('dns', 'DohResolver', 'DNS');
+          inspection.modules['ipAsn'] = makeLocalDevSkipped('ipAsn', 'AsnLookupClient', 'BGP/ASN');
+          inspection.modules['certificate'] = makeLocalDevSkipped('certificate', 'CtLogsClient', 'Certificate Transparency');
+          inspection.modules['tls'] = makeLocalDevSkipped('tls', 'TlsEvaluator', 'remote TLS');
+        } else if (!options?.skipIntelligence) {
           if (consentManager.hasConsent(inspection.target.origin, 'doh')) {
             try {
               const doh = new DohResolver({ skipConsentCheck: false });
@@ -903,7 +1057,7 @@ export class InspectionOrchestrator {
         signal,
       );
 
-      if (!inspection.target.url.startsWith('https://')) {
+      if (!inspection.target.url.startsWith('https://') && !isLocalDev) {
         if (!inspection.findings.some((f) => f.ruleId === 'sec-missing-https')) {
           inspection.findings.push({
             id: `sec-missing-https-${scanId}`,
@@ -943,6 +1097,8 @@ export class InspectionOrchestrator {
         BadgeService.setScoreBadge(tabId, scoreCalculation.overallScore, issuesCount);
       }
 
+      await this.persistSession(session);
+
       this.emitCompleted(scanId, inspection);
 
       return inspection as any;
@@ -967,6 +1123,7 @@ export class InspectionOrchestrator {
         session.error = err?.message || 'Inspection failed unexpectedly';
         this.emitFailed(scanId, session.error || 'Inspection failed unexpectedly');
       }
+      this.persistSession(session).catch(() => {});
       throw err;
     } finally {
       this.cancellation.cleanup(scanId);

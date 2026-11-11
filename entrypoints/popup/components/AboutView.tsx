@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ExternalLink, ShieldCheck } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Bot, Sparkles } from 'lucide-react';
 import lkmlLogo from '../../../assets/lkml.png';
 
 function openLink(url: string) {
@@ -25,6 +25,18 @@ function openPrivacyPolicy() {
     }
   } catch {
     window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
+  }
+}
+
+function openMcpGuide() {
+  try {
+    if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options.html#mcp'), active: true });
+    } else {
+      window.open('options.html#mcp', '_blank', 'noopener,noreferrer');
+    }
+  } catch {
+    window.open('options.html#mcp', '_blank', 'noopener,noreferrer');
   }
 }
 
@@ -74,6 +86,29 @@ export const AboutView: React.FC = () => {
             <ExternalLink className="w-3 h-3 text-zinc-400 dark:text-zinc-500" />
           </button>
         </div>
+      </div>
+
+      <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs space-y-2 border border-emerald-500/20 dark:border-emerald-500/20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bot className="w-4 h-4 text-emerald-600 dark:text-[#CEFF52]" />
+            <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
+              <span>AI Assistant &amp; MCP</span>
+              <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-600 dark:text-[#CEFF52] font-mono">NEW</span>
+            </h3>
+          </div>
+          <button
+            type="button"
+            onClick={openMcpGuide}
+            className="inline-flex items-center gap-1 text-xs font-medium text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
+          >
+            <span>Setup AI</span>
+            <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
+          </button>
+        </div>
+        <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+          SiteRadar connects directly to Claude Desktop, Cursor, and Antigravity via Model Context Protocol (MCP) to audit websites inside your AI chat.
+        </p>
       </div>
 
       <div className="rounded-md p-4 bg-white dark:bg-zinc-900 shadow-xs space-y-2">

@@ -113,6 +113,14 @@
       border-bottom: 1px solid var(--border);
     }
 
+    .brand-logo-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 6px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
     .brand-mark {
       width: 32px;
       height: 32px;
@@ -499,7 +507,7 @@
   <div class="layout-wrapper">
     <aside class="sidebar" aria-label="Documentation Sidebar">
       <div class="sidebar-brand">
-        <div class="brand-mark" aria-hidden="true">SR</div>
+        <img src="/icon/128.png" alt="SiteRadar Logo" class="brand-logo-img">
         <div>
           <div class="brand-title">SiteRadar</div>
           <div class="brand-sub">Privacy &amp; Data Policy</div>
@@ -519,13 +527,14 @@
         <a href="#not-collected" class="nav-link">2. Data Not Collected</a>
         <a href="#processed-data" class="nav-link">3. Data Processed</a>
         <a href="#deep-crawl" class="nav-link">4. Deep Crawl Mode</a>
-        <a href="#external-lookups" class="nav-link">5. External Lookups</a>
-        <a href="#local-storage" class="nav-link">6. Local Storage</a>
-        <a href="#retention" class="nav-link">7. Data Retention</a>
-        <a href="#secret-redaction" class="nav-link">8. Secret Redaction</a>
-        <a href="#permissions" class="nav-link">9. Browser Permissions</a>
-        <a href="#third-party" class="nav-link">10. Third-Party Code</a>
-        <a href="#contact" class="nav-link">11. Developer &amp; Source</a>
+        <a href="#mcp-governance" class="nav-link">5. AI &amp; MCP Auditing</a>
+        <a href="#external-lookups" class="nav-link">6. External Lookups</a>
+        <a href="#local-storage" class="nav-link">7. Local Storage</a>
+        <a href="#retention" class="nav-link">8. Data Retention</a>
+        <a href="#secret-redaction" class="nav-link">9. Secret Redaction</a>
+        <a href="#permissions" class="nav-link">10. Browser Permissions</a>
+        <a href="#third-party" class="nav-link">11. Third-Party Code</a>
+        <a href="#contact" class="nav-link">12. Developer &amp; Source</a>
       </nav>
 
       <div class="sidebar-footer">
@@ -537,7 +546,7 @@
     <main class="main-content">
       <header>
         <div class="mobile-brand-row">
-          <div class="brand-mark" aria-hidden="true">SR</div>
+          <img src="/icon/128.png" alt="SiteRadar Logo" class="brand-logo-img">
           <h1>SiteRadar — Privacy Policy</h1>
         </div>
         <div class="meta-bar">
@@ -551,6 +560,8 @@
         <a href="#overview">Overview</a>
         <a href="#not-collected">Not Collected</a>
         <a href="#processed-data">Data Processed</a>
+        <a href="#deep-crawl">Crawl</a>
+        <a href="#mcp-governance">AI &amp; MCP</a>
         <a href="#external-lookups">External Lookups</a>
         <a href="#local-storage">Storage</a>
         <a href="#retention">Retention</a>
@@ -605,7 +616,23 @@
       <h2 id="deep-crawl">4. Deep Crawl Mode</h2>
       <p>In Deep Crawl mode, SiteRadar discovers internal links and fetches up to 50 additional pages directly from the same target domain. These requests originate directly from your browser to the host website, with User-Agent header <code>WebsiteIntelligenceBot/1.0</code>. Crawled data is processed in memory and discarded when the session ends.</p>
 
-      <h2 id="external-lookups">5. External Intelligence Lookups (Opt-In Only)</h2>
+      <h2 id="mcp-governance">5. Model Context Protocol (MCP) &amp; AI Agent Auditing</h2>
+      <p>SiteRadar includes a native <strong>Model Context Protocol (MCP) server</strong> that enables local AI coding assistants (such as Claude Desktop, Cursor, and Google Antigravity agents) to invoke technical audit tools directly via standard input/output (<code>stdio</code>).</p>
+
+      <div class="callout">
+        <strong>Complete Local Isolation:</strong> The MCP server runs strictly on your local machine as an independent Node.js process. It communicates with AI assistants over standard UNIX pipes (<code>stdio</code>). SiteRadar operates zero intermediary servers, analytics proxies, or cloud relays.
+      </div>
+
+      <p>When an AI agent invokes SiteRadar tools (<code>siteradar_full_audit</code>, <code>siteradar_audit_headers</code>, <code>siteradar_audit_seo</code>, <code>siteradar_detect_tech</code>, or <code>siteradar_audit_accessibility</code>), the following safeguards are strictly enforced:</p>
+      <ul>
+        <li><strong>Independent Headless Browser Sandbox:</strong> Deep audits launch an isolated Playwright Chromium instance in headless mode (<code>--no-sandbox</code>). This instance runs with an ephemeral, empty browser profile that is completely separated from your personal Chrome profile. It has <strong>zero access</strong> to your personal bookmarks, browsing history, saved passwords, active sessions, or personal cookies.</li>
+        <li><strong>Target-Origin Confinement:</strong> The MCP server only connects to the specific target URL explicitly requested in the AI agent's tool call. It does not scan local files, inspect internal networks, or browse unrelated origins.</li>
+        <li><strong>Volatile Memory Only:</strong> Rendered DOM trees, performance timings, and axe-core accessibility violation nodes are processed strictly in volatile RAM and discarded immediately upon completion. No HTML snapshots, response bodies, or page logs are written to disk.</li>
+        <li><strong>Zero AI Model Training:</strong> Audit outputs are formatted as structured JSON and returned directly to the calling client application. SiteRadar never stores, analyzes, sells, or retains audited data, code, or URLs for model training or profiling.</li>
+        <li><strong>Secret Redaction Enforced:</strong> All responses emitted by the MCP server pass through our automated secret redactor (Section 9), preventing API keys, bearer tokens, or sensitive headers from leaking to LLM context windows.</li>
+      </ul>
+
+      <h2 id="external-lookups">6. External Intelligence Lookups (Opt-In Only)</h2>
       <div class="callout">
         <strong>Default State:</strong> All external lookups are disabled by default. No data leaves your machine unless you enable a specific provider in Settings &gt; External Intelligence Opt-In.
       </div>
@@ -645,7 +672,7 @@
 
       <p>SiteRadar enforces a private network guard: it never sends private (RFC 1918), loopback (127.0.0.1/::1), or link-local IP addresses to external services.</p>
 
-      <h2 id="local-storage">6. Local Browser Storage</h2>
+      <h2 id="local-storage">7. Local Browser Storage</h2>
       <p>SiteRadar writes only two user configuration records to <code>chrome.storage.local</code>:</p>
       <div class="table-wrap">
         <table>
@@ -672,7 +699,7 @@
       </div>
       <p>Audit results, findings, scores, and crawled URLs are stored exclusively in temporary service worker RAM. They are never written to disk or browser storage.</p>
 
-      <h2 id="retention">7. Data Retention &amp; Automatic Purging</h2>
+      <h2 id="retention">8. Data Retention &amp; Automatic Purging</h2>
       <ul>
         <li><strong>Tab Navigation:</strong> Navigating away from the audited domain purges the active report from memory.</li>
         <li><strong>Browser Close:</strong> Closing the browser destroys all in-memory audit results immediately.</li>
@@ -681,7 +708,7 @@
         <li><strong>Uninstalling:</strong> Removing the extension deletes all stored preferences from <code>chrome.storage.local</code>.</li>
       </ul>
 
-      <h2 id="secret-redaction">8. Automated Secret Redaction</h2>
+      <h2 id="secret-redaction">9. Automated Secret Redaction</h2>
       <p>Before any extracted metadata or HTTP headers enter the inspection report, SiteRadar runs an automated redactor that masks:</p>
       <ul>
         <li>API keys and secret tokens (OpenAI, Anthropic, Stripe, AWS access keys, GitHub tokens)</li>
@@ -691,7 +718,7 @@
         <li>Password query parameters in URLs</li>
       </ul>
 
-      <h2 id="permissions">9. Browser Permissions</h2>
+      <h2 id="permissions">10. Browser Permissions</h2>
       <div class="table-wrap">
         <table>
           <thead>
@@ -725,10 +752,10 @@
         </table>
       </div>
 
-      <h2 id="third-party">10. Third-Party Code</h2>
+      <h2 id="third-party">11. Third-Party Code</h2>
       <p>SiteRadar bundles <strong>axe-core</strong> (by Deque Systems) for accessibility compliance testing. The axe-core engine executes locally in your browser and makes zero network requests. No third-party analytics, tracking SDKs, or ad scripts are bundled in the extension.</p>
 
-      <h2 id="contact">11. Developer Contact &amp; Source Code</h2>
+      <h2 id="contact">12. Developer Contact &amp; Source Code</h2>
       <p>SiteRadar is open source under the MIT License.</p>
       <ul>
         <li><strong>Developer:</strong> Tharidu Lakmal (LKML)</li>

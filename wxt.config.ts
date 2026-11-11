@@ -34,6 +34,10 @@ export default defineConfig({
       'cookies',
       'contextMenus',
     ],
+    options_ui: {
+      page: 'options.html',
+      open_in_tab: true,
+    },
     host_permissions: [
       '*://*/*',
     ],

@@ -40,11 +40,15 @@ export default defineBackground(() => {
   });
 
   messageBus.onMessage(MESSAGE_CHANNELS.GET_INSPECTION_STATE, async (payload) => {
-    const session = inspectionOrchestrator.getSession(payload?.scanId, payload?.tabId, payload?.url);
+    let session = inspectionOrchestrator.getSession(payload?.scanId, payload?.tabId, payload?.url);
+    if (!session) {
+      session = await inspectionOrchestrator.restoreFromStorage(payload?.tabId, payload?.url);
+    }
     return {
       state: session?.state || 'idle',
       inspection: session?.inspection,
       progress: session?.progress,
+      targetUrl: session?.targetUrl,
     };
   });
 
@@ -88,8 +92,22 @@ export default defineBackground(() => {
   }
 
   if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
-    chrome.runtime.onInstalled.addListener(() => {
+    chrome.runtime.onInstalled.addListener((details) => {
       inspectionOrchestrator.clearSessions();
+
+      // On first install, open the onboarding & MCP welcome tab
+      if (details.reason === 'install') {
+        try {
+          if (chrome.tabs?.create && chrome.runtime?.getURL) {
+            chrome.tabs.create({
+              url: chrome.runtime.getURL('options.html#welcome'),
+              active: true,
+            });
+          }
+        } catch (err) {
+          console.warn('Failed to open welcome onboarding tab:', err);
+        }
+      }
 
       if (chrome.contextMenus) {
         try {

@@ -64,7 +64,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onStartInspection,
   disabled,
   disabledReason,
-  refreshPage = true,
+  refreshPage = false,
   onToggleRefreshPage,
 }) => {
   return (

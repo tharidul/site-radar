@@ -3,6 +3,7 @@ import type { AuditFinding, SecuritySignalsData, FormsData, JavaScriptData, CssD
 import type { Analyzer, AnalyzerContext } from './types';
 import { getModuleData } from './types';
 import { FindingBuilder } from './finding-builder';
+import { isLocalDevelopmentHost } from '../security/private-network.guard';
 
 export class SecurityAnalyzer implements Analyzer {
   readonly id = 'security-analyzer';
@@ -16,17 +17,33 @@ export class SecurityAnalyzer implements Analyzer {
     const secData = secRes.data;
 
     const isHttps = target.url.startsWith('https://');
+    const isLocalDev = Boolean(target.isLocalDevelopment ?? isLocalDevelopmentHost(target.hostname));
+
     if (!isHttps) {
-      findings.push(
-        new FindingBuilder('sec-https-enforced')
-          .setStatus('failed')
-          .setSeverity('critical')
-          .setConfidence(1.0)
-          .addEvidence('URL Scheme', target.url.split(':')[0], 'target')
-          .setExpectedBehavior('Target website must be served exclusively over encrypted TLS/HTTPS.')
-          .setExplanation('Serving content over unencrypted HTTP exposes traffic to interception, credential harvesting, and tampering.')
-          .build(),
-      );
+      if (isLocalDev) {
+        findings.push(
+          new FindingBuilder('sec-https-enforced')
+            .setStatus('passed')
+            .setSeverity('critical')
+            .setConfidence(1.0)
+            .addEvidence('URL Scheme', `${target.url.split(':')[0]} (local loopback)`, 'target')
+            .addEvidence('Secure Context', 'Localhost W3C Secure Context')
+            .setExpectedBehavior('Target website must be served exclusively over encrypted TLS/HTTPS (localhost is treated as a Secure Context by modern browsers).')
+            .setExplanation('Local development origin detected (treated as a Secure Context by modern browsers). Ensure TLS/HTTPS is active in staging and production.')
+            .build(),
+        );
+      } else {
+        findings.push(
+          new FindingBuilder('sec-https-enforced')
+            .setStatus('failed')
+            .setSeverity('critical')
+            .setConfidence(1.0)
+            .addEvidence('URL Scheme', target.url.split(':')[0], 'target')
+            .setExpectedBehavior('Target website must be served exclusively over encrypted TLS/HTTPS.')
+            .setExplanation('Serving content over unencrypted HTTP exposes traffic to interception, credential harvesting, and tampering.')
+            .build(),
+        );
+      }
     } else {
       findings.push(
         new FindingBuilder('sec-https-enforced')
@@ -435,18 +452,44 @@ export class SecurityAnalyzer implements Analyzer {
       let hasInsecureAction = false;
       let insecureActionUrl = '';
       let hasInsecurePassword = false;
+      let hasLocalDevPassword = false;
 
       for (const form of forms) {
         const action = form.action?.trim() || '';
-        const isInsecureAction = action.startsWith('http://') || action.startsWith('javascript:');
+        let isInsecureAction = false;
+        if (action.startsWith('javascript:')) {
+          isInsecureAction = true;
+        } else if (action.startsWith('http://')) {
+          if (!isLocalDev) {
+            isInsecureAction = true;
+          } else {
+            try {
+              const parsedAction = new URL(action, target.origin);
+              if (!isLocalDevelopmentHost(parsedAction.hostname)) {
+                isInsecureAction = true;
+              }
+            } catch {
+              isInsecureAction = true;
+            }
+          }
+        }
+
         if (isInsecureAction) {
           hasInsecureAction = true;
           insecureActionUrl = action;
         }
 
         const hasPassword = form.hasPasswordField || (form.fieldTypes && form.fieldTypes.includes('password'));
-        if (hasPassword && (!isHttps || isInsecureAction)) {
-          hasInsecurePassword = true;
+        if (hasPassword) {
+          if (isInsecureAction) {
+            hasInsecurePassword = true;
+          } else if (!isHttps) {
+            if (!isLocalDev) {
+              hasInsecurePassword = true;
+            } else {
+              hasLocalDevPassword = true;
+            }
+          }
         }
       }
 
@@ -460,6 +503,18 @@ export class SecurityAnalyzer implements Analyzer {
             .addEvidence('Connection Transport', isHttps ? 'Insecure form action' : 'Unencrypted HTTP plaintext')
             .setExpectedBehavior('Password authentication inputs must be submitted strictly over encrypted HTTPS.')
             .setExplanation('Submitting passwords over unencrypted transport allows immediate credential theft by network attackers.')
+            .build(),
+        );
+      } else if (hasLocalDevPassword) {
+        findings.push(
+          new FindingBuilder('sec-password-over-http')
+            .setStatus('info')
+            .setSeverity('low')
+            .setConfidence(1.0)
+            .addEvidence('Password Field Present', true)
+            .addEvidence('Environment', 'Localhost Loopback (Secure Context)')
+            .setExpectedBehavior('Password authentication inputs must be submitted strictly over encrypted HTTPS in production.')
+            .setExplanation('Password field detected on local development server. Safe on loopback; ensure HTTPS transport is enforced in production.')
             .build(),
         );
       }

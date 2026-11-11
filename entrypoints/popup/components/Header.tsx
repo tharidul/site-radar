@@ -1,7 +1,8 @@
 
 import React from 'react';
-import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen } from 'lucide-react';
+import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen, Terminal } from 'lucide-react';
 import { Button } from './Button';
+import { isLocalDevelopmentHost } from '@/security/private-network.guard';
 
 interface HeaderProps {
   tabUrl?: string;
@@ -136,6 +137,18 @@ export const Header: React.FC<HeaderProps> = ({
             {tabUrl || tabHostname || 'https://www.google.com'}
           </span>
         </div>
+
+        {tabHostname && isLocalDevelopmentHost(tabHostname) && (
+          <div className="shrink-0 mr-1.5">
+            <span
+              className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded px-1.5 py-0.5"
+              title="Local development environment (W3C Secure Context rules active)"
+            >
+              <Terminal className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <span>Dev Host</span>
+            </span>
+          </div>
+        )}
 
         {!schemeValid && (
           <div className="shrink-0">

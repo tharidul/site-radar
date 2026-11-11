@@ -3,6 +3,7 @@ import type { AuditFinding, SeoData, DomSemanticData, StructuredDataInfo } from 
 import type { Analyzer, AnalyzerContext } from './types';
 import { getModuleData } from './types';
 import { FindingBuilder } from './finding-builder';
+import { isLocalDevelopmentHost } from '../security/private-network.guard';
 
 export class SeoAnalyzer implements Analyzer {
   readonly id = 'seo-analyzer';
@@ -11,6 +12,7 @@ export class SeoAnalyzer implements Analyzer {
   analyze(context: AnalyzerContext): AuditFinding[] {
     const findings: AuditFinding[] = [];
     const { target, modules } = context;
+    const isLocalDev = Boolean(target.isLocalDevelopment ?? isLocalDevelopmentHost(target.hostname));
 
     const seoRes = getModuleData<SeoData>(modules, 'metadata', 'seo');
     const seoData = seoRes.data;
@@ -156,6 +158,17 @@ export class SeoAnalyzer implements Analyzer {
               .setConfidence(1.0)
               .addEvidence('Canonical Matches Target URL', true)
               .addEvidence('Canonical URL', canonical)
+              .build(),
+          );
+        } else if (isLocalDev && (canonical.startsWith('https://') || canonical.startsWith('http://'))) {
+          findings.push(
+            new FindingBuilder('seo-canonical-matches')
+              .setStatus('passed')
+              .setConfidence(1.0)
+              .addEvidence('Development Target', target.url)
+              .addEvidence('Production Canonical URL', canonical)
+              .setExpectedBehavior('Canonical URL matches the preferred master representation of this page.')
+              .setExplanation('Canonical URL correctly points to the authoritative production domain from local development environment.')
               .build(),
           );
         } else {

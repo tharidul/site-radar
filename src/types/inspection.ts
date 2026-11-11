@@ -69,6 +69,7 @@ export interface WebsiteTarget {
   origin: string;
   hostname: string;
   inspectedAt: number;
+  isLocalDevelopment?: boolean;
 }
 
 export interface BrowserContextInfo {
@@ -111,6 +112,7 @@ export interface WebsiteInspection {
   id: string;
   mode: InspectionMode;
   target: WebsiteTarget;
+  isDevelopmentEnvironment?: boolean;
   browser: BrowserContextInfo;
   modules: Record<string, CollectionResult<unknown>>;
   findings: AuditFinding[];

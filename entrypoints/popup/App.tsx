@@ -87,7 +87,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
-  const [refreshPage, setRefreshPage] = useState<boolean>(true);
+  const [refreshPage, setRefreshPage] = useState<boolean>(false);
   const [liveMetrics, setLiveMetrics] = useState<{
     resourceCount: number;
     wireTransferBytes: number;
@@ -129,16 +129,16 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             .catch(() => null);
 
           if (mounted && stateRes) {
+            const targetCandidate = stateRes.inspection?.target?.url || (stateRes as any).targetUrl;
             const isMatch = Boolean(
-              stateRes.inspection?.target?.url &&
-              (tab.url === stateRes.inspection.target.url ||
-               isSameOrigin(tab.url, stateRes.inspection.target.url))
+              targetCandidate &&
+              (tab.url === targetCandidate || isSameOrigin(tab.url, targetCandidate))
             );
 
             if (stateRes.state === 'running' && isMatch) {
               setScanStatus('running');
               if (stateRes.progress) setProgress(stateRes.progress);
-            } else if (stateRes.state === 'completed' && stateRes.inspection && isMatch) {
+            } else if ((stateRes.state === 'completed' || stateRes.inspection) && stateRes.inspection && isMatch) {
               setScanStatus('completed');
               setInspection(stateRes.inspection);
             } else {
@@ -354,7 +354,9 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
 
   const handleOpenOptions = useCallback(() => {
     try {
-      if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
+      if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
+        chrome.tabs.create({ url: chrome.runtime.getURL('options.html'), active: true });
+      } else if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
         chrome.runtime.openOptionsPage();
       } else {
         const adapter = getBrowserAdapter();

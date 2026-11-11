@@ -216,6 +216,40 @@ export function isPrivateIp(ip: string): boolean {
   return checkIpv4Private(ip).private || checkIpv6Private(ip).private;
 }
 
+export function isLocalDevelopmentHost(hostname?: string): boolean {
+  if (!hostname) return false;
+  let host = hostname.toLowerCase().trim();
+  if (host.includes('://')) {
+    try {
+      host = new URL(host).hostname.toLowerCase();
+    } catch {}
+  }
+  if (host.includes(':') && !host.includes('::')) {
+    host = host.split(':')[0] || '';
+  }
+  host = host.replace(/^\[|\]$/g, '').replace(/\.+$/, '');
+  return (
+    host === 'localhost' ||
+    host.endsWith('.localhost') ||
+    host === '127.0.0.1' ||
+    host.startsWith('127.') ||
+    host === '0.0.0.0' ||
+    host === '::1' ||
+    host.endsWith('.local') ||
+    host.endsWith('.test')
+  );
+}
+
+export function isLocalDevelopmentUrl(rawUrl?: string): boolean {
+  if (!rawUrl) return false;
+  try {
+    const u = new URL(rawUrl);
+    return isLocalDevelopmentHost(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 export function isProhibitedHostname(hostname: string): boolean {
   const host = hostname.toLowerCase().trim().replace(/\.+$/, '');
   if (!host) return true;
