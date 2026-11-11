@@ -380,19 +380,60 @@ const TECH_SIGNATURES: TechSignature[] = [
   {
     name: 'Tailwind CSS',
     category: 'CSS Framework',
-    matches: (doc, scripts, links) => {
-      const hasLayout = doc.querySelector('[class*="flex"], [class*="grid"]');
-      const hasSpacing = doc.querySelector('[class*="mx-auto"], [class*="p-"], [class*="gap-"]');
-      const hasSizing = doc.querySelector('[class*="max-w-"], [class*="w-full"], [class*="h-"]');
-      const hasStyling = doc.querySelector('[class*="rounded-"], [class*="shadow-"], [class*="bg-"]');
-      if (hasLayout && hasSpacing && hasSizing && hasStyling) {
-        return { matched: true, evidence: 'Atomic Tailwind utility class combinations across DOM nodes', confidence: 0.92 };
+    matches: (doc, scripts, links, win) => {
+      for (const script of scripts) {
+        const src = script.getAttribute('src') || '';
+        if (src.includes('tailwindcss.com') || /(?:^|\/|[._-])tailwind(?:css)?(?:\.min)?\.js/i.test(src)) {
+          return { matched: true, evidence: `Tailwind script asset: ${src.split('/').pop()}`, confidence: 0.98 };
+        }
       }
 
       for (const link of links) {
         const href = link.getAttribute('href') || '';
-        if (href.includes('tailwind')) {
-          return { matched: true, evidence: `Tailwind stylesheet link: ${href.split('/').pop()}`, confidence: 0.95 };
+        if (/(?:^|\/|[._-])tailwind(?:css)?(?:\.min)?\.css/i.test(href) || href.includes('tailwindcss')) {
+          return { matched: true, evidence: `Tailwind stylesheet link: ${href.split('/').pop()}`, confidence: 0.98 };
+        }
+      }
+
+      for (const style of Array.from(doc.querySelectorAll('style'))) {
+        const text = style.textContent || '';
+        if (text.includes('--tw-') || text.includes('/*! tailwindcss') || text.includes('@tailwind')) {
+          return { matched: true, evidence: 'Tailwind CSS variables (--tw-*) or directives in <style> block', confidence: 0.98 };
+        }
+      }
+
+      if (win && typeof win.getComputedStyle === 'function') {
+        try {
+          const rootStyle = win.getComputedStyle(doc.documentElement);
+          if (
+            rootStyle.getPropertyValue('--tw-ring-offset-shadow') ||
+            rootStyle.getPropertyValue('--tw-shadow') ||
+            rootStyle.getPropertyValue('--tw-border-spacing-x') ||
+            rootStyle.getPropertyValue('--tw-translate-x')
+          ) {
+            return { matched: true, evidence: 'Tailwind CSS root variables detected in styles', confidence: 0.98 };
+          }
+        } catch {
+        }
+      }
+
+      const hasTailwindVariant = doc.querySelector(
+        '[class*="sm\\:"], [class*="md\\:"], [class*="lg\\:"], [class*="xl\\:"], [class*="2xl\\:"], [class*="hover\\:"], [class*="focus\\:"], [class*="dark\\:"], [class*="group-hover\\:"]'
+      );
+      if (hasTailwindVariant) {
+        return { matched: true, evidence: 'Tailwind responsive/pseudo-class variant modifiers (hover:, md:, dark:) in DOM', confidence: 0.95 };
+      }
+
+      const candidateElements = doc.querySelectorAll('[class*="flex"], [class*="grid"], [class*="rounded"]');
+      const tailwindClassRegex = /\b(?:flex(?:-col|-row|-wrap)?|grid|items-(?:center|start|end)|justify-(?:between|center|start|end)|gap-(?:\d+|\[.*?\])|(?:p|m)[xytbrl]?-(?:\d+|auto|\[.*?\])|rounded-(?:sm|md|lg|xl|2xl|full)|bg-(?:[a-z]+-\d{2,3}|white|black|transparent)|text-(?:[a-z]+-\d{2,3}|white|black)|w-(?:full|\d+|\[.*?\])|max-w-(?:xs|sm|md|lg|xl|2xl|3xl|4xl|5xl|6xl|7xl|full)|shadow-(?:sm|md|lg|xl|2xl))\b/g;
+
+      const sampleLimit = Math.min(candidateElements.length, 30);
+      for (let i = 0; i < sampleLimit; i++) {
+        const el = candidateElements[i];
+        const className = el.getAttribute('class') || '';
+        const matches = className.match(tailwindClassRegex);
+        if (matches && matches.length >= 4) {
+          return { matched: true, evidence: `Atomic Tailwind utility classes on single node: "${matches.slice(0, 4).join(' ')}"`, confidence: 0.90 };
         }
       }
 
@@ -405,19 +446,22 @@ const TECH_SIGNATURES: TechSignature[] = [
     matches: (doc, scripts, links) => {
       for (const link of links) {
         const href = link.getAttribute('href') || '';
-        if (href.includes('bootstrap')) {
-          const vMatch = href.match(/bootstrap@?([\d.]+)/i);
-          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap stylesheet: ${href.split('/').pop()}`, confidence: 0.98 };
+        const filename = href.split('/').pop()?.split('?')[0] || '';
+        if (/^bootstrap(\.rtl)?(\.reboot)?(\.grid)?(\.min)?\.css$/i.test(filename) || /\/bootstrap@[0-9]/i.test(href) || /\/twitter-bootstrap\//i.test(href)) {
+          const vMatch = href.match(/bootstrap(?:@|\/|-|\.v)?([0-9]+(?:\.[0-9]+)*)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap stylesheet: ${filename}`, confidence: 0.98 };
         }
       }
       for (const script of scripts) {
         const src = script.getAttribute('src') || '';
-        if (src.includes('bootstrap')) {
-          const vMatch = src.match(/bootstrap@?([\d.]+)/i);
-          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap script: ${src.split('/').pop()}`, confidence: 0.98 };
+        const filename = src.split('/').pop()?.split('?')[0] || '';
+        if (/^bootstrap(\.bundle)?(\.esm)?(\.min)?\.js$/i.test(filename) || /\/bootstrap@[0-9]/i.test(src) || /\/twitter-bootstrap\//i.test(src)) {
+          const vMatch = src.match(/bootstrap(?:@|\/|-|\.v)?([0-9]+(?:\.[0-9]+)*)/i);
+          return { matched: true, version: vMatch ? vMatch[1] : undefined, evidence: `Bootstrap script: ${filename}`, confidence: 0.98 };
         }
       }
-      if (doc.querySelector('.container-fluid, .row, [class*="col-md-"], [class*="col-lg-"], .btn-primary')) {
+      if (doc.querySelector('[data-bs-toggle], [data-bs-dismiss], [data-toggle="modal"], [data-toggle="dropdown"]') ||
+          (doc.querySelector('.container-fluid, .row') && doc.querySelector('[class*="col-md-"], [class*="col-lg-"], .btn-primary'))) {
         return { matched: true, evidence: 'Bootstrap grid system and component class patterns', confidence: 0.88 };
       }
       return { matched: false, evidence: '', confidence: 0 };

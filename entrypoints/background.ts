@@ -4,6 +4,7 @@ import { MESSAGE_CHANNELS } from '../src/types/messaging';
 import { messageBus } from '../src/messaging/bus';
 import { inspectionOrchestrator } from '../src/core/orchestrator';
 import { consentManager } from '../src/intelligence';
+import { BadgeService } from '../src/services/badge.service';
 import type { IntelligenceProviderType } from '../src/types/intelligence';
 
 export default defineBackground(() => {
@@ -68,6 +69,21 @@ export default defineBackground(() => {
   if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
       inspectionOrchestrator.clearSessions();
+      BadgeService.clear();
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
+    chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+      if (changeInfo.status === 'loading') {
+        BadgeService.clear(tabId);
+      }
+    });
+  }
+
+  if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
+    chrome.tabs.onRemoved.addListener((tabId) => {
+      BadgeService.clear(tabId);
     });
   }
 

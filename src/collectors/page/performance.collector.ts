@@ -94,6 +94,10 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
           } catch {}
 
           const PO = (win as any)?.PerformanceObserver;
+          const supportsLayoutShift = Boolean(
+            PO && Array.isArray(PO.supportedEntryTypes) && PO.supportedEntryTypes.includes('layout-shift'),
+          );
+          let clsObserverRan = false;
           if (PO && Array.isArray(PO.supportedEntryTypes)) {
             if (lcpEntries.length === 0 && PO.supportedEntryTypes.includes('largest-contentful-paint')) {
               try {
@@ -109,7 +113,7 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
                 po.disconnect();
               } catch {}
             }
-            if (clsEntries.length === 0 && PO.supportedEntryTypes.includes('layout-shift')) {
+            if (clsEntries.length === 0 && supportsLayoutShift) {
               try {
                 const po = new PO((list: any) => {
                   const entries = list.getEntries();
@@ -121,6 +125,7 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
                   if (records.length > 0) clsEntries = records;
                 }
                 po.disconnect();
+                clsObserverRan = true;
               } catch {}
             }
           }
@@ -142,6 +147,9 @@ export class PerformanceCollector implements PageCollector<PerformanceData> {
               }
             });
             clsScore = parseFloat(totalCls.toFixed(3));
+          } else if (clsObserverRan || (supportsLayoutShift && clsEntries.length === 0)) {
+            // Layout shift was observable by the browser engine, but zero shift events occurred
+            clsScore = 0;
           }
 
           let inpMs: number | undefined;

@@ -18,10 +18,13 @@ import { Button } from './Button';
 import { PageVitalsCard } from './PageVitalsCard';
 import { OptimizationMatrixCard } from './OptimizationMatrixCard';
 import { ExportDropdown } from './ExportDropdown';
+import type { DashboardTab } from './TabBar';
+import { getScoreColor } from '@/utils/colors';
 
 interface OverviewDashboardProps {
   inspection: WebsiteInspection;
   onNavigateToIssues: (filter?: { severity?: Severity | 'all'; category?: string }) => void;
+  onNavigateToTab?: (tab: DashboardTab) => void;
   liveMetrics?: {
     resourceCount: number;
     wireTransferBytes: number;
@@ -35,6 +38,7 @@ interface OverviewDashboardProps {
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   inspection,
   onNavigateToIssues,
+  onNavigateToTab,
   liveMetrics,
 }) => {
   const findings = inspection.findings || [];
@@ -96,26 +100,24 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
   const categoryKeys = ['security', 'performance', 'seo', 'accessibility', 'best-practices'];
   const availableScores = categoryKeys.map((k) => scores[k]?.score).filter((s): s is number => s !== undefined);
-  const overallScore = availableScores.length > 0
-    ? Math.round(availableScores.reduce((a, b) => a + b, 0) / availableScores.length)
-    : 92;
+  const overallScore = inspection.overallScore !== undefined
+    ? inspection.overallScore
+    : (availableScores.length > 0
+        ? Math.round(availableScores.reduce((a, b) => a + b, 0) / availableScores.length)
+        : 92);
 
-  let grade = 'A';
+  const overallColor = getScoreColor(overallScore);
+  const grade = overallColor.grade;
   let gradeDescription = 'Well-optimized. No major issues found.';
   if (overallScore >= 90) {
-    grade = 'A';
     gradeDescription = 'Well-optimized. No major issues found.';
   } else if (overallScore >= 80) {
-    grade = 'B';
     gradeDescription = 'Good shape overall, with a few minor items to clean up.';
   } else if (overallScore >= 70) {
-    grade = 'C';
     gradeDescription = 'Several security, speed, or SEO issues need attention.';
   } else if (overallScore >= 60) {
-    grade = 'D';
     gradeDescription = 'Notable problems detected across security or performance.';
   } else {
-    grade = 'F';
     gradeDescription = 'Critical security or configuration issues found.';
   }
 
@@ -147,37 +149,40 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       label: 'Security',
       icon: Shield,
       score: scores['security'] ? Math.round(scores['security'].score) : 96,
-      color: '#D4FF5F',
     },
     {
       key: 'performance',
       label: 'Performance',
       icon: Zap,
       score: scores['performance'] ? Math.round(scores['performance'].score) : 93,
-      color: '#CEFF52',
     },
     {
       key: 'seo',
       label: 'SEO',
       icon: Search,
       score: scores['seo'] ? Math.round(scores['seo'].score) : 90,
-      color: '#A8F642',
     },
     {
       key: 'accessibility',
       label: 'Accessibility',
       icon: UserCheck,
       score: scores['accessibility'] ? Math.round(scores['accessibility'].score) : 86,
-      color: '#7EE838',
     },
     {
       key: 'best-practices',
       label: 'Best Practices',
       icon: Layers,
       score: scores['best-practices'] ? Math.round(scores['best-practices'].score) : 95,
-      color: '#5CD632',
     },
-  ], [scores]);
+  ].map((cat) => {
+    const colorDef = getScoreColor(cat.score);
+    return {
+      ...cat,
+      color: colorDef.stroke,
+      textColor: colorDef.textColor,
+      grade: colorDef.grade,
+    };
+  }), [scores]);
 
   return (
     <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
@@ -200,7 +205,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                   cy="50"
                   r={gaugeRadius}
                   fill="transparent"
-                  stroke="#CEFF52"
+                  stroke={overallColor.stroke}
                   strokeWidth="8"
                   strokeDasharray={gaugeCircumference}
                   strokeDashoffset={gaugeDashOffset}
@@ -220,7 +225,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h2 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight truncate">
                   Overall Health
                 </h2>
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-semibold bg-[#132737] border border-[#21435c] text-[#CEFF52] shadow-2xs shrink-0">
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-bold border shadow-2xs shrink-0 ${overallColor.badgeBg} ${overallColor.badgeBorder} ${overallColor.badgeText}`}>
                   Grade {grade}
                 </span>
               </div>
@@ -237,30 +242,30 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
-                <CheckCircle2 className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <CheckCircle2 className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-emerald-500 shrink-0" />
                 <span>Passed</span>
               </span>
-              <span className="font-bold text-zinc-900 dark:text-white tabular-nums">
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
                 {passedCount}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
-                <XCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <XCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-rose-500 shrink-0" />
                 <span>Failed</span>
               </span>
-              <span className="font-bold text-[#CEFF52] tabular-nums">
+              <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
                 {failedCount}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
-                <AlertTriangle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-[#CEFF52] shrink-0" />
+                <AlertTriangle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-amber-500 shrink-0" />
                 <span>Warnings</span>
               </span>
-              <span className="font-bold text-[#CEFF52] tabular-nums">
+              <span className="font-bold text-amber-600 dark:text-amber-400 tabular-nums">
                 {warningCount}
               </span>
             </div>

@@ -64,7 +64,9 @@ export function calculateCategoryScore(
     seenCanonicalRules.add(canonicalKey);
 
     const rule = getRuleDefinition(finding.ruleId);
-    let weight = rule?.weight ?? (SEVERITY_WEIGHTS[finding.severity] || 5);
+    let weight = finding.ruleId.startsWith('a11y-axe-')
+      ? (SEVERITY_WEIGHTS[finding.severity] ?? 8)
+      : (rule?.weight ?? (SEVERITY_WEIGHTS[finding.severity] || 5));
     if (weight === 0 && finding.severity !== 'info') {
       weight = 5;
     }

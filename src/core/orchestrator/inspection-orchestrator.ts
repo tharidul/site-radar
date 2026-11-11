@@ -31,6 +31,7 @@ import {
   CtLogsClient,
   TlsEvaluator,
 } from '../../intelligence';
+import { HeadersService, BadgeService } from '../../services';
 
 export type ScanLifecycleState = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -108,8 +109,12 @@ export class InspectionOrchestrator {
       if (session.state === 'running') {
         this.cancellation.cancel(id, 'Session state cleared');
       }
+      if (session.tabId) {
+        BadgeService.clear(session.tabId);
+      }
     }
     this.activeSessions.clear();
+    BadgeService.clear();
   }
 
   async startInspection(
@@ -204,6 +209,10 @@ export class InspectionOrchestrator {
     };
 
     session.inspection = inspection;
+
+    if (tabId) {
+      BadgeService.setScanning(tabId);
+    }
 
     try {
       const plan = getModePlan(mode);
@@ -452,9 +461,29 @@ export class InspectionOrchestrator {
             headersMap[key.toLowerCase()] = val;
           });
           if (Object.keys(headersMap).length > 0) {
+            const headersData = HeadersService.processHeaders(
+              headersMap,
+              resp.status,
+              resp.statusText,
+              inspection.target.url,
+              'HEAD',
+            );
+
+            inspection.modules['headers'] = {
+              module: 'headers',
+              status: 'completed',
+              collectedAt: Date.now(),
+              data: headersData,
+              coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+              limitations: [],
+              errors: [],
+              sources: ['HttpHeadResponse'],
+            };
+
             const secModule = inspection.modules['security'] || inspection.modules['securitySignals'];
             if (secModule && secModule.data) {
               (secModule.data as any).securityHeaders = headersMap;
+              (secModule.data as any).responseHeaders = headersData;
             }
 
             const techModule = inspection.modules['technology'];
@@ -901,6 +930,7 @@ export class InspectionOrchestrator {
 
       const scoreCalculation = calculateInspectionScores(inspection.findings);
       inspection.scores = scoreCalculation.scores;
+      inspection.overallScore = scoreCalculation.overallScore;
 
       inspection.summary = this.computeSummary(inspection.modules, inspection.findings);
       inspection.completedAt = Date.now();
@@ -908,10 +938,18 @@ export class InspectionOrchestrator {
       session.state = 'completed';
       session.completedAt = inspection.completedAt;
 
+      if (tabId) {
+        const issuesCount = (inspection.summary?.failedFindings || 0) + (inspection.summary?.warningFindings || 0);
+        BadgeService.setScoreBadge(tabId, scoreCalculation.overallScore, issuesCount);
+      }
+
       this.emitCompleted(scanId, inspection);
 
       return inspection as any;
     } catch (err: any) {
+      if (tabId) {
+        BadgeService.clear(tabId);
+      }
       if (err instanceof ScanCancelledError || signal.aborted) {
         session.state = 'cancelled';
         session.error = 'Scan cancelled by user';
@@ -939,6 +977,9 @@ export class InspectionOrchestrator {
     const session = this.activeSessions.get(scanId);
     if (!session || session.state !== 'running') {
       return false;
+    }
+    if (session.tabId) {
+      BadgeService.clear(session.tabId);
     }
     return this.cancellation.cancel(scanId, 'Cancelled by user');
   }
@@ -1026,6 +1067,7 @@ export class InspectionOrchestrator {
     let failedFindings = 0;
     let infoFindings = 0;
     let notApplicableFindings = 0;
+    let notAvailableFindings = 0;
     let errorFindings = 0;
 
     for (const f of findings) {
@@ -1034,7 +1076,8 @@ export class InspectionOrchestrator {
       else if (f.status === 'failed') failedFindings++;
       else if (f.status === 'info') infoFindings++;
       else if (f.status === 'not-applicable') notApplicableFindings++;
-      else if (f.status === 'not-available' || f.status === 'error') errorFindings++;
+      else if (f.status === 'not-available') notAvailableFindings++;
+      else if (f.status === 'error') errorFindings++;
     }
 
     return {
@@ -1047,6 +1090,7 @@ export class InspectionOrchestrator {
       failedFindings,
       infoFindings,
       notApplicableFindings,
+      notAvailableFindings,
       errorFindings,
     };
   }

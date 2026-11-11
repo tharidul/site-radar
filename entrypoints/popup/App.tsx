@@ -19,6 +19,8 @@ import { ModuleAccordions } from './components/ModuleAccordions';
 import { ResourcesView } from './components/ResourcesView';
 import { CookiesView } from './components/CookiesView';
 import { AboutView } from './components/AboutView';
+import { HeadersView } from './components/HeadersView';
+import { SocialPreviewView } from './components/SocialPreviewView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -500,6 +502,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 <OverviewDashboard
                   inspection={inspection}
                   onNavigateToIssues={handleNavigateToIssues}
+                  onNavigateToTab={setActiveDashboardTab}
                   liveMetrics={liveMetrics}
                 />
               ) : (
@@ -531,6 +534,46 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">No findings collected yet</div>
                 <p className="text-xs text-zinc-500 max-w-xs mx-auto">
                   Run an inspection from the Overview tab to detect security, SEO, performance, and accessibility issues.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+                >
+                  Go to Overview
+                </button>
+              </div>
+            )
+          )}
+
+          {activeDashboardTab === 'headers' && (
+            inspection ? (
+              <HeadersView inspection={inspection} />
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">HTTP Response Headers</div>
+                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+                  Run an inspection from the Overview tab to inspect raw server response headers, security directives, and cURL commands.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setActiveDashboardTab('overview')}
+                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+                >
+                  Go to Overview
+                </button>
+              </div>
+            )
+          )}
+
+          {activeDashboardTab === 'social' && (
+            inspection ? (
+              <SocialPreviewView inspection={inspection} />
+            ) : (
+              <div className="p-8 text-center space-y-3">
+                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Social Media &amp; Search Preview</div>
+                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
+                  Run an inspection from the Overview tab to view live previews of Twitter/X cards, Facebook/LinkedIn feeds, and Google search snippets.
                 </p>
                 <button
                   type="button"

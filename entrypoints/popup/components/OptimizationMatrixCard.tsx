@@ -2,6 +2,7 @@
 import React, { useMemo } from 'react';
 import { ChevronRight } from 'lucide-react';
 import type { AuditFinding, Severity, CategoryScore } from '@/types/inspection';
+import { getScoreColor } from '@/utils/colors';
 
 interface OptimizationMatrixCardProps {
   findings: AuditFinding[];
@@ -76,12 +77,6 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         ? 'Form labels, semantic buttons, and DOM depth verified'
         : agoIssues.map((i) => i.title.replace(/^Agentic\s+/, '')).join(' · ');
 
-    const getScoreColor = (score: number) => {
-      if (score >= 85) return '#CEFF52';
-      if (score >= 60) return '#f59e0b';
-      return '#ef4444';
-    };
-
     return [
       {
         key: 'seo',
@@ -91,7 +86,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         score: baseSeoScore,
         statusText: seoStatusText,
         issueCount: seoIssues.length,
-        barColor: getScoreColor(baseSeoScore),
+        barColor: getScoreColor(baseSeoScore).stroke,
       },
       {
         key: 'aeo',
@@ -101,7 +96,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         score: aeoScore,
         statusText: aeoStatusText,
         issueCount: aeoIssues.length,
-        barColor: getScoreColor(aeoScore),
+        barColor: getScoreColor(aeoScore).stroke,
       },
       {
         key: 'ago',
@@ -111,7 +106,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
         score: agoScore,
         statusText: agoStatusText,
         issueCount: agoIssues.length,
-        barColor: getScoreColor(agoScore),
+        barColor: getScoreColor(agoScore).stroke,
       },
     ];
   }, [findings, scores]);

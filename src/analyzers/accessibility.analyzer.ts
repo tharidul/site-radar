@@ -163,10 +163,14 @@ export class AccessibilityAnalyzer implements Analyzer {
       } else {
         findings.push(
           new FindingBuilder('a11y-axe-evaluation')
-            .setStatus('warning')
-            .setSeverity('medium')
+            .setStatus('info')
+            .setSeverity('low')
             .setConfidence(1.0)
             .addEvidence('Total Violations', violations.length)
+            .addEvidence('Reported Violations', Math.min(violations.length, 10))
+            .setExpectedBehavior('Page exhibits zero automated WCAG 2.2 AA violations detected by axe-core.')
+            .setExplanation(`axe-core evaluated the DOM and identified ${violations.length} distinct WCAG rule violation(s).`)
+            .setRecommendation('Remediate automated accessibility violations identified in the detailed findings below.')
             .build(),
         );
 

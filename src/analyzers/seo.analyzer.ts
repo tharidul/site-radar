@@ -261,13 +261,13 @@ export class SeoAnalyzer implements Analyzer {
     } else {
       findings.push(
         new FindingBuilder('aeo-faq-schema')
-          .setStatus('warning')
+          .setStatus('info')
           .setSeverity('low')
           .setConfidence(0.85)
           .addEvidence('Q&A Schemas', 'None declared')
-          .setExpectedBehavior('Include FAQPage or HowTo JSON-LD schema for LLM direct-answer citation.')
+          .setExpectedBehavior('Include FAQPage or HowTo JSON-LD schema for LLM direct-answer citation where relevant.')
           .setExplanation('AI search engines (Perplexity, ChatGPT, Gemini) prioritize pages declaring structured FAQ/Q&A data for rich answer cards.')
-          .setRecommendation('Add Schema.org FAQPage markup with top user questions and concise answers.')
+          .setRecommendation('Add Schema.org FAQPage markup with top user questions and concise answers if the page provides instructional or FAQ content.')
           .build(),
       );
     }

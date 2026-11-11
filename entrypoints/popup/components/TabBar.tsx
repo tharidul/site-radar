@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   LayoutGrid,
   AlertTriangle,
@@ -7,9 +7,20 @@ import {
   FileText,
   Cookie,
   Info,
+  Terminal,
+  Share2,
 } from 'lucide-react';
+import { useHorizontalScroll } from '@/utils/useHorizontalScroll';
 
-export type DashboardTab = 'overview' | 'issues' | 'rules' | 'resources' | 'cookies' | 'about';
+export type DashboardTab =
+  | 'overview'
+  | 'issues'
+  | 'headers'
+  | 'social'
+  | 'resources'
+  | 'cookies'
+  | 'rules'
+  | 'about';
 
 interface TabBarProps {
   activeTab: DashboardTab;
@@ -24,9 +35,11 @@ const STATIC_TABS: Array<{
 }> = [
   { id: 'overview', label: 'Overview', icon: LayoutGrid },
   { id: 'issues', label: 'Issues', icon: AlertTriangle },
-  { id: 'rules', label: 'Rules', icon: Layers },
+  { id: 'headers', label: 'Headers', icon: Terminal },
+  { id: 'social', label: 'Social', icon: Share2 },
   { id: 'resources', label: 'Resources', icon: FileText },
   { id: 'cookies', label: 'Cookies', icon: Cookie },
+  { id: 'rules', label: 'Rules', icon: Layers },
   { id: 'about', label: 'About', icon: Info },
 ];
 
@@ -35,16 +48,34 @@ export const TabBar: React.FC<TabBarProps> = ({
   onSelectTab,
   issuesCount,
 }) => {
+  const scrollRef = useHorizontalScroll<HTMLDivElement>();
+
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const activeEl = el.querySelector<HTMLElement>('[data-active="true"]');
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }, [activeTab]);
+
   return (
     <div className="relative border-b border-zinc-200/80 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 px-2 select-none">
-      <div className="flex items-center gap-1 overflow-x-auto overflow-y-hidden no-scrollbar pt-1 pb-0 scroll-smooth">
+      <div
+        ref={scrollRef}
+        className="flex items-center gap-1 overflow-x-auto overflow-y-hidden no-scrollbar pt-1 pb-0 scroll-smooth"
+      >
         {STATIC_TABS.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
           const badge = tab.id === 'issues' && issuesCount > 0 ? issuesCount : undefined;
 
           return (
-            <div key={tab.id} className="relative flex items-center pb-1 shrink-0">
+            <div
+              key={tab.id}
+              data-active={isActive ? 'true' : 'false'}
+              className="relative flex items-center pb-1 shrink-0"
+            >
               <button
                 type="button"
                 onClick={() => onSelectTab(tab.id)}

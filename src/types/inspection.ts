@@ -86,6 +86,7 @@ export interface InspectionSummary {
   failedFindings?: number;
   infoFindings?: number;
   notApplicableFindings?: number;
+  notAvailableFindings?: number;
   errorFindings?: number;
 }
 
@@ -115,6 +116,7 @@ export interface WebsiteInspection {
   findings: AuditFinding[];
   summary: InspectionSummary;
   scores?: Record<string, CategoryScore>;
+  overallScore?: number;
   startedAt: number;
   completedAt?: number;
 }
@@ -487,3 +489,47 @@ export interface AccessibilityData {
   inapplicableCount: number;
   violations: A11yViolation[];
 }
+
+export type HeaderCategory = 'security' | 'caching' | 'server' | 'network' | 'cors' | 'content' | 'other';
+export type HeaderStatus = 'secure' | 'warning' | 'info' | 'leak';
+
+export interface HeaderItem {
+  name: string;
+  value: string;
+  category: HeaderCategory;
+  status: HeaderStatus;
+  description?: string;
+  recommendation?: string;
+}
+
+export interface MissingSecurityHeader {
+  name: string;
+  severity: 'high' | 'medium' | 'low';
+  title: string;
+  description: string;
+  recommendation: string;
+  exampleValue?: string;
+}
+
+export interface HeaderLeakItem {
+  name: string;
+  value: string;
+  risk: string;
+  recommendation: string;
+}
+
+export interface ResponseHeadersData {
+  statusCode: number;
+  statusText: string;
+  url: string;
+  method: string;
+  headers: Record<string, string>;
+  rawHeaders: Array<{ name: string; value: string }>;
+  categorizedHeaders: HeaderItem[];
+  missingSecurityHeaders: MissingSecurityHeader[];
+  leaks: HeaderLeakItem[];
+  curlCommand: string;
+  rawHeadersText: string;
+  retrievedAt: number;
+}
+

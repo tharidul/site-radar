@@ -316,10 +316,50 @@ export class SecurityAnalyzer implements Analyzer {
       }
     }
 
+    const isFirstPartyAsset = (assetUrl: string): boolean => {
+      if (!assetUrl) return true;
+      if (
+        assetUrl.startsWith(target.origin) ||
+        assetUrl.startsWith('/') ||
+        assetUrl.startsWith('data:') ||
+        assetUrl.startsWith('blob:')
+      ) {
+        return true;
+      }
+      try {
+        const parsed = new URL(assetUrl, target.origin);
+        const assetHost = parsed.hostname.toLowerCase();
+        const targetHost = (target.hostname || parsed.hostname).toLowerCase();
+
+        if (assetHost === targetHost || assetHost.endsWith('.' + targetHost)) {
+          return true;
+        }
+
+        const twoPartTlds = ['.co.uk', '.gov.uk', '.ac.uk', '.org.uk', '.com.au', '.net.au', '.co.jp', '.co.nz', '.com.br'];
+        const hasTwoPart = twoPartTlds.some((tld) => targetHost.endsWith(tld));
+        const parts = targetHost.split('.');
+        const apexDomain = hasTwoPart && parts.length > 2
+          ? parts.slice(-3).join('.')
+          : parts.length > 2
+            ? parts.slice(-2).join('.')
+            : targetHost;
+
+        if (apexDomain && (assetHost === apexDomain || assetHost.endsWith('.' + apexDomain))) {
+          return true;
+        }
+
+        const brand = apexDomain.split('.')[0];
+        if (brand && brand.length >= 4 && (assetHost.includes(brand + 'cdn.') || assetHost.includes(brand + 'assets.'))) {
+          return true;
+        }
+      } catch {}
+      return false;
+    };
+
     const scriptsRes = getModuleData<JavaScriptData>(modules, 'scripts');
     if (scriptsRes.data?.scripts) {
       const externalScripts = scriptsRes.data.scripts.filter(
-        (s) => s.src && !s.src.startsWith(target.origin) && !s.src.startsWith('/') && !s.src.startsWith('data:'),
+        (s) => s.src && !isFirstPartyAsset(s.src),
       );
       if (externalScripts.length > 0) {
         const withoutSri = externalScripts.filter((s) => !s.hasSri);
@@ -357,7 +397,7 @@ export class SecurityAnalyzer implements Analyzer {
     const stylesRes = getModuleData<CssData>(modules, 'styles');
     if (stylesRes.data?.stylesheets) {
       const externalStyles = stylesRes.data.stylesheets.filter(
-        (s) => s.href && !s.href.startsWith(target.origin) && !s.href.startsWith('/') && !s.href.startsWith('data:'),
+        (s) => s.href && !isFirstPartyAsset(s.href),
       );
       if (externalStyles.length > 0) {
         const withoutSri = externalStyles.filter((s) => !s.hasSri);
