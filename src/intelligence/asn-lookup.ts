@@ -29,8 +29,12 @@ export class AsnLookupClient {
       };
     }
 
-    if (!this.skipConsentCheck && targetOrigin) {
-      consentManager.assertConsent(targetOrigin, 'ip-asn');
+    if (!this.skipConsentCheck) {
+      if (targetOrigin) {
+        consentManager.assertConsent(targetOrigin, 'ip-asn');
+      } else if (!consentManager.hasConsent('ip-asn')) {
+        throw new Error('User consent required: external IP/ASN lookup blocked');
+      }
     }
 
     const timeoutCtrl = new AbortController();

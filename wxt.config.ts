@@ -33,19 +33,20 @@ export default defineConfig({
       'storage',
       'cookies',
       'contextMenus',
+      'alarms',
     ],
     options_ui: {
       page: 'options.html',
       open_in_tab: true,
     },
-    host_permissions: [
+    optional_host_permissions: [
       '*://*/*',
     ],
     ...(env.browser === 'firefox' && {
       browser_specific_settings: {
         gecko: {
           id: 'siteradar@local.audit',
-          strict_min_version: '109.0',
+          strict_min_version: '115.0',
           data_collection_permissions: {
             required: ['none'],
           },

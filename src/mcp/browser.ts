@@ -1,5 +1,7 @@
 import { chromium, type Browser, type BrowserContext, type Page } from 'playwright';
 import axe from 'axe-core';
+import { assertSafePublicUrl } from './security';
+import { validatePublicUrl } from '../security/private-network.guard';
 
 export interface BrowserPageData {
   url: string;
@@ -72,12 +74,9 @@ export class BrowserRunner {
       this.browserInstance = await chromium.launch({
         headless: true,
         args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
           '--disable-dev-shm-usage',
           '--disable-gpu',
           '--no-first-run',
-          '--no-zygote',
         ],
       });
     }
@@ -94,15 +93,35 @@ export class BrowserRunner {
   }
 
   static async capturePage(targetUrl: string, timeoutMs: number = 20000): Promise<BrowserPageData> {
+    await assertSafePublicUrl(targetUrl);
+
     const browser = await this.getBrowser();
     const context: BrowserContext = await browser.newContext({
       viewport: { width: 1366, height: 768 },
       userAgent:
         'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 SiteRadar/0.2.0',
-      ignoreHTTPSErrors: true,
+      ignoreHTTPSErrors: false,
     });
 
     const page: Page = await context.newPage();
+
+    // Intercept all network routes to prevent SSRF via sub-resources or redirects
+    await page.route('**/*', async (route) => {
+      const reqUrl = route.request().url();
+      try {
+        const parsed = new URL(reqUrl);
+        if (parsed.protocol === 'data:' || parsed.protocol === 'blob:' || reqUrl === 'about:blank') {
+          return route.continue();
+        }
+      } catch {
+        return route.abort('blockedbyclient');
+      }
+      const subCheck = await validatePublicUrl(reqUrl);
+      if (!subCheck.valid) {
+        return route.abort('blockedbyclient');
+      }
+      return route.continue();
+    });
 
     let capturedHeaders: Record<string, string> = {};
     let capturedStatus = 200;
@@ -213,7 +232,10 @@ export class BrowserRunner {
         try {
           const lcps = p.getEntriesByType('largest-contentful-paint');
           if (lcps.length > 0) {
-            lcpMs = Math.round(lcps[lcps.length - 1].startTime);
+            const lastLcp = lcps[lcps.length - 1];
+            if (lastLcp) {
+              lcpMs = Math.round(lastLcp.startTime);
+            }
           }
         } catch {}
 

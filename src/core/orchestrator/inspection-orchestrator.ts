@@ -63,11 +63,156 @@ export interface OrchestratorOptions {
   cancellation?: ICancellationManager;
 }
 
+const ORIGIN_LRU_STORAGE_KEY = 'siteradar_session_origin_lru';
+const MAX_PERSISTED_ORIGINS = 10;
+
+/**
+ * Self-contained MAIN-world technology detector injected via scripting.executeScript.
+ * Must remain free of module-level references/closures so function serialization works.
+ * Guards all global property reads against DOM clobbering.
+ */
+export function detectMainWorldTechnologies(): Array<{
+  name: string;
+  category: string;
+  version?: string;
+  evidence: string;
+  confidence: number;
+}> {
+  const results: Array<{
+    name: string;
+    category: string;
+    version?: string;
+    evidence: string;
+    confidence: number;
+  }> = [];
+  try {
+    const w = window as any;
+
+    const isDomValue = (val: unknown): boolean => {
+      if (val === null || val === undefined) return false;
+      if (typeof Element !== 'undefined' && val instanceof Element) return true;
+      if (typeof HTMLCollection !== 'undefined' && val instanceof HTMLCollection) return true;
+      if (typeof NodeList !== 'undefined' && val instanceof NodeList) return true;
+      if (typeof Node !== 'undefined' && val instanceof Node) return true;
+      return false;
+    };
+
+    const isNonDomObject = (val: unknown): val is Record<string, any> =>
+      typeof val === 'object' &&
+      val !== null &&
+      val !== w &&
+      !isDomValue(val);
+
+    const isNonDomObjectOrFn = (val: unknown): val is Record<string, any> =>
+      (typeof val === 'object' || typeof val === 'function') &&
+      val !== null &&
+      val !== w &&
+      !isDomValue(val);
+
+    const reactObj = isNonDomObject(w.React) ? w.React : null;
+    const reactDomObj = isNonDomObject(w.ReactDOM) ? w.ReactDOM : null;
+    const reactHook = isNonDomObject(w.__REACT_DEVTOOLS_GLOBAL_HOOK__) ? w.__REACT_DEVTOOLS_GLOBAL_HOOK__ : null;
+    const reactRenderers = reactHook && isNonDomObject(reactHook.renderers) ? reactHook.renderers : null;
+
+    if (reactObj && typeof reactObj.version === 'string') {
+      results.push({ name: 'React', category: 'JavaScript Framework', version: reactObj.version, evidence: `window.React.version: ${reactObj.version}`, confidence: 1.0 });
+    } else if (reactObj || reactDomObj || (reactRenderers && typeof reactRenderers.size === 'number' && reactRenderers.size > 0)) {
+      results.push({ name: 'React', category: 'JavaScript Framework', evidence: 'window.React / ReactDOM in main world', confidence: 0.98 });
+    } else {
+      const candidates = document.querySelectorAll('#root, #__next, #app, #main, [id*="root"], body > div');
+      for (const el of Array.from(candidates)) {
+        const keys = Object.keys(el);
+        const fiberKey = keys.find((k) => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance') || k.startsWith('__reactContainer') || k.startsWith('_reactRootContainer'));
+        if (fiberKey) {
+          results.push({ name: 'React', category: 'JavaScript Framework', evidence: `React Fiber mounted on DOM node #${(el as HTMLElement).id || el.tagName.toLowerCase()} (${fiberKey})`, confidence: 1.0 });
+          break;
+        }
+      }
+    }
+
+    const nextObj = isNonDomObject(w.next) ? w.next : null;
+    const nextData = isNonDomObject(w.__NEXT_DATA__) ? w.__NEXT_DATA__ : null;
+    const nextF = isNonDomObject(w.__next_f) ? w.__next_f : null;
+    if (nextObj && typeof nextObj.version === 'string') {
+      results.push({ name: 'Next.js', category: 'Web Framework', version: nextObj.version, evidence: `window.next.version: ${nextObj.version}`, confidence: 1.0 });
+    } else if (nextData || nextObj || nextF) {
+      results.push({ name: 'Next.js', category: 'Web Framework', evidence: 'window.__NEXT_DATA__ / window.next in main world', confidence: 1.0 });
+    }
+
+    const vueVal = isNonDomObjectOrFn(w.Vue) ? w.Vue : null;
+    const vueFlag = w.__VUE__ === true || isNonDomObject(w.__VUE__);
+    const vueHmr = isNonDomObject(w.__VUE_HMR_RUNTIME__);
+    if (vueVal && typeof vueVal.version === 'string') {
+      results.push({ name: 'Vue.js', category: 'JavaScript Framework', version: vueVal.version, evidence: `window.Vue.version: ${vueVal.version}`, confidence: 1.0 });
+    } else if (vueVal || vueFlag || vueHmr) {
+      results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'window.Vue / __VUE__ in main world', confidence: 0.98 });
+    } else {
+      const el = document.querySelector('#app, #root, body > div');
+      if (el && ('__vue__' in el || '__vue_app__' in el)) {
+        results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'Vue instance mounted on DOM node', confidence: 1.0 });
+      }
+    }
+
+    if (isNonDomObject(w.$nuxt) || isNonDomObject(w.__NUXT__) || isNonDomObject(w.__NUXT_DATA__)) {
+      results.push({ name: 'Nuxt.js', category: 'Web Framework', evidence: 'window.$nuxt / __NUXT__ in main world', confidence: 1.0 });
+    }
+
+    const angularObj = isNonDomObject(w.angular) ? w.angular : null;
+    const angularVersion = angularObj && isNonDomObject(angularObj.version) ? angularObj.version : null;
+    const ngObj = isNonDomObject(w.ng) ? w.ng : null;
+    const hasAngularRootFn = typeof w.getAllAngularRootElements === 'function' && !isDomValue(w.getAllAngularRootElements);
+    if (angularVersion && typeof angularVersion.full === 'string') {
+      results.push({ name: 'Angular', category: 'JavaScript Framework', version: angularVersion.full, evidence: `window.angular.version: ${angularVersion.full}`, confidence: 1.0 });
+    } else if (angularObj || ngObj || hasAngularRootFn) {
+      results.push({ name: 'Angular', category: 'JavaScript Framework', evidence: 'window.angular / window.ng in main world', confidence: 0.95 });
+    }
+
+    if (isNonDomObject(w.__remixContext) || isNonDomObject(w.__remixManifest)) {
+      results.push({ name: 'Remix', category: 'Web Framework', evidence: 'window.__remixContext in main world', confidence: 1.0 });
+    }
+
+    if (isNonDomObject(w.___gatsby)) {
+      results.push({ name: 'Gatsby', category: 'Web Framework', evidence: 'window.___gatsby in main world', confidence: 1.0 });
+    }
+
+    if (isNonDomObjectOrFn(w.Solid) || isNonDomObject(w._$HY)) {
+      results.push({ name: 'Solid.js', category: 'JavaScript Framework', evidence: 'window.Solid in main world', confidence: 0.95 });
+    }
+
+    const alpineObj = isNonDomObject(w.Alpine) ? w.Alpine : null;
+    if (alpineObj && typeof alpineObj.version === 'string') {
+      results.push({ name: 'Alpine.js', category: 'JavaScript Framework', version: alpineObj.version, evidence: `window.Alpine.version: ${alpineObj.version}`, confidence: 1.0 });
+    } else if (alpineObj) {
+      results.push({ name: 'Alpine.js', category: 'JavaScript Framework', evidence: 'window.Alpine in main world', confidence: 0.95 });
+    }
+
+    const htmxObj = isNonDomObject(w.htmx) ? w.htmx : null;
+    if (htmxObj && typeof htmxObj.version === 'string') {
+      results.push({ name: 'HTMX', category: 'JavaScript Library', version: htmxObj.version, evidence: `window.htmx.version: ${htmxObj.version}`, confidence: 1.0 });
+    } else if (htmxObj) {
+      results.push({ name: 'HTMX', category: 'JavaScript Library', evidence: 'window.htmx in main world', confidence: 0.95 });
+    }
+
+    const jqVal = isNonDomObjectOrFn(w.jQuery) ? w.jQuery : null;
+    const jqFn = jqVal && isNonDomObject(jqVal.fn) ? jqVal.fn : null;
+    const dollarVal = isNonDomObjectOrFn(w.$) ? w.$ : null;
+    const dollarFn = dollarVal && isNonDomObject(dollarVal.fn) ? dollarVal.fn : null;
+    if (jqFn && typeof jqFn.jquery === 'string') {
+      results.push({ name: 'jQuery', category: 'JavaScript Library', version: jqFn.jquery, evidence: `window.jQuery.fn.jquery: ${jqFn.jquery}`, confidence: 1.0 });
+    } else if (dollarFn && typeof dollarFn.jquery === 'string') {
+      results.push({ name: 'jQuery', category: 'JavaScript Library', version: dollarFn.jquery, evidence: `window.$.fn.jquery: ${dollarFn.jquery}`, confidence: 1.0 });
+    }
+  } catch {
+  }
+  return results;
+}
+
 export class InspectionOrchestrator {
   private adapter: BrowserAdapter;
   private bus: IMessageBus;
   private cancellation: ICancellationManager;
   private activeSessions = new Map<string, ActiveScanSession>();
+  private persistChain: Promise<void> = Promise.resolve();
 
   constructor(options?: OrchestratorOptions) {
     this.adapter = options?.browserAdapter || getBrowserAdapter();
@@ -75,50 +220,74 @@ export class InspectionOrchestrator {
     this.cancellation = options?.cancellation || cancellationManager;
   }
 
-  private getStorageAreaName(): StorageArea {
-    return this.adapter.capabilities?.supportsSessionStorage ? 'session' : 'local';
+  private getStorageAreaName(): StorageArea | null {
+    return this.adapter.capabilities?.supportsSessionStorage ? 'session' : null;
   }
 
   async persistSession(session: ActiveScanSession): Promise<void> {
-    try {
-      const area = this.getStorageAreaName();
-      const payload: ActiveScanSession = {
-        scanId: session.scanId,
-        mode: session.mode,
-        targetUrl: session.targetUrl,
-        tabId: session.tabId,
-        state: session.state,
-        startedAt: session.startedAt,
-        completedAt: session.completedAt,
-        error: session.error,
-        progress: session.progress,
-        inspection: session.inspection,
-      };
+    const runPersist = async () => {
+      try {
+        const area = this.getStorageAreaName();
+        if (!area) return;
+        const payload: ActiveScanSession = {
+          scanId: session.scanId,
+          mode: session.mode,
+          targetUrl: session.targetUrl,
+          tabId: session.tabId,
+          state: session.state,
+          startedAt: session.startedAt,
+          completedAt: session.completedAt,
+          error: session.error,
+          progress: session.progress,
+          inspection: session.inspection,
+        };
 
-      const items: Record<string, unknown> = {
-        siteradar_session_latest: payload,
-      };
+        const items: Record<string, unknown> = {
+          siteradar_session_latest: payload,
+        };
 
-      if (session.targetUrl) {
-        try {
-          const origin = new URL(session.targetUrl).origin;
-          items[`siteradar_session_origin_${origin}`] = payload;
-        } catch {}
+        if (session.targetUrl) {
+          try {
+            const origin = new URL(session.targetUrl).origin;
+            items[`siteradar_session_origin_${origin}`] = payload;
+
+            const lruStored = await this.adapter.getStorage<string[]>(ORIGIN_LRU_STORAGE_KEY, area);
+            const existingLru = Array.isArray(lruStored[ORIGIN_LRU_STORAGE_KEY])
+              ? lruStored[ORIGIN_LRU_STORAGE_KEY].filter((item): item is string => typeof item === 'string')
+              : [];
+            const nextLru = [origin, ...existingLru.filter((o) => o !== origin)];
+
+            if (nextLru.length > MAX_PERSISTED_ORIGINS) {
+              const evictedOrigins = nextLru.splice(MAX_PERSISTED_ORIGINS);
+              const evictedKeys = evictedOrigins.map((o) => `siteradar_session_origin_${o}`);
+              if (evictedKeys.length > 0) {
+                await this.adapter.removeStorage(evictedKeys, area);
+              }
+            }
+
+            items[ORIGIN_LRU_STORAGE_KEY] = nextLru;
+          } catch {}
+        }
+
+        if (session.tabId !== undefined) {
+          items[`siteradar_session_tab_${session.tabId}`] = payload;
+        }
+
+        await this.adapter.setStorage(items, area);
+      } catch (err) {
+        console.warn('Failed to persist session to storage:', err);
       }
+    };
 
-      if (session.tabId !== undefined) {
-        items[`siteradar_session_tab_${session.tabId}`] = payload;
-      }
-
-      await this.adapter.setStorage(items, area);
-    } catch (err) {
-      console.warn('Failed to persist session to storage:', err);
-    }
+    const next = this.persistChain.then(runPersist, runPersist);
+    this.persistChain = next.catch(() => {});
+    return next;
   }
 
   async restoreFromStorage(tabId?: number, url?: string): Promise<ActiveScanSession | undefined> {
     try {
       const area = this.getStorageAreaName();
+      if (!area) return undefined;
       const keysToFetch: string[] = ['siteradar_session_latest'];
       if (tabId !== undefined) {
         keysToFetch.push(`siteradar_session_tab_${tabId}`);
@@ -147,6 +316,11 @@ export class InspectionOrchestrator {
       }
 
       if (candidate && candidate.scanId) {
+        if (candidate.state === 'running' && !this.activeSessions.has(candidate.scanId)) {
+          candidate.state = 'failed';
+          candidate.error = 'Scan interrupted by service worker restart.';
+          await this.persistSession(candidate);
+        }
         this.activeSessions.set(candidate.scanId, candidate);
         return candidate;
       }
@@ -159,6 +333,7 @@ export class InspectionOrchestrator {
   async clearStorageSession(): Promise<void> {
     try {
       const area = this.getStorageAreaName();
+      if (!area) return;
       const all = await this.adapter.getStorage<unknown>(null, area);
       const keysToRemove = Object.keys(all).filter((k) => k.startsWith('siteradar_session_'));
       if (keysToRemove.length > 0) {
@@ -387,86 +562,7 @@ export class InspectionOrchestrator {
                 const mainWorldResults = await this.adapter.executeScript({
                   tabId,
                   world: 'MAIN',
-                  func: () => {
-                    const results: Array<{ name: string; category: string; version?: string; evidence: string; confidence: number }> = [];
-                    try {
-                      const w = window as any;
-                      if (w.React?.version) {
-                        results.push({ name: 'React', category: 'JavaScript Framework', version: String(w.React.version), evidence: `window.React.version: ${w.React.version}`, confidence: 1.0 });
-                      } else if (w.React || w.ReactDOM || w.__REACT_DEVTOOLS_GLOBAL_HOOK__?.renderers?.size > 0) {
-                        results.push({ name: 'React', category: 'JavaScript Framework', evidence: 'window.React / ReactDOM in main world', confidence: 0.98 });
-                      } else {
-                        const candidates = document.querySelectorAll('#root, #__next, #app, #main, [id*="root"], body > div');
-                        for (const el of Array.from(candidates)) {
-                          const keys = Object.keys(el);
-                          const fiberKey = keys.find((k) => k.startsWith('__reactFiber') || k.startsWith('__reactInternalInstance') || k.startsWith('__reactContainer') || k.startsWith('_reactRootContainer'));
-                          if (fiberKey) {
-                            results.push({ name: 'React', category: 'JavaScript Framework', evidence: `React Fiber mounted on DOM node #${(el as HTMLElement).id || el.tagName.toLowerCase()} (${fiberKey})`, confidence: 1.0 });
-                            break;
-                          }
-                        }
-                      }
-
-                      if (w.next?.version) {
-                        results.push({ name: 'Next.js', category: 'Web Framework', version: String(w.next.version), evidence: `window.next.version: ${w.next.version}`, confidence: 1.0 });
-                      } else if (w.__NEXT_DATA__ || w.next || w.__next_f) {
-                        results.push({ name: 'Next.js', category: 'Web Framework', evidence: 'window.__NEXT_DATA__ / window.next in main world', confidence: 1.0 });
-                      }
-
-                      if (w.Vue?.version) {
-                        results.push({ name: 'Vue.js', category: 'JavaScript Framework', version: String(w.Vue.version), evidence: `window.Vue.version: ${w.Vue.version}`, confidence: 1.0 });
-                      } else if (w.Vue || w.__VUE__ || w.__VUE_HMR_RUNTIME__) {
-                        results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'window.Vue / __VUE__ in main world', confidence: 0.98 });
-                      } else {
-                        const el = document.querySelector('#app, #root, body > div');
-                        if (el && ('__vue__' in el || '__vue_app__' in el)) {
-                          results.push({ name: 'Vue.js', category: 'JavaScript Framework', evidence: 'Vue instance mounted on DOM node', confidence: 1.0 });
-                        }
-                      }
-
-                      if (w.$nuxt || w.__NUXT__ || w.__NUXT_DATA__) {
-                        results.push({ name: 'Nuxt.js', category: 'Web Framework', evidence: 'window.$nuxt / __NUXT__ in main world', confidence: 1.0 });
-                      }
-
-                      if (w.angular?.version?.full) {
-                        results.push({ name: 'Angular', category: 'JavaScript Framework', version: String(w.angular.version.full), evidence: `window.angular.version: ${w.angular.version.full}`, confidence: 1.0 });
-                      } else if (w.angular || w.ng || w.getAllAngularRootElements) {
-                        results.push({ name: 'Angular', category: 'JavaScript Framework', evidence: 'window.angular / window.ng in main world', confidence: 0.95 });
-                      }
-
-                      if (w.__remixContext || w.__remixManifest) {
-                        results.push({ name: 'Remix', category: 'Web Framework', evidence: 'window.__remixContext in main world', confidence: 1.0 });
-                      }
-
-                      if (w.___gatsby) {
-                        results.push({ name: 'Gatsby', category: 'Web Framework', evidence: 'window.___gatsby in main world', confidence: 1.0 });
-                      }
-
-                      if (w.Solid || w._$HY) {
-                        results.push({ name: 'Solid.js', category: 'JavaScript Framework', evidence: 'window.Solid in main world', confidence: 0.95 });
-                      }
-
-                      if (w.Alpine?.version) {
-                        results.push({ name: 'Alpine.js', category: 'JavaScript Framework', version: String(w.Alpine.version), evidence: `window.Alpine.version: ${w.Alpine.version}`, confidence: 1.0 });
-                      } else if (w.Alpine) {
-                        results.push({ name: 'Alpine.js', category: 'JavaScript Framework', evidence: 'window.Alpine in main world', confidence: 0.95 });
-                      }
-
-                      if (w.htmx?.version) {
-                        results.push({ name: 'HTMX', category: 'JavaScript Library', version: String(w.htmx.version), evidence: `window.htmx.version: ${w.htmx.version}`, confidence: 1.0 });
-                      } else if (w.htmx) {
-                        results.push({ name: 'HTMX', category: 'JavaScript Library', evidence: 'window.htmx in main world', confidence: 0.95 });
-                      }
-
-                      if (w.jQuery?.fn?.jquery) {
-                        results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.jQuery.fn.jquery), evidence: `window.jQuery.fn.jquery: ${w.jQuery.fn.jquery}`, confidence: 1.0 });
-                      } else if (w.$?.fn?.jquery) {
-                        results.push({ name: 'jQuery', category: 'JavaScript Library', version: String(w.$.fn.jquery), evidence: `window.$.fn.jquery: ${w.$.fn.jquery}`, confidence: 1.0 });
-                      }
-                    } catch {
-                    }
-                    return results;
-                  },
+                  func: detectMainWorldTechnologies,
                 });
                 if (mainWorldResults && mainWorldResults[0] && Array.isArray(mainWorldResults[0])) {
                   moduleOptions = { mainWorldTech: mainWorldResults[0] };
@@ -567,14 +663,28 @@ export class InspectionOrchestrator {
           }
         }
       } catch {
+        if (signal.aborted) {
+          throw signal.reason || new ScanCancelledError(scanId);
+        }
       }
 
       try {
-        if (typeof fetch === 'function' && inspection.target.url.startsWith('http')) {
+        if (
+          !signal.aborted &&
+          this.adapter.browserType !== 'mock' &&
+          typeof fetch === 'function' &&
+          inspection.target.url.startsWith('http')
+        ) {
+          const timeoutSignal = AbortSignal.timeout(10000);
+          const fetchSignal =
+            typeof AbortSignal.any === 'function'
+              ? AbortSignal.any([signal, timeoutSignal])
+              : timeoutSignal;
           const resp = await fetch(inspection.target.url, {
             method: 'HEAD',
             credentials: 'omit',
             cache: 'no-cache',
+            signal: fetchSignal,
           });
           const headersMap: Record<string, string> = {};
           resp.headers.forEach((val, key) => {
@@ -642,6 +752,9 @@ export class InspectionOrchestrator {
           }
         }
       } catch {
+        if (signal.aborted) {
+          throw signal.reason || new ScanCancelledError(scanId);
+        }
       }
 
       if (inspection.modules['security']) {

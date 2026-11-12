@@ -44,8 +44,12 @@ export async function handleDetectTech(args: z.infer<typeof DetectTechSchema>): 
     markdown += `### Detailed Detection Evidence\n\n`;
     for (const t of technologies) {
       markdown += `- **${t.name}:**\n`;
-      for (const ev of t.evidence) {
-        markdown += `  - ${ev}\n`;
+      if (Array.isArray(t.evidence)) {
+        for (const ev of t.evidence) {
+          markdown += `  - ${ev}\n`;
+        }
+      } else if (t.evidence) {
+        markdown += `  - ${t.evidence}\n`;
       }
     }
   }

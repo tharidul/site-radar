@@ -89,7 +89,7 @@ export class BoundedSpider {
       const normalizedSeed = normalizeUrl(seedUrl);
       const parsedOrigin = new URL(normalizedSeed).origin;
 
-      const seedPublicCheck = await validatePublicUrl(seedUrl);
+      const seedPublicCheck = await validatePublicUrl(normalizedSeed);
       if (!seedPublicCheck.valid) {
         return this.buildEmptyResult(seedUrl, startedAt, 'error', `SSRF Blocked: ${seedPublicCheck.reason}`);
       }
@@ -243,6 +243,15 @@ export class BoundedSpider {
                     details: err.message,
                   });
                 }
+              } else if (err?.blockedUrl) {
+                const blockedUrl = String(err.blockedUrl);
+                if (!excludedUrls.some((e) => e.url === blockedUrl)) {
+                  excludedUrls.push({
+                    url: blockedUrl,
+                    reason: 'private-ip',
+                    details: err.ssrfReason || 'Redirect to private IP blocked',
+                  });
+                }
               }
             } finally {
               activeUrls.delete(url);
@@ -337,6 +346,9 @@ export class BoundedSpider {
 
       const finishedAt = Date.now();
       const finalStatus = this.isAborted(effectiveSignal) ? 'aborted' : 'completed';
+      const allowed = this.robotsParser.getAllowed();
+      const disallowed = this.robotsParser.getDisallowed();
+      const sitemaps = this.robotsParser.getSitemaps();
 
       return {
         origin: parsedOrigin,
@@ -344,13 +356,13 @@ export class BoundedSpider {
         finishedAt,
         status: finalStatus,
         pages: crawledPages,
-        sitemaps: this.robotsParser.getSitemaps(),
-        robots: (this.robotsParser as any).allowed.length > 0 || (this.robotsParser as any).disallowed.length > 0
+        sitemaps,
+        robots: allowed.length > 0 || disallowed.length > 0
           ? {
-              userAgent: (this.robotsParser as any).userAgent || '*',
-              allowed: (this.robotsParser as any).allowed || [],
-              disallowed: (this.robotsParser as any).disallowed || [],
-              sitemaps: this.robotsParser.getSitemaps(),
+              userAgent: this.robotsParser.getUserAgent() || '*',
+              allowed,
+              disallowed,
+              sitemaps,
             }
           : undefined,
         progress,
@@ -398,7 +410,15 @@ export class BoundedSpider {
           }
 
           const location = response.headers.get('location')!;
-          currentUrl = new URL(location, currentUrl).href;
+          const nextUrl = new URL(location, currentUrl).href;
+          const redirectPublicCheck = await validatePublicUrl(nextUrl);
+          if (!redirectPublicCheck.valid) {
+            const ssrfErr = new Error(`SSRF Blocked: ${redirectPublicCheck.reason || 'Private IP'}`);
+            (ssrfErr as any).blockedUrl = nextUrl;
+            (ssrfErr as any).ssrfReason = redirectPublicCheck.reason || 'Redirect to private IP blocked';
+            throw ssrfErr;
+          }
+          currentUrl = nextUrl;
           continue;
         }
 

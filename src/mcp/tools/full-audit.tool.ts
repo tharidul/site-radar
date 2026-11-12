@@ -8,7 +8,8 @@ export const FullAuditSchema = z.object({
   timeoutMs: z.number().optional().default(30000).describe('Max navigation timeout in milliseconds for deep mode. Default: 30000'),
 });
 
-export async function handleFullAudit(args: z.infer<typeof FullAuditSchema>): Promise<AuditToolResult> {
+export async function handleFullAudit(rawArgs: z.input<typeof FullAuditSchema>): Promise<AuditToolResult> {
+  const args = FullAuditSchema.parse(rawArgs);
   return await SiteRadarAuditor.auditUrl(args.url, {
     mode: args.mode,
     timeoutMs: args.timeoutMs,

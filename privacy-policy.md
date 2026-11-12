@@ -70,7 +70,7 @@ SiteRadar writes only two user configuration records to `chrome.storage.local`:
 | `theme` | `"dark"` or `"light"` | Persists your chosen interface theme |
 | `crawlLimits` | maxPages, depth, concurrency, timeout | Persists your crawler configuration limits |
 
-Audit results, findings, scores, and crawled URLs are stored exclusively in temporary service worker RAM. They are never written to disk or browser storage.
+Audit results, findings, scores, and crawled URLs are stored exclusively in temporary service worker RAM (and ephemeral `chrome.storage.session` memory where supported by the browser, with no `chrome.storage.local` disk fallback). They are never written to persistent disk storage.
 
 ---
 

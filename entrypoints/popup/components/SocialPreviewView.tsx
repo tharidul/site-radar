@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Share2,
   Image as ImageIcon,
@@ -25,6 +25,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
   const [platform, setPlatform] = useState<PlatformTab>('twitter');
   const [copied, setCopied] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [faviconError, setFaviconError] = useState(false);
 
   const seoData = useMemo(() => {
     return (
@@ -74,9 +75,11 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
     seoData?.twitterCards?.['twitter:card'] ||
     (imageUrl ? 'summary_large_image' : 'summary');
 
-  const faviconUrl =
-    identityData?.faviconUrl ||
-    `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
+  const faviconUrl = identityData?.faviconUrl || null;
+
+  useEffect(() => {
+    setFaviconError(false);
+  }, [faviconUrl]);
 
   // Validation Checks
   const audit = useMemo(() => {
@@ -388,14 +391,21 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
           {platform === 'google' && (
             <div className="rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 p-4 max-w-sm sm:max-w-md mx-auto space-y-2 shadow-sm font-sans">
               <div className="flex items-center gap-2">
-                <img
-                  src={faviconUrl}
-                  alt="favicon"
-                  className="w-4 h-4 rounded-full bg-zinc-100 shrink-0"
-                  onError={(e) => {
-                    (e.target as HTMLElement).style.display = 'none';
-                  }}
-                />
+                {faviconUrl && !faviconError ? (
+                  <img
+                    src={faviconUrl}
+                    alt="favicon"
+                    className="w-4 h-4 rounded-full bg-zinc-100 shrink-0 object-contain"
+                    onError={() => setFaviconError(true)}
+                  />
+                ) : (
+                  <span
+                    className="w-4 h-4 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0"
+                    aria-hidden="true"
+                  >
+                    <Globe className="w-2.5 h-2.5 text-zinc-500 dark:text-zinc-400" />
+                  </span>
+                )}
                 <div className="flex flex-col min-w-0">
                   <span className="text-2xs font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                     {siteName}

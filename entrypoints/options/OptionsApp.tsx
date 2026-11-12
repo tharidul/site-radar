@@ -122,7 +122,7 @@ export function OptionsApp() {
               }
             }),
           ),
-          adapter.getStorage<CrawlConfig>(['crawlLimits']).catch(() => null),
+          adapter.getStorage<CrawlConfig & { perPageTimeoutMs?: number }>(['crawlLimits']).catch(() => null),
         ]);
 
         if (mounted) {
@@ -135,7 +135,17 @@ export function OptionsApp() {
           setGlobalConsent(Object.values(consents).some(Boolean));
 
           if (stored?.crawlLimits) {
-            setCrawlConfig(stored.crawlLimits);
+            const savedLimits = stored.crawlLimits;
+            setCrawlConfig({
+              ...DEFAULT_CRAWL_CONFIG,
+              ...savedLimits,
+              timeoutSeconds:
+                typeof savedLimits.timeoutSeconds === 'number'
+                  ? savedLimits.timeoutSeconds
+                  : typeof savedLimits.perPageTimeoutMs === 'number'
+                  ? Math.round(savedLimits.perPageTimeoutMs / 1000)
+                  : DEFAULT_CRAWL_CONFIG.timeoutSeconds,
+            });
           }
         }
       } catch (err) {
@@ -222,7 +232,12 @@ export function OptionsApp() {
   const handleSaveCrawlLimits = async () => {
     try {
       const adapter = getBrowserAdapter();
-      await adapter.setStorage({ crawlLimits: crawlConfig });
+      await adapter.setStorage({
+        crawlLimits: {
+          ...crawlConfig,
+          perPageTimeoutMs: crawlConfig.timeoutSeconds * 1000,
+        },
+      });
       setCrawlFeedback('Crawl boundaries saved');
     } catch {
       setCrawlFeedback('Failed to save crawl limits');
@@ -230,9 +245,20 @@ export function OptionsApp() {
     setTimeout(() => setCrawlFeedback(null), 2500);
   };
 
-  const handleResetCrawlLimits = () => {
+  const handleResetCrawlLimits = async () => {
     setCrawlConfig(DEFAULT_CRAWL_CONFIG);
-    setCrawlFeedback('Reset to default boundaries');
+    try {
+      const adapter = getBrowserAdapter();
+      await adapter.setStorage({
+        crawlLimits: {
+          ...DEFAULT_CRAWL_CONFIG,
+          perPageTimeoutMs: DEFAULT_CRAWL_CONFIG.timeoutSeconds * 1000,
+        },
+      });
+      setCrawlFeedback('Reset to default boundaries');
+    } catch {
+      setCrawlFeedback('Failed to reset crawl limits');
+    }
     setTimeout(() => setCrawlFeedback(null), 2500);
   };
 
@@ -770,7 +796,7 @@ export function OptionsApp() {
               </section>
 
               <div className="callout" style={{ marginTop: '20px' }}>
-                <strong>Headless Browser &amp; Privacy Isolation:</strong> When deep audits or accessibility testing are requested, the MCP server launches Playwright Chromium in headless mode (<code>--no-sandbox</code>) with automated <code>axe-core</code> injection. This runs in a clean, ephemeral profile with zero access to your personal Chrome browser, history, or cookies. For complete data governance details, see our <a href="privacy-policy.html#mcp-governance" target="_blank" rel="noopener noreferrer">Privacy Policy (Section 5: AI &amp; MCP Auditing)</a>.
+                <strong>Headless Browser &amp; Privacy Isolation:</strong> When deep audits or accessibility testing are requested, the MCP server launches Playwright Chromium in sandboxed headless mode with automated <code>axe-core</code> injection. This runs in a clean, ephemeral profile with zero access to your personal Chrome browser, history, or cookies. For complete data governance details, see our <a href="privacy-policy.html#mcp-governance" target="_blank" rel="noopener noreferrer">Privacy Policy (Section 5: AI &amp; MCP Auditing)</a>.
               </div>
             </div>
           )}
@@ -836,7 +862,7 @@ export function OptionsApp() {
                                   {isExpanded ? 'Hide Details' : 'View Network Disclosure'}
                                 </button>
                               </td>
-                              <td style={{ fontSize: 'var(--font-size-xs)', fontFamily: 'Roboto, monospace', color: 'var(--text-dim)' }}>
+                              <td style={{ fontSize: 'var(--font-size-xs)', fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace", color: 'var(--text-dim)' }}>
                                 {provider.endpoint}
                               </td>
                               <td style={{ verticalAlign: 'middle' }}>

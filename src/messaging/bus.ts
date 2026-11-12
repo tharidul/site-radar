@@ -7,6 +7,36 @@ import {
 } from '../types/messaging';
 import { getBrowserAdapter, type BrowserAdapter } from '../browser/adapters';
 
+export interface MessageListenerOptions {
+  requireInternalSender?: boolean;
+}
+
+interface ListenerEntry {
+  handler: (payload: any, sender: chrome.runtime.MessageSender) => any;
+  requireInternalSender: boolean;
+}
+
+/**
+ * Validates that an incoming runtime message originated from an internal
+ * extension context (e.g. popup, sidepanel, options, or background page)
+ * rather than an injected content script or external page.
+ */
+export function isInternalExtensionSender(
+  sender?: chrome.runtime.MessageSender | null,
+): boolean {
+  if (!sender || typeof chrome === 'undefined' || !chrome.runtime?.id) {
+    return false;
+  }
+  if (sender.id !== chrome.runtime.id || sender.tab !== undefined) {
+    return false;
+  }
+  const extensionOrigin = `chrome-extension://${chrome.runtime.id}`;
+  return (
+    typeof sender.url === 'string' &&
+    (sender.url === extensionOrigin || sender.url.startsWith(`${extensionOrigin}/`))
+  );
+}
+
 export interface IMessageBus {
   sendToBackground<C extends ProtocolChannel>(
     channel: C,
@@ -25,15 +55,13 @@ export interface IMessageBus {
       payload: MessageProtocol[C]['request'],
       sender: chrome.runtime.MessageSender,
     ) => Promise<MessageProtocol[C]['response']> | MessageProtocol[C]['response'],
+    options?: MessageListenerOptions,
   ): () => void;
 }
 
 export class ExtensionMessageBus implements IMessageBus {
   private adapter?: BrowserAdapter;
-  private localListeners = new Map<
-    ProtocolChannel,
-    Set<(payload: any, sender: chrome.runtime.MessageSender) => any>
-  >();
+  private localListeners = new Map<ProtocolChannel, Set<ListenerEntry>>();
   private runtimeListenerAttached = false;
 
   constructor(adapter?: BrowserAdapter) {
@@ -117,18 +145,23 @@ export class ExtensionMessageBus implements IMessageBus {
       payload: MessageProtocol[C]['request'],
       sender: chrome.runtime.MessageSender,
     ) => Promise<MessageProtocol[C]['response']> | MessageProtocol[C]['response'],
+    options?: MessageListenerOptions,
   ): () => void {
     if (!this.localListeners.has(channel)) {
       this.localListeners.set(channel, new Set());
     }
-    this.localListeners.get(channel)!.add(handler);
+    const entry: ListenerEntry = {
+      handler,
+      requireInternalSender: Boolean(options?.requireInternalSender),
+    };
+    this.localListeners.get(channel)!.add(entry);
 
     this.ensureRuntimeListener();
 
     return () => {
       const set = this.localListeners.get(channel);
       if (set) {
-        set.delete(handler);
+        set.delete(entry);
         if (set.size === 0) {
           this.localListeners.delete(channel);
         }
@@ -142,7 +175,7 @@ export class ExtensionMessageBus implements IMessageBus {
     if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
       this.runtimeListenerAttached = true;
       chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
-        if (sender.id !== chrome.runtime.id) {
+        if (!sender || sender.id !== chrome.runtime.id) {
           return false;
         }
 
@@ -151,18 +184,30 @@ export class ExtensionMessageBus implements IMessageBus {
         }
 
         const channel = message.type as ProtocolChannel;
-        const handlers = this.localListeners.get(channel);
+        const entries = this.localListeners.get(channel);
 
-        if (!handlers || handlers.size === 0) {
+        if (!entries || entries.size === 0) {
           return false;
+        }
+
+        const authorizedEntries = Array.from(entries).filter(
+          (entry) => !entry.requireInternalSender || isInternalExtensionSender(sender),
+        );
+
+        if (authorizedEntries.length === 0) {
+          sendResponse({
+            success: false,
+            error: 'Unauthorized: internal extension context required',
+          });
+          return true;
         }
 
         const payload = message.payload;
         (async () => {
           try {
             let lastResult: any;
-            for (const handler of Array.from(handlers)) {
-              lastResult = await handler(payload, sender);
+            for (const entry of authorizedEntries) {
+              lastResult = await entry.handler(payload, sender);
             }
             sendResponse({
               success: true,
@@ -186,15 +231,26 @@ export class ExtensionMessageBus implements IMessageBus {
     payload: MessageProtocol[C]['request'],
     sender?: chrome.runtime.MessageSender,
   ): Promise<MessageProtocol[C]['response']> {
-    const handlers = this.localListeners.get(channel);
-    if (!handlers || handlers.size === 0) {
+    const entries = this.localListeners.get(channel);
+    if (!entries || entries.size === 0) {
       throw new Error(`No handlers registered for channel: ${channel}`);
+    }
+
+    const entryList = Array.from(entries);
+    const authorizedEntries = sender
+      ? entryList.filter(
+          (entry) => !entry.requireInternalSender || isInternalExtensionSender(sender),
+        )
+      : entryList;
+
+    if (authorizedEntries.length === 0) {
+      throw new Error('Unauthorized: internal extension context required');
     }
 
     const mockSender = sender || ({ id: 'mock-sender' } as chrome.runtime.MessageSender);
     let result: any;
-    for (const handler of Array.from(handlers)) {
-      result = await handler(payload, mockSender);
+    for (const entry of authorizedEntries) {
+      result = await entry.handler(payload, mockSender);
     }
     return result;
   }

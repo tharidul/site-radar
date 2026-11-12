@@ -202,8 +202,11 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
       return copy as unknown as T;
     }
 
-    const result: Record<string, unknown> = {};
+    const result: Record<string, unknown> = Object.create(null);
     for (const [key, value] of Object.entries(data)) {
+      if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
+        continue;
+      }
       if (isSensitiveKey(key)) {
         result[key] = '[REDACTED]';
       } else {
@@ -211,7 +214,7 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
       }
     }
 
-    return result as T;
+    return Object.assign({}, result) as T;
   } finally {
     activeStack.delete(data as object);
   }

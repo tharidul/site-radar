@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type { WebsiteInspection, InspectionMode, AuditFinding, Severity } from '@/types/inspection';
 import type { TabInfo } from '@/types/browser';
+import type { CrawlLimits } from '@/types/crawler';
 import { MESSAGE_CHANNELS, type ScanProgressEvent } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
 import { getBrowserAdapter } from '@/browser/adapters';
@@ -23,6 +24,67 @@ import { HeadersView } from './components/HeadersView';
 import { SocialPreviewView } from './components/SocialPreviewView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
+
+export function getRequiredOriginPermissions(
+  url: string | undefined,
+  mode: InspectionMode,
+): string[] {
+  if (!url) return [];
+
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return [];
+  }
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    return [];
+  }
+
+  if (mode === 'deep') {
+    return ['*://*/*'];
+  }
+
+  return [`${parsed.protocol}//${parsed.host}/*`];
+}
+
+export async function ensureOriginPermission(
+  url: string | undefined,
+  mode: InspectionMode,
+  adapter = getBrowserAdapter(),
+): Promise<{ granted: boolean; reason?: string }> {
+  const origins = getRequiredOriginPermissions(url, mode);
+  if (origins.length === 0) {
+    return { granted: true };
+  }
+
+  try {
+    if (adapter.browserType !== 'mock') {
+      const hasChromePermissions =
+        typeof chrome !== 'undefined' && typeof chrome.permissions?.request === 'function';
+      const browserApi = (globalThis as { browser?: { permissions?: { request?: unknown } } }).browser;
+      const hasFirefoxPermissions = typeof browserApi?.permissions?.request === 'function';
+      if (!hasChromePermissions && !hasFirefoxPermissions) {
+        return { granted: true };
+      }
+    }
+
+    const granted = await adapter.requestPermissions({ origins });
+    if (!granted) {
+      return {
+        granted: false,
+        reason:
+          mode === 'deep'
+            ? 'Host permission (*://*/*) is required to run Deep Inspection.'
+            : `Host permission (${origins[0]}) is required to inspect this site.`,
+      };
+    }
+    return { granted: true };
+  } catch {
+    return { granted: true };
+  }
+}
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
@@ -88,6 +150,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
   const [refreshPage, setRefreshPage] = useState<boolean>(false);
+  const activeScanIdRef = useRef<string | null>(null);
+  const pendingCancelRef = useRef<boolean>(false);
   const [liveMetrics, setLiveMetrics] = useState<{
     resourceCount: number;
     wireTransferBytes: number;
@@ -137,7 +201,12 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
 
             if (stateRes.state === 'running' && isMatch) {
               setScanStatus('running');
-              if (stateRes.progress) setProgress(stateRes.progress);
+              if (stateRes.progress) {
+                setProgress(stateRes.progress);
+                if (stateRes.progress.scanId) {
+                  activeScanIdRef.current = stateRes.progress.scanId;
+                }
+              }
             } else if ((stateRes.state === 'completed' || stateRes.inspection) && stateRes.inspection && isMatch) {
               setScanStatus('completed');
               setInspection(stateRes.inspection);
@@ -209,7 +278,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     const unsubProgress = messageBus.onMessage(
       MESSAGE_CHANNELS.SCAN_PROGRESS,
       (event: ScanProgressEvent) => {
-        if (!mounted) return;
+        if (!mounted || pendingCancelRef.current) return;
+        if (event.scanId) {
+          activeScanIdRef.current = event.scanId;
+        }
         setScanStatus('running');
         setProgress(event);
       },
@@ -218,7 +290,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     const unsubCompleted = messageBus.onMessage(
       MESSAGE_CHANNELS.SCAN_COMPLETED,
       (payload: { scanId: string; inspection?: WebsiteInspection }) => {
-        if (!mounted) return;
+        if (!mounted || pendingCancelRef.current) return;
+        activeScanIdRef.current = null;
         setScanStatus('completed');
         if (payload.inspection) {
           setInspection(payload.inspection);
@@ -229,7 +302,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     const unsubFailed = messageBus.onMessage(
       MESSAGE_CHANNELS.SCAN_FAILED,
       (payload: { scanId: string; error: string }) => {
-        if (!mounted) return;
+        if (!mounted || pendingCancelRef.current) return;
+        activeScanIdRef.current = null;
         setScanStatus('failed');
         setErrorMessage(payload.error || 'Audit scan failed');
       },
@@ -248,6 +322,44 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       }
     };
   }, []);
+
+  // CRIT-03: Keepalive port connection to service worker during active scans
+  useEffect(() => {
+    if (scanStatus !== 'running') return;
+    if (typeof chrome === 'undefined' || !chrome.runtime?.connect) return;
+
+    let port: chrome.runtime.Port | null = null;
+    let pingInterval: ReturnType<typeof setInterval> | null = null;
+
+    try {
+      port = chrome.runtime.connect({ name: 'siteradar-scan-keepalive' });
+      port.postMessage('PING');
+
+      pingInterval = setInterval(() => {
+        try {
+          port?.postMessage('PING');
+        } catch {
+          if (pingInterval) clearInterval(pingInterval);
+        }
+      }, 20000);
+
+      port.onDisconnect.addListener(() => {
+        if (pingInterval) clearInterval(pingInterval);
+        port = null;
+      });
+    } catch (err) {
+      console.warn('Failed to establish keepalive port:', err);
+    }
+
+    return () => {
+      if (pingInterval) clearInterval(pingInterval);
+      if (port) {
+        try {
+          port.disconnect();
+        } catch {}
+      }
+    };
+  }, [scanStatus]);
 
   useEffect(() => {
     if (scanStatus !== 'completed' || !activeTab?.id) {
@@ -285,12 +397,23 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
 
+    const adapter = getBrowserAdapter();
+    const permissionResult = await ensureOriginPermission(activeTab?.url, selectedMode, adapter);
+    if (!permissionResult.granted) {
+      setScanStatus('failed');
+      setErrorMessage(permissionResult.reason || 'Host permission was denied.');
+      return;
+    }
+
+    pendingCancelRef.current = false;
+    activeScanIdRef.current = null;
+    setIsCancelling(false);
     setScanStatus('running');
     setErrorMessage(null);
     setInspection(null);
     setLiveMetrics(null);
     setProgress({
-      scanId: `scan_${Date.now()}`,
+      scanId: '',
       mode: selectedMode,
       step: refreshPage
         ? 'Hard refreshing page (clearing cache) for accurate data usage...'
@@ -302,28 +425,84 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     });
 
     try {
+      const stored = await adapter
+        .getStorage<Partial<CrawlLimits> & { timeoutSeconds?: number }>(['crawlLimits'])
+        .catch(() => null);
+      const rawLimits = stored?.crawlLimits;
+      let crawlLimits: Partial<CrawlLimits> | undefined;
+      if (rawLimits && typeof rawLimits === 'object') {
+        const normalized: Partial<CrawlLimits> = {
+          ...(typeof rawLimits.maxPages === 'number' && Number.isFinite(rawLimits.maxPages) && rawLimits.maxPages > 0
+            ? { maxPages: rawLimits.maxPages }
+            : {}),
+          ...(typeof rawLimits.maxDepth === 'number' && Number.isFinite(rawLimits.maxDepth) && rawLimits.maxDepth > 0
+            ? { maxDepth: rawLimits.maxDepth }
+            : {}),
+          ...(typeof rawLimits.concurrency === 'number' && Number.isFinite(rawLimits.concurrency) && rawLimits.concurrency > 0
+            ? { concurrency: rawLimits.concurrency }
+            : {}),
+          ...(typeof rawLimits.perPageTimeoutMs === 'number' &&
+          Number.isFinite(rawLimits.perPageTimeoutMs) &&
+          rawLimits.perPageTimeoutMs > 0
+            ? { perPageTimeoutMs: rawLimits.perPageTimeoutMs }
+            : typeof rawLimits.timeoutSeconds === 'number' &&
+              Number.isFinite(rawLimits.timeoutSeconds) &&
+              rawLimits.timeoutSeconds > 0
+            ? { perPageTimeoutMs: rawLimits.timeoutSeconds * 1000 }
+            : {}),
+        };
+        if (Object.keys(normalized).length > 0) {
+          crawlLimits = normalized;
+        }
+      }
+
+      if (pendingCancelRef.current) {
+        return;
+      }
+
       const res = await messageBus.sendToBackground(MESSAGE_CHANNELS.START_INSPECTION, {
         mode: selectedMode,
         tabId: activeTab?.id,
+        crawlLimits,
         refreshPage,
       });
+
+      if (pendingCancelRef.current) {
+        if (res?.success && res.scanId) {
+          await messageBus
+            .sendToBackground(MESSAGE_CHANNELS.CANCEL_INSPECTION, {
+              scanId: res.scanId,
+            })
+            .catch(() => {});
+        }
+        return;
+      }
 
       if (!res.success) {
         setScanStatus('failed');
         setErrorMessage(res.error || 'Failed to start inspection');
+        return;
+      }
+
+      if (res.scanId) {
+        activeScanIdRef.current = res.scanId;
+        setProgress((prev) => (prev ? { ...prev, scanId: res.scanId } : prev));
       }
     } catch (err: any) {
+      if (pendingCancelRef.current) return;
       setScanStatus('failed');
       setErrorMessage(err?.message || 'Error communicating with background service worker');
     }
-  }, [schemeValidation.valid, selectedMode, activeTab?.id, refreshPage]);
+  }, [schemeValidation.valid, selectedMode, activeTab?.id, activeTab?.url, refreshPage]);
 
   const handleCancelInspection = useCallback(async () => {
     setIsCancelling(true);
+    pendingCancelRef.current = true;
+    const targetScanId = activeScanIdRef.current || progress?.scanId || '';
     try {
-      if (progress?.scanId) {
+      if (targetScanId) {
         await messageBus.sendToBackground(MESSAGE_CHANNELS.CANCEL_INSPECTION, {
-          scanId: progress.scanId,
+          scanId: targetScanId,
         });
       }
       setScanStatus('cancelled');
@@ -331,11 +510,14 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       console.warn('Cancel error:', err);
       setScanStatus('cancelled');
     } finally {
+      activeScanIdRef.current = null;
       setIsCancelling(false);
     }
   }, [progress?.scanId]);
 
   const handleClearResults = useCallback(async () => {
+    pendingCancelRef.current = false;
+    activeScanIdRef.current = null;
     try {
       await messageBus.sendToBackground(MESSAGE_CHANNELS.CLEAR_IN_MEMORY_STATE, undefined);
     } catch (err) {

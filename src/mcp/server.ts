@@ -6,6 +6,7 @@ import { handleDetectTech } from './tools/tech.tool';
 import { handleAuditAccessibility } from './tools/a11y.tool';
 import { handleFullAudit } from './tools/full-audit.tool';
 import { BrowserRunner } from './browser';
+import { assertSafePublicUrl } from './security';
 
 export function createSiteRadarServer(): McpServer {
   const server = new McpServer({
@@ -22,6 +23,7 @@ export function createSiteRadarServer(): McpServer {
     },
     async ({ url }) => {
       try {
+        await assertSafePublicUrl(url);
         const result = await handleAuditHeaders({ url });
         return {
           content: [
@@ -64,6 +66,7 @@ export function createSiteRadarServer(): McpServer {
     },
     async ({ url, useBrowser }) => {
       try {
+        await assertSafePublicUrl(url);
         const result = await handleAuditSeo({ url, useBrowser });
         return {
           content: [
@@ -109,6 +112,7 @@ export function createSiteRadarServer(): McpServer {
     },
     async ({ url, deep }) => {
       try {
+        await assertSafePublicUrl(url);
         const result = await handleDetectTech({ url, deep });
         return {
           content: [
@@ -151,6 +155,7 @@ export function createSiteRadarServer(): McpServer {
     },
     async ({ url, timeoutMs }) => {
       try {
+        await assertSafePublicUrl(url);
         const result = await handleAuditAccessibility({ url, timeoutMs });
         return {
           content: [
@@ -193,6 +198,7 @@ export function createSiteRadarServer(): McpServer {
     },
     async ({ url, mode, timeoutMs }) => {
       try {
+        await assertSafePublicUrl(url);
         const result = await handleFullAudit({ url, mode, timeoutMs });
         return {
           content: [

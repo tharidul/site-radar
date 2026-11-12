@@ -38,14 +38,14 @@ describe('SiteRadar MCP Server Tools', () => {
   });
 
   it('runs live axe-core accessibility audit via Playwright', async () => {
-    const result = await handleAuditAccessibility({ url: 'https://example.com' });
+    const result = await handleAuditAccessibility({ url: 'https://example.com', timeoutMs: 25000 });
     expect(result.url).toBe('https://example.com');
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.markdownReport).toContain('Accessibility Audit');
   }, 35000);
 
   it('runs full 5-pillar SiteRadar audit with scores and breakdown', async () => {
-    const result = await handleFullAudit({ url: 'https://example.com', mode: 'fast' });
+    const result = await handleFullAudit({ url: 'https://example.com', mode: 'fast', timeoutMs: 30000 });
     expect(result.overallScore).toBeGreaterThan(0);
     expect(result.scores['security']).toBeDefined();
     expect(result.scores['seo']).toBeDefined();

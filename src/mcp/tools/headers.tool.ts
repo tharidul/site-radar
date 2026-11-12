@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { HeadersService } from '../../services/headers.service';
+import { assertSafePublicUrl } from '../security';
+import { validatePublicUrl } from '../../security/private-network.guard';
 import type { HeaderAuditResult } from '../types';
 
 export const AuditHeadersSchema = z.object({
@@ -8,6 +10,8 @@ export const AuditHeadersSchema = z.object({
 
 export async function handleAuditHeaders(args: z.infer<typeof AuditHeadersSchema>): Promise<HeaderAuditResult> {
   const url = args.url;
+  await assertSafePublicUrl(url);
+
   let statusCode = 200;
   let statusText = 'OK';
   const headersMap: Record<string, string> = {};
@@ -20,7 +24,15 @@ export async function handleAuditHeaders(args: z.infer<typeof AuditHeadersSchema
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       },
       redirect: 'follow',
+      signal: AbortSignal.timeout(10000),
     });
+
+    if (resp.url && resp.url !== url) {
+      const redirectCheck = await validatePublicUrl(resp.url);
+      if (!redirectCheck.valid) {
+        throw new Error(`SSRF Blocked: Redirect destination is a private, loopback, or reserved address (${redirectCheck.reason || 'Restricted IP'})`);
+      }
+    }
 
     statusCode = resp.status;
     statusText = resp.statusText;
@@ -71,7 +83,7 @@ export async function handleAuditHeaders(args: z.infer<typeof AuditHeadersSchema
   if (processed.leaks.length > 0) {
     markdown += `### 🔍 Information Leaks Detected (${processed.leaks.length})\n\n`;
     for (const leak of processed.leaks) {
-      markdown += `- **\`${leak.header}\`**: \`${leak.value}\`\n  > ${leak.description}\n`;
+      markdown += `- **\`${leak.name}\`**: \`${leak.value}\`\n  > ${leak.risk}\n`;
     }
     markdown += `\n`;
   }

@@ -10,11 +10,11 @@ import type { WebsiteTarget } from '../src/types/inspection';
 describe('Engine Adjustments & Refinements', () => {
   describe('SecurityAnalyzer - SRI subresource domain classification', () => {
     const analyzer = new SecurityAnalyzer();
-    const target: InspectionTarget = {
+    const target: WebsiteTarget = {
       url: 'https://stripe.com/',
       origin: 'https://stripe.com',
       hostname: 'stripe.com',
-      inspectedAt: new Date().toISOString(),
+      inspectedAt: Date.now(),
     };
 
     it('does not penalize first-party subdomains or branded CDNs for SRI', async () => {
@@ -79,11 +79,11 @@ describe('Engine Adjustments & Refinements', () => {
 
   describe('PerformanceAnalyzer - CLS handling with zero layout shifts', () => {
     const analyzer = new PerformanceAnalyzer();
-    const target: InspectionTarget = {
+    const target: WebsiteTarget = {
       url: 'https://amazon.com/',
       origin: 'https://amazon.com',
       hostname: 'amazon.com',
-      inspectedAt: new Date().toISOString(),
+      inspectedAt: Date.now(),
     };
 
     it('marks CLS as passed with visual stability when clsScore is 0', () => {

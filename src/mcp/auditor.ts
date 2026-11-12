@@ -1,10 +1,12 @@
 import { Window as HappyWindow } from 'happy-dom';
-import type { AuditFinding, CategoryScore, CollectionResult, InspectionSummary, TechnologyData, WebsiteTarget } from '../types/inspection';
+import type { AuditFinding, CategoryScore, CollectionResult, InspectionMode, InspectionSummary, TechnologyData, WebsiteTarget } from '../types/inspection';
 import { runAllAnalyzers } from '../analyzers';
 import { calculateInspectionScores } from '../scoring';
 import { PAGE_COLLECTORS } from '../collectors/page';
 import { HeadersService } from '../services/headers.service';
 import { BrowserRunner, type BrowserPageData } from './browser';
+import { assertSafePublicUrl } from './security';
+import { validatePublicUrl } from '../security/private-network.guard';
 import type { AuditToolResult } from './types';
 
 // Ensure window & document globals exist in Node for collectors
@@ -21,13 +23,15 @@ export class SiteRadarAuditor {
    * Run a full deep audit using Playwright headless browser
    */
   static async auditUrl(targetUrl: string, options?: { mode?: 'fast' | 'deep'; timeoutMs?: number }): Promise<AuditToolResult> {
+    await assertSafePublicUrl(targetUrl);
+
     const mode = options?.mode || 'deep';
     const parsed = new URL(targetUrl);
     const target: WebsiteTarget = {
       url: targetUrl,
       origin: parsed.origin,
       hostname: parsed.hostname,
-      inspectedAt: new Date().toISOString(),
+      inspectedAt: Date.now(),
     };
 
     let browserData: BrowserPageData | null = null;
@@ -57,9 +61,16 @@ export class SiteRadarAuditor {
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           },
           redirect: 'follow',
+          signal: AbortSignal.timeout(10000),
         });
         statusCode = resp.status;
         statusText = resp.statusText;
+        if (resp.url && resp.url !== targetUrl) {
+          const redirectCheck = await validatePublicUrl(resp.url);
+          if (!redirectCheck.valid) {
+            throw new Error(`SSRF Blocked: Redirect destination is a private, loopback, or reserved address (${redirectCheck.reason || 'Restricted IP'})`);
+          }
+        }
         resp.headers.forEach((val, key) => {
           responseHeaders[key.toLowerCase()] = val;
         });
@@ -82,7 +93,6 @@ export class SiteRadarAuditor {
           document: domDoc as any,
           window: domWin as any,
           url: targetUrl,
-          mode,
         });
       } catch (err: any) {
         modules[modId] = {
@@ -167,8 +177,7 @@ export class SiteRadarAuditor {
             category: 'Web Framework',
             version: browserData.runtimeGlobals.nextVersion,
             confidence: 1,
-            evidence: ['window.next.version runtime global detected'],
-            sources: ['window.next'],
+            evidence: 'window.next.version runtime global detected',
           });
         }
         if (browserData.runtimeGlobals.hasReact && !techData.technologies.some((t) => t.name === 'React')) {
@@ -176,17 +185,17 @@ export class SiteRadarAuditor {
             name: 'React',
             category: 'JavaScript Framework',
             confidence: 1,
-            evidence: ['React DOM runtime mounting detected'],
-            sources: ['React'],
+            evidence: 'React DOM runtime mounting detected',
           });
         }
       }
     }
 
     // Run all analyzers
+    const engineMode: InspectionMode = mode === 'fast' ? 'quick' : 'deep';
     const findings = await runAllAnalyzers({
       target,
-      mode,
+      mode: engineMode,
       modules,
     });
 
@@ -233,7 +242,12 @@ export class SiteRadarAuditor {
     const markdownReport = this.generateMarkdownReport(target, scoreResult.overallScore, scoreResult.scores, topIssues, techList, summary);
 
     return {
-      target,
+      target: {
+        url: target.url,
+        origin: target.origin,
+        hostname: target.hostname,
+        inspectedAt: new Date(target.inspectedAt).toISOString(),
+      },
       overallScore: scoreResult.overallScore,
       scores: scoreResult.scores,
       summary,
@@ -260,7 +274,7 @@ export class SiteRadarAuditor {
 
     let md = `# SiteRadar Audit: ${target.hostname}\n\n`;
     md += `**Target URL:** ${target.url}\n`;
-    md += `**Inspected At:** ${target.inspectedAt}\n`;
+    md += `**Inspected At:** ${new Date(target.inspectedAt).toISOString()}\n`;
     md += `**Overall Quality Score:** **${overallScore}/100** (${getBadge(overallScore)})\n\n`;
 
     md += `### Score Breakdown\n\n`;
@@ -271,9 +285,7 @@ export class SiteRadarAuditor {
       const name = catKey.charAt(0).toUpperCase() + catKey.slice(1);
       const badge = getBadge(scoreObj.score);
       const passedRatio = `${scoreObj.passed}/${scoreObj.totalChecks}`;
-      const deductionNote = scoreObj.deductionsExplanation.length > 0
-        ? scoreObj.deductionsExplanation[0]
-        : 'All checks passed';
+      const deductionNote = scoreObj.deductionsExplanation?.[0] || 'All checks passed';
       md += `| **${name}** | **${scoreObj.score}** | ${badge} | ${passedRatio} | ${deductionNote} |\n`;
     }
 

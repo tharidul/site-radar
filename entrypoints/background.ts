@@ -1,77 +1,252 @@
 
 import { defineBackground } from 'wxt/utils/define-background';
 import { MESSAGE_CHANNELS } from '../src/types/messaging';
-import { messageBus } from '../src/messaging/bus';
+import { isInternalExtensionSender, messageBus } from '../src/messaging/bus';
 import { inspectionOrchestrator } from '../src/core/orchestrator';
 import { consentManager } from '../src/intelligence';
 import { BadgeService } from '../src/services/badge.service';
+import { getBrowserAdapter } from '../src/browser/adapters';
+import type { CrawlLimits } from '../src/types/crawler';
 import type { IntelligenceProviderType } from '../src/types/intelligence';
 
+type StoredCrawlLimits = Partial<CrawlLimits> & { timeoutSeconds?: number };
+
+function normalizeCrawlLimits(raw?: StoredCrawlLimits | null): Partial<CrawlLimits> | undefined {
+  if (!raw || typeof raw !== 'object') {
+    return undefined;
+  }
+
+  const normalized: Partial<CrawlLimits> = {};
+
+  if (typeof raw.maxPages === 'number' && Number.isFinite(raw.maxPages) && raw.maxPages > 0) {
+    normalized.maxPages = raw.maxPages;
+  }
+  if (typeof raw.maxDepth === 'number' && Number.isFinite(raw.maxDepth) && raw.maxDepth > 0) {
+    normalized.maxDepth = raw.maxDepth;
+  }
+  if (typeof raw.concurrency === 'number' && Number.isFinite(raw.concurrency) && raw.concurrency > 0) {
+    normalized.concurrency = raw.concurrency;
+  }
+  if (
+    typeof raw.perPageTimeoutMs === 'number' &&
+    Number.isFinite(raw.perPageTimeoutMs) &&
+    raw.perPageTimeoutMs > 0
+  ) {
+    normalized.perPageTimeoutMs = raw.perPageTimeoutMs;
+  } else if (
+    typeof raw.timeoutSeconds === 'number' &&
+    Number.isFinite(raw.timeoutSeconds) &&
+    raw.timeoutSeconds > 0
+  ) {
+    normalized.perPageTimeoutMs = raw.timeoutSeconds * 1000;
+  }
+  if (
+    typeof raw.maxSitemapEntries === 'number' &&
+    Number.isFinite(raw.maxSitemapEntries) &&
+    raw.maxSitemapEntries > 0
+  ) {
+    normalized.maxSitemapEntries = raw.maxSitemapEntries;
+  }
+  if (typeof raw.retryCount === 'number' && Number.isFinite(raw.retryCount) && raw.retryCount >= 0) {
+    normalized.retryCount = raw.retryCount;
+  }
+  if (
+    typeof raw.maxRedirects === 'number' &&
+    Number.isFinite(raw.maxRedirects) &&
+    raw.maxRedirects >= 0
+  ) {
+    normalized.maxRedirects = raw.maxRedirects;
+  }
+  if (typeof raw.sameOriginOnly === 'boolean') {
+    normalized.sameOriginOnly = raw.sameOriginOnly;
+  }
+
+  return Object.keys(normalized).length > 0 ? normalized : undefined;
+}
+
+function isAuthorizedBackgroundSender(sender?: chrome.runtime.MessageSender | null): boolean {
+  if (sender?.id === 'mock-sender' && (typeof chrome === 'undefined' || !chrome.runtime?.id)) {
+    return true;
+  }
+  return isInternalExtensionSender(sender);
+}
+
 export default defineBackground(() => {
-  messageBus.onMessage(MESSAGE_CHANNELS.START_INSPECTION, async (payload) => {
-    try {
-      const mode = payload?.mode || 'quick';
-      const tabId = payload?.tabId;
-      const options = {
-        crawlLimits: payload?.crawlLimits,
-        externalConsent: payload?.externalConsent,
-        refreshPage: payload?.refreshPage,
+  void consentManager.ensureLoaded();
+
+  // Track tabs that currently have an active or completed audit badge
+  const badgedTabIds = new Set<number>();
+
+  const clearKeepaliveAlarm = (scanId: string) => {
+    if (typeof chrome !== 'undefined' && chrome.alarms?.clear) {
+      chrome.alarms.clear(`siteradar_keepalive_${scanId}`, () => {});
+    }
+  };
+
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.START_INSPECTION,
+    async (payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        return {
+          success: false,
+          scanId: '',
+          error: 'Unauthorized: Content scripts cannot initiate inspections',
+        };
+      }
+
+      try {
+        await consentManager.ensureLoaded();
+
+        const mode = payload?.mode || 'quick';
+        const tabId = payload?.tabId;
+
+        const adapter = getBrowserAdapter();
+        const stored = await adapter
+          .getStorage<StoredCrawlLimits>(['crawlLimits'])
+          .catch(() => null);
+        const storedLimits = normalizeCrawlLimits(stored?.crawlLimits);
+        const payloadLimits = normalizeCrawlLimits(payload?.crawlLimits as StoredCrawlLimits | undefined);
+        const mergedLimits = { ...storedLimits, ...payloadLimits };
+        const crawlLimits = Object.keys(mergedLimits).length > 0 ? mergedLimits : undefined;
+
+        const options = {
+          crawlLimits,
+          externalConsent: payload?.externalConsent,
+          refreshPage: payload?.refreshPage,
+        };
+
+        const inspectionPromise = inspectionOrchestrator.startInspection(mode, tabId, options);
+        const session = inspectionOrchestrator.getSession();
+        const scanId = session?.scanId || `scan_${Date.now()}`;
+
+        if (typeof tabId === 'number' && tabId >= 0) {
+          badgedTabIds.add(tabId);
+        } else if (typeof session?.tabId === 'number' && session.tabId >= 0) {
+          badgedTabIds.add(session.tabId);
+        }
+
+        // Schedule keepalive alarm to prevent MV3 idle termination during active scans
+        if (typeof chrome !== 'undefined' && chrome.alarms?.create) {
+          chrome.alarms.create(`siteradar_keepalive_${scanId}`, {
+            periodInMinutes: 0.4,
+          });
+        }
+
+        inspectionPromise
+          .then(() => {
+            const settledSession = inspectionOrchestrator.getSession(scanId);
+            if (typeof settledSession?.tabId === 'number' && settledSession.tabId >= 0) {
+              badgedTabIds.add(settledSession.tabId);
+            }
+          })
+          .catch((err) => {
+            const failedSession = inspectionOrchestrator.getSession(scanId);
+            const failedTabId = failedSession?.tabId ?? tabId;
+            if (typeof failedTabId === 'number') {
+              badgedTabIds.delete(failedTabId);
+            }
+            console.warn('Inspection execution error:', err);
+          })
+          .finally(() => {
+            clearKeepaliveAlarm(scanId);
+          });
+
+        return { success: true, scanId };
+      } catch (err: any) {
+        return { success: false, scanId: '', error: err?.message || 'Failed to start inspection' };
+      }
+    },
+    { requireInternalSender: true },
+  );
+
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.CANCEL_INSPECTION,
+    async (payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        return {
+          success: false,
+          error: 'Unauthorized: Content scripts cannot cancel inspections',
+        };
+      }
+      const scanId = payload?.scanId;
+      if (!scanId) {
+        return { success: false, error: 'scanId is required to cancel' };
+      }
+      clearKeepaliveAlarm(scanId);
+      const session = inspectionOrchestrator.getSession(scanId);
+      const cancelled = inspectionOrchestrator.cancelInspection(scanId);
+      if (cancelled && typeof session?.tabId === 'number') {
+        badgedTabIds.delete(session.tabId);
+      }
+      return { success: cancelled };
+    },
+    { requireInternalSender: true },
+  );
+
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.GET_INSPECTION_STATE,
+    async (payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        throw new Error('Unauthorized: Content scripts cannot access inspection state');
+      }
+      let session = inspectionOrchestrator.getSession(payload?.scanId, payload?.tabId, payload?.url);
+      if (!session) {
+        session = await inspectionOrchestrator.restoreFromStorage(payload?.tabId, payload?.url);
+      }
+      return {
+        state: session?.state || 'idle',
+        inspection: session?.inspection,
+        progress: session?.progress,
+        targetUrl: session?.targetUrl,
       };
+    },
+    { requireInternalSender: true },
+  );
 
-      const inspectionPromise = inspectionOrchestrator.startInspection(mode, tabId, options);
-      const session = inspectionOrchestrator.getSession();
-      const scanId = session?.scanId || `scan_${Date.now()}`;
-      inspectionPromise.catch((err) => {
-        console.warn('Inspection execution error:', err);
-      });
-      return { success: true, scanId };
-    } catch (err: any) {
-      return { success: false, scanId: '', error: err?.message || 'Failed to start inspection' };
-    }
-  });
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.CLEAR_IN_MEMORY_STATE,
+    async (_payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        return { success: false };
+      }
+      badgedTabIds.clear();
+      inspectionOrchestrator.clearSessions();
+      return { success: true };
+    },
+    { requireInternalSender: true },
+  );
 
-  messageBus.onMessage(MESSAGE_CHANNELS.CANCEL_INSPECTION, async (payload) => {
-    const scanId = payload?.scanId;
-    if (!scanId) {
-      return { success: false, error: 'scanId is required to cancel' };
-    }
-    const cancelled = inspectionOrchestrator.cancelInspection(scanId);
-    return { success: cancelled };
-  });
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.CHECK_EXTERNAL_CONSENT,
+    async (payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        throw new Error('Unauthorized: Content scripts cannot read consent state');
+      }
+      await consentManager.ensureLoaded();
+      const provider = payload?.provider as IntelligenceProviderType;
+      const granted = consentManager.hasConsent(provider);
+      return { granted };
+    },
+    { requireInternalSender: true },
+  );
 
-  messageBus.onMessage(MESSAGE_CHANNELS.GET_INSPECTION_STATE, async (payload) => {
-    let session = inspectionOrchestrator.getSession(payload?.scanId, payload?.tabId, payload?.url);
-    if (!session) {
-      session = await inspectionOrchestrator.restoreFromStorage(payload?.tabId, payload?.url);
-    }
-    return {
-      state: session?.state || 'idle',
-      inspection: session?.inspection,
-      progress: session?.progress,
-      targetUrl: session?.targetUrl,
-    };
-  });
-
-  messageBus.onMessage(MESSAGE_CHANNELS.CLEAR_IN_MEMORY_STATE, async () => {
-    inspectionOrchestrator.clearSessions();
-    return { success: true };
-  });
-
-  messageBus.onMessage(MESSAGE_CHANNELS.CHECK_EXTERNAL_CONSENT, async (payload) => {
-    const provider = payload?.provider as IntelligenceProviderType;
-    const granted = consentManager.hasConsent(provider);
-    return { granted };
-  });
-
-  messageBus.onMessage(MESSAGE_CHANNELS.SET_EXTERNAL_CONSENT, async (payload) => {
-    const provider = payload?.provider as IntelligenceProviderType;
-    const granted = Boolean(payload?.granted);
-    consentManager.setConsent(provider, granted);
-    return { success: true };
-  });
+  messageBus.onMessage(
+    MESSAGE_CHANNELS.SET_EXTERNAL_CONSENT,
+    async (payload, sender) => {
+      if (!isAuthorizedBackgroundSender(sender)) {
+        return { success: false };
+      }
+      const provider = payload?.provider as IntelligenceProviderType;
+      const granted = Boolean(payload?.granted);
+      await consentManager.setConsent(provider, granted);
+      return { success: true };
+    },
+    { requireInternalSender: true },
+  );
 
   if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
+      badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
       BadgeService.clear();
     });
@@ -79,20 +254,38 @@ export default defineBackground(() => {
 
   if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
     chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
-      if (changeInfo.status === 'loading') {
-        BadgeService.clear(tabId);
+      // Skip irrelevant updates (title, favicon, audible, status='complete', etc.)
+      if (!changeInfo.url && changeInfo.status !== 'loading') {
+        return;
       }
+
+      // Only clear badges on tabs that have an active or audited badge
+      if (!badgedTabIds.has(tabId)) {
+        return;
+      }
+
+      const activeSession = inspectionOrchestrator.getSession(undefined, tabId);
+      // Avoid wiping the scanning badge while an active scan reloads its target tab
+      if (activeSession?.state === 'running' && !changeInfo.url) {
+        return;
+      }
+
+      badgedTabIds.delete(tabId);
+      BadgeService.clear(tabId);
     });
   }
 
   if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
     chrome.tabs.onRemoved.addListener((tabId) => {
-      BadgeService.clear(tabId);
+      if (badgedTabIds.delete(tabId)) {
+        BadgeService.clear(tabId);
+      }
     });
   }
 
   if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
     chrome.runtime.onInstalled.addListener((details) => {
+      badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
 
       // On first install, open the onboarding & MCP welcome tab
@@ -110,12 +303,31 @@ export default defineBackground(() => {
       }
 
       if (chrome.contextMenus) {
+        const registerContextMenus = () => {
+          try {
+            chrome.contextMenus.create(
+              {
+                id: 'open-side-panel',
+                title: 'Open SiteRadar in Side Panel',
+                contexts: ['all'],
+              },
+              () => {
+                void chrome.runtime?.lastError;
+              },
+            );
+          } catch {
+          }
+        };
+
         try {
-          chrome.contextMenus.create({
-            id: 'open-side-panel',
-            title: 'Open SiteRadar in Side Panel',
-            contexts: ['all'],
-          });
+          if (typeof chrome.contextMenus.removeAll === 'function') {
+            chrome.contextMenus.removeAll(() => {
+              void chrome.runtime?.lastError;
+              registerContextMenus();
+            });
+          } else {
+            registerContextMenus();
+          }
         } catch {
         }
       }
@@ -129,6 +341,40 @@ export default defineBackground(() => {
           await (chrome as any).sidePanel.open({ windowId: tab.windowId });
         } catch (err) {
           console.warn('Failed to open side panel from context menu:', err);
+        }
+      }
+    });
+  }
+
+  // CRIT-03: Register onConnect listener for UI-driven port keepalive
+  if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
+    chrome.runtime.onConnect.addListener((port) => {
+      if (port.name === 'siteradar-scan-keepalive') {
+        if (!isInternalExtensionSender(port.sender)) {
+          try {
+            port.disconnect();
+          } catch {}
+          return;
+        }
+        port.onMessage.addListener((msg) => {
+          if (msg === 'PING' || (msg && typeof msg === 'object' && (msg as any).type === 'PING')) {
+            try {
+              port.postMessage({ type: 'PONG', timestamp: Date.now() });
+            } catch {}
+          }
+        });
+      }
+    });
+  }
+
+  // CRIT-03: Register onAlarm listener for background alarm keepalive
+  if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
+    chrome.alarms.onAlarm.addListener((alarm) => {
+      if (alarm.name.startsWith('siteradar_keepalive_')) {
+        const scanId = alarm.name.replace('siteradar_keepalive_', '');
+        const session = inspectionOrchestrator.getSession(scanId);
+        if (!session || session.state !== 'running') {
+          clearKeepaliveAlarm(scanId);
         }
       }
     });

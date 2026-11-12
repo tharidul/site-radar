@@ -26,8 +26,8 @@ export class RobotsParser {
 
   static isAllowed(path: string, directives: RobotsDirectives): boolean {
     const parser = new RobotsParser(directives.userAgent);
-    (parser as any).allowed = [...directives.allowed];
-    (parser as any).disallowed = [...directives.disallowed];
+    parser.allowed = [...directives.allowed];
+    parser.disallowed = [...directives.disallowed];
     return parser.isAllowed(path);
   }
 
@@ -177,6 +177,18 @@ export class RobotsParser {
     }
 
     return allowedByMatch;
+  }
+
+  getAllowed(): string[] {
+    return [...this.allowed];
+  }
+
+  getDisallowed(): string[] {
+    return [...this.disallowed];
+  }
+
+  getUserAgent(): string {
+    return this.userAgent;
   }
 
   getSitemaps(): string[] {

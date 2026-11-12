@@ -430,6 +430,7 @@ const TECH_SIGNATURES: TechSignature[] = [
       const sampleLimit = Math.min(candidateElements.length, 30);
       for (let i = 0; i < sampleLimit; i++) {
         const el = candidateElements[i];
+        if (!el) continue;
         const className = el.getAttribute('class') || '';
         const matches = className.match(tailwindClassRegex);
         if (matches && matches.length >= 4) {

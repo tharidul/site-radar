@@ -2,6 +2,8 @@
 import type { ResponsiveData } from '../../types/inspection';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
 
+export const MAX_TAP_TARGET_ELEMENTS = 200;
+
 export class ResponsiveCollector implements PageCollector<ResponsiveData> {
   readonly id = 'responsive';
   readonly name = 'Responsive & Layout Collector';
@@ -19,9 +21,13 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       : true;
 
     const interactiveElements = doc.querySelectorAll('a, button, input:not([type="hidden"]), select');
+    const sampleLimit = Math.min(interactiveElements.length, MAX_TAP_TARGET_ELEMENTS);
     let undersizedCount = 0;
 
-    interactiveElements.forEach((el) => {
+    // Cap synchronous getBoundingClientRect() calls to prevent layout thrashing on large DOMs
+    for (let i = 0; i < sampleLimit; i++) {
+      const el = interactiveElements[i];
+      if (!el) continue;
       try {
         const rect = el.getBoundingClientRect();
         if (rect.width > 0 && rect.height > 0) {
@@ -31,10 +37,10 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
         }
       } catch {
       }
-    });
+    }
 
     const tapTargetsEvaluation = {
-      total: interactiveElements.length,
+      total: sampleLimit,
       undersized: undersizedCount,
     };
 
@@ -56,6 +62,15 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
       horizontalOverflowDetected,
     };
 
+    const limitations = [
+      'Tap target bounding rect evaluations reflect the active browser viewport dimension.',
+    ];
+    if (interactiveElements.length > MAX_TAP_TARGET_ELEMENTS) {
+      limitations.push(
+        `Evaluated a capped sample of ${MAX_TAP_TARGET_ELEMENTS} of ${interactiveElements.length} interactive elements.`,
+      );
+    }
+
     return createCollectionResult<ResponsiveData>({
       module: this.id,
       status: 'completed',
@@ -66,9 +81,7 @@ export class ResponsiveCollector implements PageCollector<ResponsiveData> {
         unavailable: 0,
         supported: true,
       },
-      limitations: [
-        'Tap target bounding rect evaluations reflect the active browser viewport dimension.',
-      ],
+      limitations,
       sources: ['DOM:meta[name="viewport"]', 'DOM:getBoundingClientRect', 'DOM:scrollWidth'],
     });
   }

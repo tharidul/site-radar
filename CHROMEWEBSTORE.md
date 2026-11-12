@@ -1,6 +1,6 @@
 # Chrome Web Store Listing — SiteRadar
 
-> Last Updated: 2026-11-07
+> Last Updated: 2026-11-12
 
 ---
 
@@ -74,10 +74,16 @@ PRIVACY BY DESIGN
 
 PERMISSIONS
 
-SiteRadar requests only three permissions:
-• activeTab: Accesses the URL and tab ID of the current tab only when you open the popup and click inspect.
-• scripting: Injects the auditing scripts into the active tab on demand during an inspection. No scripts run automatically in the background while you browse.
-• storage: Saves your local display preferences (dark or light mode) and crawler page limits. It never stores audit logs or page data.
+SiteRadar requests the following permissions strictly to fulfill its technical auditing and security inspection mission:
+• activeTab: Accesses the URL and tab ID of the current tab only when you explicitly open the popup or side panel and initiate an inspection.
+• tabs: Detects tab navigation and lifecycle events to clear stale audit findings and badges, queries active tabs when inspecting from the side panel, reloads pages with cache bypass for cold-cache performance audits, and opens settings/documentation tabs.
+• scripting: Dynamically injects technical collectors into the inspected page on demand and executes isolated main-world inspection routines to detect runtime frameworks. No scripts run automatically in the background while you browse.
+• storage: Saves your local display preferences (dark or light mode), crawler page limits, and temporary scan session states. It never stores audit logs or page data permanently on disk.
+• cookies: Inspects cookie security attributes (Secure, HttpOnly, SameSite, expiration) on the audited site to detect security vulnerabilities and authentication hygiene risks.
+• contextMenus: Adds a right-click browser shortcut allowing you to quickly open the SiteRadar inspection panel in Chrome's side panel.
+• sidePanel: Displays the continuous inspection interface in Chrome's native side panel alongside web pages for seamless side-by-side auditing.
+• alarms: Runs lightweight periodic keepalive signals to prevent the background service worker from idling out during multi-page crawl audits.
+• optional_host_permissions (*://*/*): Requested at runtime only when you initiate an inspection (scoped to the audited origin for Quick/Full audits, or *://*/* for Deep crawls) to enable background fetching of raw HTTP response security headers (HSTS, CSP, X-Frame-Options), robots.txt, and XML sitemaps across audited domains without CORS restrictions.
 
 **Category**
 Developer Tools
@@ -124,12 +130,22 @@ Show the downloaded standalone HTML report open in a browser tab, displaying the
 
 | Permission | Type | Justification |
 |------------|------|---------------|
-| `activeTab` | permissions | Required to identify the specific tab the user explicitly requests to audit. When the user opens the popup and clicks "Start Inspection," the extension reads the URL and tab ID of the currently active tab. Access is temporary, isolated to user gesture, and grants no persistent background monitoring. |
-| `scripting` | permissions | Required to dynamically inject the auditing collectors (`content-scripts/content.js`) and execute main-world inspection routines only on the active tab when an audit is initiated by the user. Prevents running any scripts on non-audited pages. |
-| `storage` | permissions | Required to remember user preferences across sessions: (1) color theme preference (dark/light), and (2) custom deep-crawl limits (maximum pages, crawl depth). No audit logs, browsing history, or website content is ever written to storage. |
+| `activeTab` | permissions | Required to identify the specific tab the user explicitly requests to audit. When the user opens the popup or side panel and clicks "Start Inspection", the extension reads the URL and tab ID of the currently active tab. Access is temporary, isolated to user gesture, and grants no persistent background monitoring. |
+| `tabs` | permissions | Required for tab lifecycle management and multi-view auditing: (1) monitors tab navigation, reload, and closure events (`chrome.tabs.onUpdated`, `chrome.tabs.onActivated`, `chrome.tabs.onRemoved`) to clear stale audit results and badge states when the user leaves an audited site; (2) queries the active tab when auditing from the persistent side panel where popup focus context is not available; (3) performs cache-bypassed page reloads (`chrome.tabs.reload` with `bypassCache: true`) during hard-refresh performance audits; and (4) opens internal settings, documentation, and privacy policy pages via `chrome.tabs.create`. |
+| `scripting` | permissions | Required to dynamically execute auditing collectors (`content-scripts/content.js`) on-demand only on the inspected tab when an audit is initiated by the user, and to execute isolated main-world inspection routines (`world: 'MAIN'`) to detect runtime JavaScript frameworks and globals (e.g. React, Next.js, Vue). Strictly avoids running persistent content scripts on non-audited pages. |
+| `storage` | permissions | Required to remember user preferences across sessions: (1) UI display theme (dark/light mode); (2) user-configured deep crawl limits (maximum pages, crawl depth); and (3) temporary inspection session state in `chrome.storage.session` to recover audit progress across service worker lifecycles. No browsing history, website DOM content, or audit logs are permanently stored on disk. |
+| `cookies` | permissions | Required to inspect cookie security flags (`Secure`, `HttpOnly`, `SameSite`, and expiration timestamps) on the audited website to identify security defects, such as session cookies vulnerable to cross-site scripting (XSS) or cross-site request forgery (CSRF). Cookie data is analyzed strictly locally in memory for security posture evaluation and redacted before report generation or export. |
+| `contextMenus` | permissions | Required to add a right-click browser context menu item ("Open SiteRadar in Side Panel") that allows users to quickly open the SiteRadar inspection side panel for the active webpage from any tab. |
+| `sidePanel` | permissions | Required to provide a persistent, native side panel inspection interface (`sidepanel.html`) running alongside web pages in Chrome. This enables developers to view real-time audit findings, explore DOM elements, and inspect cookie security side-by-side with the live site without popup auto-dismissal when interacting with the webpage. |
+| `alarms` | permissions | Required to schedule temporary, low-frequency keepalive alarms during long-running background inspections (such as multi-page site crawls). Prevents premature Manifest V3 service worker idle termination without keeping CPU resources active when no scan is running. |
+| `*://*/*` | optional_host_permissions | Requested on demand at runtime via `chrome.permissions.request()` only when the user initiates an inspection (scoped to the active site origin for Quick/Full audits, or `*://*/*` for Deep crawls): (1) sends background `HEAD` requests to the audited URL to retrieve raw server HTTP response security headers (`Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and Server banners) without CORS restrictions or browser header stripping; (2) fetches same-origin pages, `robots.txt`, and XML sitemaps during multi-page deep crawl audits; and (3) connects to optional, user-consented intelligence endpoints (DNS-over-HTTPS via Cloudflare/Google, ASN lookup via ipapi.co, and Certificate Transparency logs via crt.sh). Network requests are never initiated automatically during normal browsing; they execute strictly on explicit user action for the targeted website. |
 
-**On-Demand Dynamic Injection Architecture:**
-The extension strictly avoids persistent content scripts and broad host permissions. No code is injected automatically into pages during regular browsing. When a user explicitly initiates an inspection from the popup, the extension uses `chrome.scripting.executeScript` to dynamically inject the collector script into the active tab under the temporary authorization granted by `activeTab`. This ensures strict adherence to Chrome Web Store Minimum Permissions requirements.
+**On-Demand Dynamic Injection & Scoped Execution Architecture:**
+SiteRadar enforces strict least-privilege principles in its runtime execution:
+1. **Zero Persistent Content Scripts:** The extension does not declare `content_scripts` in `manifest.json`. No scripts run automatically while users browse.
+2. **On-Demand Injection:** Collectors are injected into the active tab via `chrome.scripting.executeScript` only when the user explicitly triggers an inspection from the popup or side panel.
+3. **Targeted Host Access:** `*://*/*` is declared under `optional_host_permissions` (not static `host_permissions`), and runtime origin access is requested via `chrome.permissions.request()` only when the user launches an inspection. Background network calls are dispatched strictly for the explicitly audited target URL upon user request.
+4. **Local-First Privacy:** All audits, DOM evaluations, and cookie analyses run entirely locally in the browser session. Inspected data is kept in ephemeral memory and never transmitted to external analytics or third-party servers without explicit user opt-in consent.
 
 ---
 
@@ -223,7 +239,7 @@ The extension strictly avoids persistent content scripts and broad host permissi
 
 - API keys entered in Settings are stored in service worker memory only. They are cleared when the service worker restarts (browser restart, or after ~30s of extension inactivity). This is by design and disclosed in the UI.
 - The deep crawl spider identifies itself as `WebsiteIntelligenceBot/1.0` to target servers. Some websites with aggressive bot protection may block these requests.
-- Security header analysis via background HEAD fetch may fail for websites with strict CORS policies. This is non-fatal; the extension falls back to DOM-based analysis.
+- Security header analysis via background HEAD fetch may fail on servers that block HEAD requests or enforce strict bot filtering. This is non-fatal; the extension falls back to DOM-based analysis.
 - The extension cannot inspect `chrome://`, `about:blank`, `file://`, or other internal browser pages.
 
 ### Rejection History

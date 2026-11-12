@@ -268,6 +268,10 @@ export function isProhibitedHostname(hostname: string): boolean {
     return true;
   }
   if (host.endsWith('.onion')) return true;
+  const wildcardDnsDomains = ['nip.io', 'sslip.io', 'localtest.me', 'vcap.me', 'lvh.me'];
+  if (wildcardDnsDomains.some((domain) => host === domain || host.endsWith(`.${domain}`))) {
+    return true;
+  }
 
   if (parseIpv6ToBigInt(host) !== null) {
     return false;

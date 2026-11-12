@@ -7,7 +7,8 @@ export const AuditA11ySchema = z.object({
   timeoutMs: z.number().optional().default(25000).describe('Max navigation timeout in milliseconds. Default: 25000'),
 });
 
-export async function handleAuditAccessibility(args: z.infer<typeof AuditA11ySchema>): Promise<AccessibilityAuditResult> {
+export async function handleAuditAccessibility(rawArgs: z.input<typeof AuditA11ySchema>): Promise<AccessibilityAuditResult> {
+  const args = AuditA11ySchema.parse(rawArgs);
   const audit = await SiteRadarAuditor.auditUrl(args.url, { mode: 'deep', timeoutMs: args.timeoutMs });
   const a11yScoreObj = audit.scores['accessibility'];
   const a11yScore = a11yScoreObj ? a11yScoreObj.score : 100;
@@ -39,8 +40,8 @@ export async function handleAuditAccessibility(args: z.infer<typeof AuditA11ySch
 
   for (const v of axeViolations) {
     if (v.impact === 'critical') violationsByImpact.critical++;
-    else if (v.impact === 'high' || v.impact === 'serious') violationsByImpact.serious++;
-    else if (v.impact === 'medium' || v.impact === 'moderate') violationsByImpact.moderate++;
+    else if (v.impact === 'high') violationsByImpact.serious++;
+    else if (v.impact === 'medium') violationsByImpact.moderate++;
     else violationsByImpact.minor++;
   }
 

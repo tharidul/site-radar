@@ -114,28 +114,41 @@ export function calculateCategoryScore(
 
   const evaluatedChecks = passed + failed + warnings;
   const totalApplicable = evaluatedChecks + unavailable;
-  const coverageRate = totalApplicable > 0 ? evaluatedChecks / totalApplicable : 1.0;
+  const coverageRate = evaluatedChecks === 0
+    ? 0
+    : (totalApplicable > 0 ? evaluatedChecks / totalApplicable : 1.0);
   const coveragePercent = Math.round(coverageRate * 100);
 
-  let rawScore = maxPossiblePoints > 0 ? (earnedPoints / maxPossiblePoints) * 100 : 100;
+  let scoreRounded: number;
+  if (evaluatedChecks === 0) {
+    // INFO-01: Never award a passing/moderate coverage-ceiling score (75) when zero checks were evaluated.
+    scoreRounded = 0;
+    deductionsExplanation.push(
+      unavailable > 0
+        ? `No checks could be evaluated (${unavailable} unobservable or errored; 0% scan coverage): score set to 0`
+        : 'No applicable checks evaluated in this category: score set to 0',
+    );
+  } else {
+    let rawScore = maxPossiblePoints > 0 ? (earnedPoints / maxPossiblePoints) * 100 : 100;
 
-  if (hasCriticalFailure && rawScore > 49) {
-    rawScore = 49;
-    deductionsExplanation.push('Critical failure override applied: score capped at 49');
-  }
-
-  let finalScore = rawScore;
-  if (coverageRate < 0.70 && totalApplicable > 0) {
-    const coverageCeiling = Math.round(75 + 25 * coverageRate);
-    if (finalScore > coverageCeiling) {
-      finalScore = coverageCeiling;
-      deductionsExplanation.push(
-        `Limited scan coverage (${coveragePercent}% evaluated): score capped at ${coverageCeiling} (unobservable properties require network inspection)`,
-      );
+    if (hasCriticalFailure && rawScore > 49) {
+      rawScore = 49;
+      deductionsExplanation.push('Critical failure override applied: score capped at 49');
     }
-  }
 
-  const scoreRounded = Math.max(0, Math.min(100, Math.round(finalScore)));
+    let finalScore = rawScore;
+    if (coverageRate < 0.70 && totalApplicable > 0) {
+      const coverageCeiling = Math.round(75 + 25 * coverageRate);
+      if (finalScore > coverageCeiling) {
+        finalScore = coverageCeiling;
+        deductionsExplanation.push(
+          `Limited scan coverage (${coveragePercent}% evaluated): score capped at ${coverageCeiling} (unobservable properties require network inspection)`,
+        );
+      }
+    }
+
+    scoreRounded = Math.max(0, Math.min(100, Math.round(finalScore)));
+  }
 
   return {
     category,
@@ -151,7 +164,7 @@ export function calculateCategoryScore(
     isHeuristic,
     hasCriticalFailure,
     deductionsExplanation,
-    scoringFormula: 'Weighted severity points with confidence factor (Passed=100%, Warning=50-75%, Failed=0%), Critical Cap=49, Coverage Ceiling if <70%',
+    scoringFormula: 'Weighted severity points with confidence factor (Passed=100%, Warning=50-75%, Failed=0%), Critical Cap=49, Coverage Ceiling if <70%, Unobservable (0 evaluated)=0',
   };
 }
 

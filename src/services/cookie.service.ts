@@ -20,17 +20,45 @@ export function clearMockCookies() {
   mockCookiesStore = [];
 }
 
+export function assertValidCookieDomain(targetUrl: string, domain?: string): void {
+  if (!domain) return;
+
+  let targetHost: string;
+  try {
+    targetHost = new URL(targetUrl).hostname.toLowerCase().replace(/\.+$/, '');
+  } catch {
+    throw new Error(`Invalid target URL: '${targetUrl}'`);
+  }
+
+  if (!targetHost) {
+    throw new Error(`Invalid target URL hostname: '${targetUrl}'`);
+  }
+
+  const cleanCookieDomain = domain.trim().replace(/^\./, '').replace(/\.+$/, '').toLowerCase();
+  if (!cleanCookieDomain || cleanCookieDomain.startsWith('.')) {
+    throw new Error(`Security Violation: Invalid cookie domain '${domain}' while auditing '${targetHost}'`);
+  }
+
+  const isExactMatch = cleanCookieDomain === targetHost;
+  const isValidParentDomain = cleanCookieDomain.includes('.') && targetHost.endsWith(`.${cleanCookieDomain}`);
+  if (!isExactMatch && !isValidParentDomain) {
+    throw new Error(`Security Violation: Cannot set cookie for '${domain}' while auditing '${targetHost}'`);
+  }
+}
+
 export function buildCookieUrl(url: string, domain?: string, path?: string, secure?: boolean): string {
+  assertValidCookieDomain(url, domain);
   try {
     const parsed = new URL(url);
     const scheme = secure !== undefined ? (secure ? 'https:' : 'http:') : parsed.protocol;
-    const cleanDomain = domain ? domain.replace(/^\./, '') : parsed.hostname;
+    const cleanDomain = domain
+      ? domain.trim().replace(/^\./, '').replace(/\.+$/, '').toLowerCase()
+      : parsed.hostname;
     const cleanPath = path ? (path.startsWith('/') ? path : `/${path}`) : '/';
     return `${scheme}//${cleanDomain}${cleanPath}`;
   } catch {
-    const cleanDomain = domain ? domain.replace(/^\./, '') : 'localhost';
     const cleanPath = path ? (path.startsWith('/') ? path : `/${path}`) : '/';
-    return `https://${cleanDomain}${cleanPath}`;
+    return `https://localhost${cleanPath}`;
   }
 }
 
@@ -229,6 +257,8 @@ export class CookieService {
     if (!cookie.name) {
       throw new Error('Cookie name is required');
     }
+
+    assertValidCookieDomain(targetUrl, cookie.domain);
 
     try {
       if (typeof chrome === 'undefined' || !chrome.cookies?.set) {
