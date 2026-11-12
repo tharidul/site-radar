@@ -10,7 +10,7 @@ import {
   ExternalLink,
   Globe,
   Search as SearchIcon,
-  Sparkles,
+  Code2,
   Info,
 } from 'lucide-react';
 import type { WebsiteInspection, SeoData, IdentityData } from '@/types/inspection';
@@ -490,7 +490,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
         <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
-              <Sparkles className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
+              <Code2 className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
               <span>Ready-to-Paste Meta Tags</span>
             </span>
 

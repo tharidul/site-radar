@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { ExternalLink, ShieldCheck, Bot, Sparkles } from 'lucide-react';
+import { ExternalLink, ShieldCheck, Bot } from 'lucide-react';
 import lkmlLogo from '../../../assets/lkml.png';
 
 function openLink(url: string) {

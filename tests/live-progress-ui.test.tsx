@@ -4,6 +4,7 @@ import path from 'node:path';
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { LiveProgressBar } from '../entrypoints/popup/components/LiveProgressBar';
+import { ModeSelector } from '../entrypoints/popup/components/ModeSelector';
 import type { ScanProgressEvent } from '../src/types/messaging';
 
 const ROOT = path.resolve(__dirname, '..');
@@ -264,6 +265,83 @@ describe('LiveProgressBar circular SVG progress ring UI', () => {
     expect(appTsx).toContain('<main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">');
     expect(appTsx).toContain('min-h-full w-full flex items-center justify-center');
     expect(appTsx).toContain('targetHost={');
+  });
+});
+
+describe('ModeSelector comparison layout and explanations', () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  it('renders responsive side-by-side cards with clear Full Page vs Deep highlights and updates selection', () => {
+    const onSelectMode = vi.fn();
+    const onStartInspection = vi.fn();
+
+    act(() => {
+      root.render(
+        <ModeSelector
+          selectedMode="full"
+          onSelectMode={onSelectMode}
+          onStartInspection={onStartInspection}
+          disabled={false}
+        />,
+      );
+    });
+
+    const outer = container.firstElementChild as HTMLElement;
+    expect(outer.className).toContain('min-h-full');
+    expect(outer.className).toContain('justify-between');
+
+    const group = container.querySelector('[role="radiogroup"]') as HTMLElement;
+    expect(group).not.toBeNull();
+    expect(group.className).toContain('min-[460px]:grid-cols-2');
+
+    const radios = Array.from(container.querySelectorAll('[role="radio"]')) as HTMLButtonElement[];
+    expect(radios).toHaveLength(2);
+    const [fullRadio, deepRadio] = radios;
+    expect(fullRadio?.getAttribute('aria-checked')).toBe('true');
+    expect(deepRadio?.getAttribute('aria-checked')).toBe('false');
+
+    expect(container.textContent).toContain('Audits only the tab currently open.');
+    expect(container.textContent).toContain('Speed, scripts & media weight');
+    expect(container.textContent).toContain('Full audit plus site & server checks.');
+    expect(container.textContent).toContain('Crawls linked same-site pages');
+    expect(container.textContent).toContain('Reads robots.txt & XML sitemaps');
+    expect(container.textContent).toContain('DNS, IP/ASN & TLS cert lookups');
+    expect(container.textContent).toContain('Start Full Page Audit');
+
+    act(() => {
+      deepRadio?.click();
+    });
+    expect(onSelectMode).toHaveBeenCalledWith('deep');
+
+    act(() => {
+      root.render(
+        <ModeSelector
+          selectedMode="deep"
+          onSelectMode={onSelectMode}
+          onStartInspection={onStartInspection}
+          disabled={false}
+        />,
+      );
+    });
+
+    expect(fullRadio?.getAttribute('aria-checked')).toBe('false');
+    expect(deepRadio?.getAttribute('aria-checked')).toBe('true');
+    expect(container.textContent).toContain('Start Deep Inspection');
   });
 });
 

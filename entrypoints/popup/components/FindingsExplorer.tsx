@@ -16,7 +16,7 @@ import {
   Info,
   HelpCircle,
   Copy,
-  Sparkles,
+  MessageSquareText,
   Bot,
 } from 'lucide-react';
 import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/types/inspection';
@@ -42,7 +42,7 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   security: Shield,
   performance: Zap,
   seo: Search,
-  aeo: Sparkles,
+  aeo: MessageSquareText,
   ago: Bot,
   accessibility: UserCheck,
   'best-practices': Layers,
@@ -253,7 +253,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       baseOptions.push({
         value: 'aeo',
         label: 'AEO (Answer Engine)',
-        icon: Sparkles,
+        icon: MessageSquareText,
       });
     }
 
@@ -486,28 +486,28 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 flex-wrap text-xs">
+          <div className="flex items-center gap-3 flex-wrap text-xs">
             {currentCategoryScore.failed > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-rose-500/15 text-rose-700 dark:text-rose-300 font-semibold">
+              <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300 font-medium">
                 <X className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.failed}</span> Failed</span>
               </span>
             )}
 
             {currentCategoryScore.warnings > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-500/15 text-orange-700 dark:text-orange-300 font-semibold">
+              <span className="inline-flex items-center gap-1 text-orange-700 dark:text-orange-300 font-medium">
                 <AlertTriangle className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.warnings}</span> Warnings</span>
               </span>
             )}
 
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 font-semibold">
+            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium">
               <CheckCircle2 className="w-3 h-3" />
               <span><span className="tabular-nums">{currentCategoryScore.passed}</span> Passed</span>
             </span>
 
             {(currentCategoryScore.unavailable ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-zinc-200/60 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+              <span className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-400 font-medium">
                 <HelpCircle className="w-3 h-3" />
                 <span><span className="tabular-nums">{currentCategoryScore.unavailable}</span> Unobservable</span>
               </span>
@@ -515,7 +515,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </div>
 
           {currentCategoryScore.failed === 0 && currentCategoryScore.warnings === 0 && (
-            <div className="text-xs rounded-md bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 p-2 flex items-center gap-1.5">
+            <div className="pt-2 border-t border-zinc-100 dark:border-zinc-800/80 text-xs text-emerald-700 dark:text-emerald-300 flex items-center gap-1.5">
               <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
               <span>
                 All evaluated checks passed cleanly.{(currentCategoryScore.unavailable ?? 0) > 0 ? ' Network headers require background inspection.' : ''}
