@@ -1,6 +1,17 @@
 import type { BrowserAdapter } from '../types/browser';
 
 export const BROWSER_PERMISSION_SESSION_KEY = 'siteradar_browser_session_id';
+export const PENDING_PERMISSION_SCAN_KEY = 'siteradar_pending_permission_scan';
+const PENDING_PERMISSION_SCAN_TTL_MS = 2 * 60 * 1000;
+
+export interface PendingPermissionScan {
+  origins: string[];
+  mode: 'full' | 'deep';
+  tabId?: number;
+  url?: string;
+  refreshPage?: boolean;
+  createdAt: number;
+}
 
 let inFlightSessionInit: Promise<void> | null = null;
 
@@ -118,5 +129,83 @@ export async function ensureEphemeralBrowserSessionPermissions(
   })();
 
   return inFlightSessionInit;
+}
+
+/**
+ * Persists pending scan parameters right before triggering a runtime permission
+ * prompt so background `permissions.onAdded` can auto-start the scan if the
+ * popup closes while the user confirms the native browser prompt.
+ */
+export async function savePendingPermissionScan(
+  adapter: BrowserAdapter,
+  pending: PendingPermissionScan,
+): Promise<void> {
+  if (!supportsSessionStorage(adapter)) {
+    return;
+  }
+  try {
+    await adapter.setStorage({ [PENDING_PERMISSION_SCAN_KEY]: pending }, 'session');
+  } catch {
+    // Best-effort persistence
+  }
+}
+
+export async function clearPendingPermissionScan(adapter: BrowserAdapter): Promise<void> {
+  if (!supportsSessionStorage(adapter)) {
+    return;
+  }
+  try {
+    await adapter.removeStorage(PENDING_PERMISSION_SCAN_KEY, 'session');
+  } catch {
+    // Best-effort cleanup
+  }
+}
+
+/**
+ * Reads and clears a matching pending permission scan when new host origins
+ * are granted. Returns null if absent, expired, or unrelated to the granted origins.
+ */
+export async function consumePendingPermissionScan(
+  adapter: BrowserAdapter,
+  addedOrigins?: string[],
+): Promise<PendingPermissionScan | null> {
+  if (!supportsSessionStorage(adapter)) {
+    return null;
+  }
+
+  try {
+    const stored = await adapter.getStorage<PendingPermissionScan>(
+      [PENDING_PERMISSION_SCAN_KEY],
+      'session',
+    );
+    const pending = stored?.[PENDING_PERMISSION_SCAN_KEY];
+    if (!pending || typeof pending !== 'object') {
+      return null;
+    }
+
+    const isExpired =
+      typeof pending.createdAt !== 'number' ||
+      Date.now() - pending.createdAt > PENDING_PERMISSION_SCAN_TTL_MS;
+    if (isExpired) {
+      await clearPendingPermissionScan(adapter);
+      return null;
+    }
+
+    if (addedOrigins && addedOrigins.length > 0 && Array.isArray(pending.origins)) {
+      const grantedSet = new Set(addedOrigins);
+      const matches =
+        grantedSet.has('*://*/*') ||
+        grantedSet.has('<all_urls>') ||
+        pending.origins.some((origin) => grantedSet.has(origin));
+      if (!matches) {
+        return null;
+      }
+    }
+
+    await clearPendingPermissionScan(adapter);
+    return pending;
+  } catch {
+    return null;
+  }
 }
 

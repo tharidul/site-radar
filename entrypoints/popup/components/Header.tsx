@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen, Terminal } from 'lucide-react';
 import { Button } from './Button';
 import { isLocalDevelopmentHost } from '@/security/private-network.guard';
@@ -7,6 +7,7 @@ import { isLocalDevelopmentHost } from '@/security/private-network.guard';
 interface HeaderProps {
   tabUrl?: string;
   tabHostname?: string;
+  faviconUrl?: string;
   schemeValid: boolean;
   schemeReason?: string;
   hasInspectionData: boolean;
@@ -19,9 +20,41 @@ interface HeaderProps {
   isSidepanel?: boolean;
 }
 
+function getSafeFaviconSrc(rawUrl?: string, fallbackPageUrl?: string, schemeValid?: boolean): string | undefined {
+  const candidates = [rawUrl];
+  if (schemeValid && fallbackPageUrl) {
+    try {
+      const parsed = new URL(fallbackPageUrl);
+      if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+        candidates.push(`${parsed.origin}/favicon.ico`);
+      }
+    } catch {
+      // Ignore malformed tab URL
+    }
+  }
+
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'string') continue;
+    const trimmed = candidate.trim();
+    if (trimmed.startsWith('data:image/')) {
+      return trimmed;
+    }
+    try {
+      const parsed = new URL(trimmed);
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        return parsed.toString();
+      }
+    } catch {
+      // Ignore invalid favicon URL
+    }
+  }
+  return undefined;
+}
+
 export const Header: React.FC<HeaderProps> = ({
   tabUrl,
   tabHostname,
+  faviconUrl,
   schemeValid,
   schemeReason,
   hasInspectionData,
@@ -33,6 +66,12 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSidePanel,
   isSidepanel = false,
 }) => {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const safeFaviconSrc = useMemo(
+    () => getSafeFaviconSrc(faviconUrl, tabUrl, schemeValid),
+    [faviconUrl, tabUrl, schemeValid],
+  );
+  const showFavicon = Boolean(safeFaviconSrc && failedSrc !== safeFaviconSrc);
   return (
     <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
       <div className="relative z-10 flex items-center justify-between">
@@ -129,7 +168,17 @@ export const Header: React.FC<HeaderProps> = ({
 
       <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
-          <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
+          {showFavicon ? (
+            <img
+              src={safeFaviconSrc}
+              alt=""
+              referrerPolicy="no-referrer"
+              onError={() => setFailedSrc(safeFaviconSrc ?? null)}
+              className="w-4 h-4 rounded-xs object-contain shrink-0"
+            />
+          ) : (
+            <Globe className="w-4 h-4 shrink-0 text-zinc-500 dark:text-zinc-400" />
+          )}
           <span
             className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate select-all"
             title={tabUrl || 'No active tab'}

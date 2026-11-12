@@ -7,6 +7,8 @@ import { consentManager } from '../src/intelligence';
 import { BadgeService } from '../src/services/badge.service';
 import { getBrowserAdapter } from '../src/browser/adapters';
 import {
+  clearPendingPermissionScan,
+  consumePendingPermissionScan,
   ensureEphemeralBrowserSessionPermissions,
   resetGrantedOriginPermissionsOnStartup,
 } from '../src/security/ephemeral-permissions';
@@ -89,6 +91,77 @@ export default defineBackground(() => {
     }
   };
 
+  const startBackgroundInspection = async (params: {
+    mode: InspectionMode;
+    tabId?: number;
+    crawlLimits?: StoredCrawlLimits;
+    externalConsent?: Record<string, boolean>;
+    refreshPage?: boolean;
+  }): Promise<{ success: boolean; scanId: string; error?: string }> => {
+    const adapter = getBrowserAdapter();
+    await clearPendingPermissionScan(adapter);
+
+    const existing =
+      typeof params.tabId === 'number'
+        ? inspectionOrchestrator.getSession(undefined, params.tabId)
+        : undefined;
+    if (existing?.state === 'running') {
+      return { success: true, scanId: existing.scanId };
+    }
+
+    const stored = await adapter
+      .getStorage<StoredCrawlLimits>(['crawlLimits'])
+      .catch(() => null);
+    const storedLimits = normalizeCrawlLimits(stored?.crawlLimits);
+    const payloadLimits = normalizeCrawlLimits(params.crawlLimits);
+    const mergedLimits = { ...storedLimits, ...payloadLimits };
+    const crawlLimits = Object.keys(mergedLimits).length > 0 ? mergedLimits : undefined;
+
+    const options = {
+      crawlLimits,
+      externalConsent: params.externalConsent as any,
+      refreshPage: params.refreshPage,
+    };
+
+    const inspectionPromise = inspectionOrchestrator.startInspection(params.mode, params.tabId, options);
+    const session = inspectionOrchestrator.getSession();
+    const scanId = session?.scanId || `scan_${Date.now()}`;
+
+    if (typeof params.tabId === 'number' && params.tabId >= 0) {
+      badgedTabIds.add(params.tabId);
+    } else if (typeof session?.tabId === 'number' && session.tabId >= 0) {
+      badgedTabIds.add(session.tabId);
+    }
+
+    // Schedule keepalive alarm to prevent MV3 idle termination during active scans
+    if (typeof chrome !== 'undefined' && chrome.alarms?.create) {
+      chrome.alarms.create(`siteradar_keepalive_${scanId}`, {
+        periodInMinutes: 0.4,
+      });
+    }
+
+    inspectionPromise
+      .then(() => {
+        const settledSession = inspectionOrchestrator.getSession(scanId);
+        if (typeof settledSession?.tabId === 'number' && settledSession.tabId >= 0) {
+          badgedTabIds.add(settledSession.tabId);
+        }
+      })
+      .catch((err) => {
+        const failedSession = inspectionOrchestrator.getSession(scanId);
+        const failedTabId = failedSession?.tabId ?? params.tabId;
+        if (typeof failedTabId === 'number') {
+          badgedTabIds.delete(failedTabId);
+        }
+        console.warn('Inspection execution error:', err);
+      })
+      .finally(() => {
+        clearKeepaliveAlarm(scanId);
+      });
+
+    return { success: true, scanId };
+  };
+
   messageBus.onMessage(
     MESSAGE_CHANNELS.START_INSPECTION,
     async (payload, sender) => {
@@ -106,64 +179,50 @@ export default defineBackground(() => {
         const mode: InspectionMode = payload?.mode === 'deep' ? 'deep' : 'full';
         const tabId = payload?.tabId;
 
-        const adapter = getBrowserAdapter();
-        const stored = await adapter
-          .getStorage<StoredCrawlLimits>(['crawlLimits'])
-          .catch(() => null);
-        const storedLimits = normalizeCrawlLimits(stored?.crawlLimits);
-        const payloadLimits = normalizeCrawlLimits(payload?.crawlLimits as StoredCrawlLimits | undefined);
-        const mergedLimits = { ...storedLimits, ...payloadLimits };
-        const crawlLimits = Object.keys(mergedLimits).length > 0 ? mergedLimits : undefined;
-
-        const options = {
-          crawlLimits,
+        return await startBackgroundInspection({
+          mode,
+          tabId,
+          crawlLimits: payload?.crawlLimits as StoredCrawlLimits | undefined,
           externalConsent: payload?.externalConsent,
           refreshPage: payload?.refreshPage,
-        };
-
-        const inspectionPromise = inspectionOrchestrator.startInspection(mode, tabId, options);
-        const session = inspectionOrchestrator.getSession();
-        const scanId = session?.scanId || `scan_${Date.now()}`;
-
-        if (typeof tabId === 'number' && tabId >= 0) {
-          badgedTabIds.add(tabId);
-        } else if (typeof session?.tabId === 'number' && session.tabId >= 0) {
-          badgedTabIds.add(session.tabId);
-        }
-
-        // Schedule keepalive alarm to prevent MV3 idle termination during active scans
-        if (typeof chrome !== 'undefined' && chrome.alarms?.create) {
-          chrome.alarms.create(`siteradar_keepalive_${scanId}`, {
-            periodInMinutes: 0.4,
-          });
-        }
-
-        inspectionPromise
-          .then(() => {
-            const settledSession = inspectionOrchestrator.getSession(scanId);
-            if (typeof settledSession?.tabId === 'number' && settledSession.tabId >= 0) {
-              badgedTabIds.add(settledSession.tabId);
-            }
-          })
-          .catch((err) => {
-            const failedSession = inspectionOrchestrator.getSession(scanId);
-            const failedTabId = failedSession?.tabId ?? tabId;
-            if (typeof failedTabId === 'number') {
-              badgedTabIds.delete(failedTabId);
-            }
-            console.warn('Inspection execution error:', err);
-          })
-          .finally(() => {
-            clearKeepaliveAlarm(scanId);
-          });
-
-        return { success: true, scanId };
+        });
       } catch (err: any) {
         return { success: false, scanId: '', error: err?.message || 'Failed to start inspection' };
       }
     },
     { requireInternalSender: true },
   );
+
+  // Auto-resume a pending scan when the user grants optional host permissions
+  // (e.g. Chrome's native permission prompt closed the popup mid-click).
+  const handlePermissionsAdded = async (added: { origins?: string[] }) => {
+    try {
+      const adapter = getBrowserAdapter();
+      const pending = await consumePendingPermissionScan(adapter, added?.origins);
+      if (!pending) {
+        return;
+      }
+      await consentManager.ensureLoaded();
+      await startBackgroundInspection({
+        mode: pending.mode === 'deep' ? 'deep' : 'full',
+        tabId: pending.tabId,
+        refreshPage: pending.refreshPage,
+      });
+    } catch (err) {
+      console.warn('Failed to auto-start inspection after permission grant:', err);
+    }
+  };
+
+  try {
+    const browserPermsApi = (globalThis as { browser?: { permissions?: { onAdded?: { addListener?: (cb: (p: { origins?: string[] }) => void) => void } } } }).browser?.permissions?.onAdded;
+    if (typeof chrome !== 'undefined' && chrome.permissions?.onAdded?.addListener) {
+      chrome.permissions.onAdded.addListener(handlePermissionsAdded);
+    } else if (typeof browserPermsApi?.addListener === 'function') {
+      browserPermsApi.addListener(handlePermissionsAdded);
+    }
+  } catch {
+    // Ignore in environments where permissions.onAdded is stubbed as unimplemented
+  }
 
   messageBus.onMessage(
     MESSAGE_CHANNELS.CANCEL_INSPECTION,

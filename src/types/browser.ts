@@ -5,6 +5,7 @@ export interface TabInfo {
   id: number;
   url?: string;
   title?: string;
+  favIconUrl?: string;
   origin?: string;
   windowId?: number;
   incognito: boolean;

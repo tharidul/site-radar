@@ -7,7 +7,11 @@ import { MESSAGE_CHANNELS, type ScanProgressEvent } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
 import { getBrowserAdapter } from '@/browser/adapters';
 import { validateScheme, type SchemeValidationResult } from '@/security/scheme-validator';
-import { ensureEphemeralBrowserSessionPermissions } from '@/security/ephemeral-permissions';
+import {
+  clearPendingPermissionScan,
+  ensureEphemeralBrowserSessionPermissions,
+  savePendingPermissionScan,
+} from '@/security/ephemeral-permissions';
 import { isSameOrigin } from '@/security/url-normalizer';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
 
@@ -264,13 +268,21 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
 
     initialize();
 
-    const handleTabUpdated = (updatedTabId: number, changeInfo: { url?: string; status?: string }) => {
+    const handleTabUpdated = (
+      updatedTabId: number,
+      changeInfo: { url?: string; status?: string; favIconUrl?: string },
+    ) => {
       if (!mounted) return;
+      if (changeInfo.favIconUrl) {
+        setActiveTab((prev) =>
+          prev && prev.id === updatedTabId ? { ...prev, favIconUrl: changeInfo.favIconUrl } : prev,
+        );
+      }
       if (changeInfo.url) {
         const newUrl = changeInfo.url;
         setActiveTab((prev) => {
           if (prev && prev.id === updatedTabId) {
-            return { ...prev, url: newUrl };
+            return { ...prev, url: newUrl, favIconUrl: changeInfo.favIconUrl ?? undefined };
           }
           return prev;
         });
@@ -438,8 +450,23 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     if (!schemeValidation.valid) return;
 
     const adapter = getBrowserAdapter();
+    const requiredOrigins = getRequiredOriginPermissions(activeTab?.url, selectedMode);
+    if (requiredOrigins.length > 0) {
+      // Fire-and-forget before permissions.request() so Chrome's user gesture is preserved
+      // and background permissions.onAdded can auto-start if the popup closes on prompt.
+      void savePendingPermissionScan(adapter, {
+        origins: requiredOrigins,
+        mode: selectedMode,
+        tabId: activeTab?.id,
+        url: activeTab?.url,
+        refreshPage,
+        createdAt: Date.now(),
+      });
+    }
+
     const permissionResult = await ensureOriginPermission(activeTab?.url, selectedMode, adapter);
     if (!permissionResult.granted) {
+      void clearPendingPermissionScan(adapter);
       setScanStatus('failed');
       setErrorMessage(permissionResult.reason || 'Host permission was denied.');
       return;
@@ -648,6 +675,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         <Header
           tabUrl={activeTab?.url}
           tabHostname={activeTab?.origin || activeTab?.url}
+          faviconUrl={
+            activeTab?.favIconUrl ||
+            (inspection?.modules?.identity?.data as { favicon?: string } | undefined)?.favicon
+          }
           schemeValid={schemeValidation.valid}
           schemeReason={schemeValidation.reason}
           hasInspectionData={inspection !== null || scanStatus === 'completed'}

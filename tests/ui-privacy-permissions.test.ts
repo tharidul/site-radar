@@ -1,6 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
+import { act, createElement } from 'react';
+import { createRoot } from 'react-dom/client';
 import fs from 'node:fs';
 import path from 'node:path';
+import { Header } from '../entrypoints/popup/components/Header';
 import { MockBrowserAdapter } from '../src/browser/adapters/mock.adapter';
 import {
   getRequiredOriginPermissions,
@@ -8,10 +11,16 @@ import {
 } from '../entrypoints/popup/App';
 import {
   BROWSER_PERMISSION_SESSION_KEY,
+  PENDING_PERMISSION_SCAN_KEY,
+  consumePendingPermissionScan,
   ensureEphemeralBrowserSessionPermissions,
   resetGrantedOriginPermissionsOnStartup,
   revokeAllGrantedOrigins,
+  savePendingPermissionScan,
 } from '../src/security/ephemeral-permissions';
+import { setBrowserAdapter } from '../src/browser/adapters';
+import { inspectionOrchestrator } from '../src/core/orchestrator';
+import backgroundDef from '../entrypoints/background';
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -179,5 +188,178 @@ describe('UI Privacy, Permissions & Manifest Hardening (MED-05, MED-08, MED-09, 
     await adapter.requestPermissions({ origins: ['https://another.com/*'] });
     expect(await revokeAllGrantedOrigins(adapter)).toEqual(['https://another.com/*']);
     expect((await adapter.getAllPermissions()).origins).toEqual([]);
+  });
+
+  it('pending permission scan: saves, matches granted origins once, and rejects expired or mismatched origins', async () => {
+    const adapter = new MockBrowserAdapter();
+
+    await savePendingPermissionScan(adapter, {
+      origins: ['https://example.com/*'],
+      mode: 'deep',
+      tabId: 42,
+      url: 'https://example.com/',
+      refreshPage: true,
+      createdAt: Date.now(),
+    });
+
+    // Unrelated origin does not consume the pending scan
+    const mismatch = await consumePendingPermissionScan(adapter, ['https://other.com/*']);
+    expect(mismatch).toBeNull();
+
+    // Matching origin consumes it once and clears session storage
+    const matched = await consumePendingPermissionScan(adapter, ['https://example.com/*']);
+    expect(matched).toMatchObject({
+      mode: 'deep',
+      tabId: 42,
+      refreshPage: true,
+    });
+    const secondRead = await consumePendingPermissionScan(adapter, ['https://example.com/*']);
+    expect(secondRead).toBeNull();
+
+    // Expired entries (> 2 minutes) are discarded
+    await adapter.setStorage(
+      {
+        [PENDING_PERMISSION_SCAN_KEY]: {
+          origins: ['https://stale.com/*'],
+          mode: 'deep',
+          tabId: 7,
+          createdAt: Date.now() - 3 * 60 * 1000,
+        },
+      },
+      'session',
+    );
+    expect(await consumePendingPermissionScan(adapter, ['https://stale.com/*'])).toBeNull();
+  });
+
+  it('auto-starts pending deep scan in background when chrome.permissions.onAdded fires after popup prompt', async () => {
+    const originalChrome = (globalThis as any).chrome;
+    const adapter = new MockBrowserAdapter();
+    setBrowserAdapter(adapter);
+
+    let onAddedListener: ((added: { origins?: string[] }) => void | Promise<void>) | undefined;
+    (globalThis as any).chrome = {
+      runtime: { id: 'test-ext', onInstalled: { addListener: vi.fn() }, onStartup: { addListener: vi.fn() }, onConnect: { addListener: vi.fn() }, onMessage: { addListener: vi.fn() } },
+      tabs: { onUpdated: { addListener: vi.fn() }, onRemoved: { addListener: vi.fn() } },
+      alarms: { create: vi.fn(), clear: vi.fn(), onAlarm: { addListener: vi.fn() } },
+      contextMenus: { onClicked: { addListener: vi.fn() } },
+      permissions: {
+        onAdded: {
+          addListener: vi.fn((cb) => {
+            onAddedListener = cb;
+          }),
+        },
+      },
+    };
+
+    const startSpy = vi
+      .spyOn(inspectionOrchestrator, 'startInspection')
+      .mockResolvedValue({ id: 'scan_auto_1' } as any);
+    vi.spyOn(inspectionOrchestrator, 'getSession').mockReturnValueOnce(undefined).mockReturnValue({
+      scanId: 'scan_auto_1',
+      tabId: 99,
+      state: 'running',
+    } as any);
+
+    try {
+      const mainFn = (backgroundDef as any).main;
+      if (typeof mainFn === 'function') {
+        mainFn();
+      }
+      expect(onAddedListener).toBeDefined();
+
+      await savePendingPermissionScan(adapter, {
+        origins: ['https://www.aliexpress.com/*'],
+        mode: 'deep',
+        tabId: 99,
+        url: 'https://www.aliexpress.com/',
+        refreshPage: true,
+        createdAt: Date.now(),
+      });
+
+      await onAddedListener!({ origins: ['https://www.aliexpress.com/*'] });
+
+      expect(startSpy).toHaveBeenCalledTimes(1);
+      expect(startSpy).toHaveBeenCalledWith(
+        'deep',
+        99,
+        expect.objectContaining({ refreshPage: true }),
+      );
+    } finally {
+      setBrowserAdapter(null);
+      (globalThis as any).chrome = originalChrome;
+      vi.restoreAllMocks();
+    }
+  });
+});
+
+describe('Header favicon loading and safe fallback', () => {
+  it('renders site favicon, falls back to origin /favicon.ico, rejects unsafe URLs, and falls back to Globe on error', () => {
+    (globalThis as Record<string, unknown>).IS_REACT_ACT_ENVIRONMENT = true;
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    const baseProps = {
+      tabUrl: 'https://bodimak.lk/',
+      tabHostname: 'bodimak.lk',
+      schemeValid: true,
+      hasInspectionData: false,
+      onClearResults: () => {},
+      onOptionsClick: () => {},
+    };
+
+    try {
+      // 1. Explicit https faviconUrl renders <img> with no-referrer policy
+      act(() => {
+        root.render(
+          createElement(Header, {
+            ...baseProps,
+            faviconUrl: 'https://bodimak.lk/icon.png',
+          }),
+        );
+      });
+      const img = container.querySelector(
+        'img[referrerpolicy="no-referrer"]',
+      ) as HTMLImageElement | null;
+      expect(img).not.toBeNull();
+      expect(img?.getAttribute('src')).toBe('https://bodimak.lk/icon.png');
+      expect(img?.getAttribute('referrerpolicy')).toBe('no-referrer');
+
+      // 2. Omitted faviconUrl falls back to first-party ${origin}/favicon.ico
+      act(() => {
+        root.render(createElement(Header, baseProps));
+      });
+      const fallbackImg = container.querySelector(
+        'img[referrerpolicy="no-referrer"]',
+      ) as HTMLImageElement | null;
+      expect(fallbackImg?.getAttribute('src')).toBe('https://bodimak.lk/favicon.ico');
+
+      // 3. Error event hides favicon <img> and renders <Globe> SVG fallback
+      act(() => {
+        fallbackImg?.dispatchEvent(new Event('error'));
+      });
+      expect(container.querySelector('img[referrerpolicy="no-referrer"]')).toBeNull();
+      expect(container.querySelector('svg.lucide-globe')).not.toBeNull();
+
+      // 4. Unsafe schemes (e.g. javascript:) are ignored and never placed in img[src]
+      act(() => {
+        root.render(
+          createElement(Header, {
+            ...baseProps,
+            tabUrl: 'chrome://settings',
+            tabHostname: 'settings',
+            schemeValid: false,
+            faviconUrl: 'javascript:alert(1)',
+          }),
+        );
+      });
+      expect(container.querySelector('img[referrerpolicy="no-referrer"]')).toBeNull();
+      expect(container.querySelector('svg.lucide-globe')).not.toBeNull();
+    } finally {
+      act(() => {
+        root.unmount();
+      });
+      container.remove();
+    }
   });
 });
