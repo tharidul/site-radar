@@ -191,8 +191,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   );
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
+    <div className="min-h-full flex flex-col bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+      <div className="flex-1 p-4 space-y-3.5">
         {isLocalDev && (
           <div className="flex items-center gap-2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
             <span className="font-semibold shrink-0">🛠️ Localhost Dev Mode:</span>
@@ -237,7 +237,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h2 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight truncate">
                   Overall Health
                 </h2>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-bold border shadow-2xs shrink-0 ${overallColor.badgeBg} ${overallColor.badgeBorder} ${overallColor.badgeText}`}>
+                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-bold border shrink-0 ${overallColor.badgeBg} ${overallColor.badgeBorder} ${overallColor.badgeText}`}>
                   Grade {grade}
                 </span>
               </div>
@@ -305,7 +305,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 key={cat.key}
                 type="button"
                 onClick={() => onNavigateToIssues({ category: cat.key })}
-                className="rounded-md bg-white dark:bg-zinc-900 px-1 min-[400px]:px-1.5 py-2 min-[400px]:py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer"
+                className="rounded-md bg-white dark:bg-zinc-900 px-1 min-[400px]:px-1.5 py-2 min-[400px]:py-2.5 flex flex-col items-center justify-center text-center shadow-xs hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-100 active:scale-[0.97] cursor-pointer"
                 title={`View ${cat.label} findings (${cat.score})`}
               >
                 <div className="relative w-12 h-12 min-[380px]:w-[52px] min-[380px]:h-[52px] min-[480px]:w-14 min-[480px]:h-14 flex items-center justify-center shrink-0">
@@ -372,7 +372,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             {techData.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out hover:-translate-y-0.5 active:scale-[0.98]"
+                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-100"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center gap-1.5 min-w-0">
@@ -397,7 +397,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       <PageVitalsCard inspection={inspection} liveMetrics={liveMetrics} />
     </div>
 
-    <div className="shrink-0 relative z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">
+    <div className="sticky bottom-0 z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">
       <ExportDropdown inspection={inspection} direction="up" align="left" />
 
       <Button

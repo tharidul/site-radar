@@ -4,7 +4,7 @@ import type { WebsiteInspection } from '../src/types/inspection';
 describe('Social Preview Logic', () => {
   const mockInspection: WebsiteInspection = {
     id: 'test-1',
-    mode: 'quick',
+    mode: 'full',
     target: {
       url: 'https://example.com/blog/my-post',
       origin: 'https://example.com',

@@ -640,11 +640,29 @@ export class InspectionOrchestrator {
           session.progress = scrollProgress;
           this.emitProgress(scrollProgress);
 
-          const scrollRes = await this.bus.sendToTab(
+          const scrollPromise = this.bus.sendToTab(
             tabId,
             MESSAGE_CHANNELS.MEASURE_SCROLLED_PAGE,
             undefined,
           );
+          let onAbort: (() => void) | undefined;
+          const abortPromise = new Promise<never>((_, reject) => {
+            if (signal.aborted) {
+              reject(signal.reason || new ScanCancelledError(scanId));
+              return;
+            }
+            onAbort = () => {
+              reject(signal.reason || new ScanCancelledError(scanId));
+            };
+            signal.addEventListener('abort', onAbort, { once: true });
+          });
+          scrollPromise.catch(() => {});
+
+          const scrollRes = await Promise.race([scrollPromise, abortPromise]).finally(() => {
+            if (onAbort) {
+              signal.removeEventListener('abort', onAbort);
+            }
+          });
 
           if (scrollRes && scrollRes.success) {
             const perfModule = inspection.modules['performance'];
@@ -658,7 +676,15 @@ export class InspectionOrchestrator {
               perfData.scrolledCacheHitCount = scrollRes.scrolledCacheHitCount;
               perfData.scrolledCacheHitBytes = scrollRes.scrolledCacheHitBytes;
               perfData.scrolledOpaqueResourceCount = scrollRes.scrolledOpaqueResourceCount;
-              perfData.isInfiniteScrollDetected = scrollRes.isInfiniteScroll;
+              perfData.isInfiniteScrollDetected =
+                scrollRes.isInfiniteScroll ??
+                (scrollRes.layoutScrollType ? scrollRes.layoutScrollType === 'infinite-feed' : undefined);
+              perfData.layoutScrollType = scrollRes.layoutScrollType;
+              perfData.isFixedHeight =
+                scrollRes.isFixedHeight ??
+                (scrollRes.layoutScrollType ? scrollRes.layoutScrollType === 'fixed-height' : undefined);
+              perfData.scrollConfidence = scrollRes.scrollConfidence;
+              perfData.scrollSignals = scrollRes.scrollSignals;
             }
           }
         }

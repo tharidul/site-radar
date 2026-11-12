@@ -56,7 +56,7 @@ export function downloadJsonReport(
   const json = exportToJson(inspection, options);
   const filename = generateReportFilename(
     inspection.target?.hostname || 'audit',
-    inspection.mode || 'quick',
+    inspection.mode || 'full',
     'json',
     inspection.target?.inspectedAt || Date.now(),
   );
@@ -134,7 +134,7 @@ export function downloadHtmlReport(inspection: WebsiteInspection): void {
   const html = exportToHtml(inspection);
   const filename = generateReportFilename(
     inspection.target?.hostname || 'audit',
-    inspection.mode || 'quick',
+    inspection.mode || 'full',
     'html',
     inspection.target?.inspectedAt || Date.now(),
   );

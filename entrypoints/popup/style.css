@@ -1,6 +1,18 @@
 @import "tailwindcss";
 @custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *, .dark, .dark *));
 
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
 :root {
   --color-1: #CEFF52;
   --color-2: #CEFF52;
@@ -372,6 +384,51 @@
     height: 0 !important;
   }
 
+  .horizontal-scroll-fade {
+    --fade-size: 2rem;
+    --fade-dir: right;
+    --fade-start-pos: 0;
+    --fade-end-pos: 100%;
+    scroll-padding-inline: var(--fade-size);
+    mask:
+      linear-gradient(black, black) no-clip subtract,
+      linear-gradient(to var(--fade-dir), black, transparent) var(--fade-start-pos) 0 / var(--fade-start) 100% no-repeat no-clip,
+      linear-gradient(to var(--fade-dir), transparent, black) var(--fade-end-pos) 0 / var(--fade-end) 100% no-repeat no-clip;
+    animation: reveal-fade-start linear both, hide-fade-end linear both;
+    animation-timeline: scroll(self inline);
+    animation-range: 0 var(--fade-size), calc(100% - var(--fade-size)) 100%;
+  }
+
+  .horizontal-scroll-fade:dir(rtl) {
+    --fade-dir: left;
+    --fade-start-pos: 100%;
+    --fade-end-pos: 0;
+  }
+
+  @keyframes reveal-fade-start {
+    to {
+      --fade-start: var(--fade-size);
+    }
+  }
+
+  @keyframes hide-fade-end {
+    from {
+      --fade-end: var(--fade-size);
+    }
+  }
+
+  @supports not (animation-timeline: scroll()) {
+    .horizontal-scroll-fade {
+      transition: --fade-start 0.2s, --fade-end 0.2s;
+    }
+    .horizontal-scroll-fade.more-start {
+      --fade-start: var(--fade-size);
+    }
+    .horizontal-scroll-fade.more-end {
+      --fade-end: var(--fade-size);
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     text-wrap: balance;
   }
@@ -392,4 +449,10 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+/* Defer layout/paint for below-the-fold list rows while keeping initial items immediate */
+.deferred-list-item:nth-child(n+9) {
+  content-visibility: auto;
+  contain-intrinsic-size: auto none auto 72px;
 }

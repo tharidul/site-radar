@@ -226,6 +226,14 @@ export class ChromeMV3Adapter implements BrowserAdapter {
     return Boolean(res);
   }
 
+  async getAllPermissions(): Promise<PermissionRequest> {
+    const res = await chrome.permissions.getAll();
+    return {
+      permissions: res.permissions || [],
+      origins: res.origins || [],
+    };
+  }
+
   async sendMessage<M = unknown, R = unknown>(message: M): Promise<R> {
     return (await chrome.runtime.sendMessage(message)) as R;
   }

@@ -40,7 +40,6 @@ When opened on any webpage, the extension analyzes the live site and generates a
 
 | Mode | Duration | What It Inspects |
 |---|---|---|
-| **Quick Scan** | < 1s | Surface-level checks: headers, TLS status, basic metadata, and resource counts. |
 | **Full Page Audit** | ~2–4s | In-depth page inspection: full DOM analysis, forms, structured data, tech fingerprinting, and automated axe-core accessibility tests. |
 | **Deep Inspection** | ~10–30s | Full audit + bounded same-origin crawler (up to 50 pages / depth 3) with optional DNS-over-HTTPS, IP/ASN, and Certificate Transparency lookups. |
 

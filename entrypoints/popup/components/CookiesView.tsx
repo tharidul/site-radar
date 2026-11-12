@@ -255,7 +255,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           <button
             type="button"
             onClick={() => openEditModal()}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-all cursor-pointer shadow-2xs"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-colors duration-100 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Cookie</span>
@@ -359,9 +359,9 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
               key={mode}
               type="button"
               onClick={() => setFilterType(mode)}
-              className={`px-2 py-1 rounded text-xs font-semibold capitalize transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded text-xs font-semibold capitalize transition-colors duration-100 cursor-pointer ${
                 filterType === mode
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 shadow-2xs'
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100'
                   : 'text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
@@ -385,7 +385,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           Loading domain cookies...
         </div>
       ) : filteredCookies.length === 0 ? (
-        <div className="rounded-md bg-white dark:bg-zinc-900 p-8 text-center shadow-xs">
+        <div className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-8 text-center">
           <p className="text-xs text-zinc-500 dark:text-zinc-400">
             {searchQuery
               ? `No cookies match "${searchQuery}"`
@@ -414,10 +414,10 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
             return (
               <div
                 key={cookieKey}
-                className={`rounded-md bg-white dark:bg-zinc-900 border transition-all ${
+                className={`deferred-list-item rounded-md bg-white dark:bg-zinc-900 border transition-colors duration-100 ${
                   isExpanded
-                    ? 'border-zinc-300 dark:border-zinc-700 shadow-xs'
-                    : 'border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-2xs'
+                    ? 'border-zinc-300 dark:border-zinc-700'
+                    : 'border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700'
                 }`}
               >
                 <div
@@ -614,7 +614,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                         <button
                           type="button"
                           onClick={() => openEditModal(cookie)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-all cursor-pointer shadow-2xs"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
                         >
                           <Edit2 className="w-3 h-3" />
                           <span>Edit Cookie</span>
@@ -841,7 +841,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-all cursor-pointer shadow-2xs"
+                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
                 >
                   Save Cookie
                 </button>
@@ -892,7 +892,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-all cursor-pointer shadow-2xs"
+                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
                 >
                   Import Cookies
                 </button>

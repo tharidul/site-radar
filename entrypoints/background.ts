@@ -6,7 +6,12 @@ import { inspectionOrchestrator } from '../src/core/orchestrator';
 import { consentManager } from '../src/intelligence';
 import { BadgeService } from '../src/services/badge.service';
 import { getBrowserAdapter } from '../src/browser/adapters';
+import {
+  ensureEphemeralBrowserSessionPermissions,
+  resetGrantedOriginPermissionsOnStartup,
+} from '../src/security/ephemeral-permissions';
 import type { CrawlLimits } from '../src/types/crawler';
+import type { InspectionMode } from '../src/types/inspection';
 import type { IntelligenceProviderType } from '../src/types/intelligence';
 
 type StoredCrawlLimits = Partial<CrawlLimits> & { timeoutSeconds?: number };
@@ -73,6 +78,7 @@ function isAuthorizedBackgroundSender(sender?: chrome.runtime.MessageSender | nu
 
 export default defineBackground(() => {
   void consentManager.ensureLoaded();
+  void ensureEphemeralBrowserSessionPermissions(getBrowserAdapter());
 
   // Track tabs that currently have an active or completed audit badge
   const badgedTabIds = new Set<number>();
@@ -97,7 +103,7 @@ export default defineBackground(() => {
       try {
         await consentManager.ensureLoaded();
 
-        const mode = payload?.mode || 'quick';
+        const mode: InspectionMode = payload?.mode === 'deep' ? 'deep' : 'full';
         const tabId = payload?.tabId;
 
         const adapter = getBrowserAdapter();
@@ -249,6 +255,7 @@ export default defineBackground(() => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
       BadgeService.clear();
+      void resetGrantedOriginPermissionsOnStartup(getBrowserAdapter());
     });
   }
 
@@ -287,6 +294,7 @@ export default defineBackground(() => {
     chrome.runtime.onInstalled.addListener((details) => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
+      void resetGrantedOriginPermissionsOnStartup(getBrowserAdapter());
 
       // On first install, open the onboarding & MCP welcome tab
       if (details.reason === 'install') {

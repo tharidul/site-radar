@@ -5,7 +5,7 @@ import { MockBrowserAdapter } from '../src/browser/adapters/mock.adapter';
 function makeSession(overrides: Partial<ActiveScanSession> = {}): ActiveScanSession {
   return {
     scanId: overrides.scanId ?? `scan_${Math.random().toString(36).slice(2, 8)}`,
-    mode: overrides.mode ?? 'quick',
+    mode: overrides.mode ?? 'full',
     targetUrl: overrides.targetUrl ?? 'https://example.com/',
     tabId: overrides.tabId ?? 1,
     state: overrides.state ?? 'completed',
@@ -148,7 +148,7 @@ describe('Orchestrator Lifecycle & Storage Bounds (MED-12, MED-13, MED-17)', () 
   });
 
   describe('MED-17: MockBrowserAdapter skips live network HEAD fetch', () => {
-    it('completes localhost quick inspection under MockBrowserAdapter without invoking fetch()', async () => {
+    it('completes localhost full inspection under MockBrowserAdapter without invoking fetch()', async () => {
       const fetchSpy = vi.spyOn(globalThis, 'fetch');
 
       adapter.setMockTab({
@@ -160,7 +160,7 @@ describe('Orchestrator Lifecycle & Storage Bounds (MED-12, MED-13, MED-17)', () 
         incognito: false,
       });
 
-      const result = await orchestrator.startInspection('quick', 1, { refreshPage: false });
+      const result = await orchestrator.startInspection('full', 1, { refreshPage: false });
 
       expect(result).toBeDefined();
       expect(result.target.url).toBe('http://localhost:3000/');

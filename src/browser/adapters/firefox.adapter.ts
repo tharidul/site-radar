@@ -243,6 +243,18 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
     return await api.permissions.remove(request);
   }
 
+  async getAllPermissions(): Promise<PermissionRequest> {
+    const api = this.api;
+    if (!api || !api.permissions || typeof api.permissions.getAll !== 'function') {
+      return { permissions: [], origins: [] };
+    }
+    const res = await api.permissions.getAll();
+    return {
+      permissions: res?.permissions || [],
+      origins: res?.origins || [],
+    };
+  }
+
   async sendMessage<M = unknown, R = unknown>(message: M): Promise<R> {
     const api = this.api;
     if (!api || !api.runtime) {

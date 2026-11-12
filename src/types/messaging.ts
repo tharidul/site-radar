@@ -1,5 +1,11 @@
 
-import type { InspectionMode, WebsiteInspection, CollectionResult } from './inspection';
+import type {
+  InspectionMode,
+  WebsiteInspection,
+  CollectionResult,
+  LayoutScrollType,
+  ScrollConfidence,
+} from './inspection';
 import type { TabInfo } from './browser';
 import type { CrawlLimits } from './crawler';
 
@@ -124,6 +130,10 @@ export interface MessageProtocol {
       scrolledCacheHitBytes?: number;
       scrolledOpaqueResourceCount?: number;
       isInfiniteScroll?: boolean;
+      layoutScrollType?: LayoutScrollType;
+      isFixedHeight?: boolean;
+      scrollConfidence?: ScrollConfidence;
+      scrollSignals?: string[];
       error?: string;
     };
   };

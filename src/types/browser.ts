@@ -70,6 +70,8 @@ export interface BrowserAdapter {
 
   removePermissions(permissions: PermissionRequest): Promise<boolean>;
 
+  getAllPermissions(): Promise<PermissionRequest>;
+
   sendMessage<M = unknown, R = unknown>(message: M): Promise<R>;
 
   sendTabMessage<M = unknown, R = unknown>(tabId: number, message: M): Promise<R>;

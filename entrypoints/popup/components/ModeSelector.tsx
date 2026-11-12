@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Zap, Layers, Compass, Play, ExternalLink } from 'lucide-react';
+import { Layers, Compass, Play, ExternalLink } from 'lucide-react';
 import type { InspectionMode } from '@/types/inspection';
 import { Button } from './Button';
 
@@ -23,13 +23,6 @@ interface ModeOption {
 }
 
 const MODES: ModeOption[] = [
-  {
-    id: 'quick',
-    title: 'Quick Scan',
-    scope: 'Headers, scripts, meta tags, and web vitals.',
-    duration: '~1-2s',
-    icon: Zap,
-  },
   {
     id: 'full',
     title: 'Full Page Audit',
@@ -64,7 +57,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   onStartInspection,
   disabled,
   disabledReason,
-  refreshPage = false,
+  refreshPage = true,
   onToggleRefreshPage,
 }) => {
   return (
@@ -140,7 +133,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
         >
           {disabled
             ? disabledReason || 'Cannot start audit'
-            : `Start ${selectedMode === 'quick' ? 'Quick Scan' : selectedMode === 'full' ? 'Full Page Audit' : 'Deep Inspection'}`}
+            : `Start ${selectedMode === 'full' ? 'Full Page Audit' : 'Deep Inspection'}`}
         </Button>
       </div>
 

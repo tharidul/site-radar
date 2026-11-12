@@ -52,7 +52,6 @@ Technology Detection and Asset Inventory
 
 INSPECTION DEPTHS
 
-• Quick Scan (< 1s): Checks HTTP response headers, TLS configuration, basic page metadata, and resource counts.
 • Full Page Audit (2-4s): Performs complete DOM analysis, form inspection, structured data verification, technology fingerprinting, and automated axe-core accessibility tests.
 • Deep Inspection (10-30s): Runs the full page audit and crawls up to 50 same-origin links (depth 3) to identify broken links, missing meta tags, and orphan pages across the site.
 
@@ -83,7 +82,7 @@ SiteRadar requests the following permissions strictly to fulfill its technical a
 • contextMenus: Adds a right-click browser shortcut allowing you to quickly open the SiteRadar inspection panel in Chrome's side panel.
 • sidePanel: Displays the continuous inspection interface in Chrome's native side panel alongside web pages for seamless side-by-side auditing.
 • alarms: Runs lightweight periodic keepalive signals to prevent the background service worker from idling out during multi-page crawl audits.
-• optional_host_permissions (*://*/*): Requested at runtime only when you initiate an inspection (scoped to the audited origin for Quick/Full audits, or *://*/* for Deep crawls) to enable background fetching of raw HTTP response security headers (HSTS, CSP, X-Frame-Options), robots.txt, and XML sitemaps across audited domains without CORS restrictions.
+• optional_host_permissions (*://*/*): Requested at runtime only when you initiate an inspection, strictly scoped to the current active site's origin (for both Full and Deep audits) and automatically reset when the browser restarts, to enable background fetching of raw HTTP response security headers (HSTS, CSP, X-Frame-Options), robots.txt, and XML sitemaps without CORS restrictions.
 
 **Category**
 Developer Tools
@@ -110,7 +109,7 @@ English
 ### Screenshot Guidance
 
 **Screenshot 1 — Overview Dashboard (Required)**
-Show the popup after completing a Quick inspection on a real website. The Overview tab should be visible showing category scores, severity counts, and the target URL in the header.
+Show the popup after completing a Full inspection on a real website. The Overview tab should be visible showing category scores, severity counts, and the target URL in the header.
 
 **Screenshot 2 — Findings Explorer**
 Show the Issues tab with several findings visible. Use a filter (e.g., Critical or High) to demonstrate the severity filtering UI.
@@ -138,7 +137,7 @@ Show the downloaded standalone HTML report open in a browser tab, displaying the
 | `contextMenus` | permissions | Required to add a right-click browser context menu item ("Open SiteRadar in Side Panel") that allows users to quickly open the SiteRadar inspection side panel for the active webpage from any tab. |
 | `sidePanel` | permissions | Required to provide a persistent, native side panel inspection interface (`sidepanel.html`) running alongside web pages in Chrome. This enables developers to view real-time audit findings, explore DOM elements, and inspect cookie security side-by-side with the live site without popup auto-dismissal when interacting with the webpage. |
 | `alarms` | permissions | Required to schedule temporary, low-frequency keepalive alarms during long-running background inspections (such as multi-page site crawls). Prevents premature Manifest V3 service worker idle termination without keeping CPU resources active when no scan is running. |
-| `*://*/*` | optional_host_permissions | Requested on demand at runtime via `chrome.permissions.request()` only when the user initiates an inspection (scoped to the active site origin for Quick/Full audits, or `*://*/*` for Deep crawls): (1) sends background `HEAD` requests to the audited URL to retrieve raw server HTTP response security headers (`Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and Server banners) without CORS restrictions or browser header stripping; (2) fetches same-origin pages, `robots.txt`, and XML sitemaps during multi-page deep crawl audits; and (3) connects to optional, user-consented intelligence endpoints (DNS-over-HTTPS via Cloudflare/Google, ASN lookup via ipapi.co, and Certificate Transparency logs via crt.sh). Network requests are never initiated automatically during normal browsing; they execute strictly on explicit user action for the targeted website. |
+| `*://*/*` | optional_host_permissions | Declared only to allow per-origin runtime grants via `chrome.permissions.request()` when the user initiates an inspection (strictly scoped to the current site's `<protocol>//<host>/*` origin for both Full and Deep audits — never requesting `*://*/*` at runtime — and automatically revoked after the browser closes): (1) sends background `HEAD` requests to the audited URL to retrieve raw server HTTP response security headers (`Strict-Transport-Security`, `Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`, and Server banners) without CORS restrictions or browser header stripping; (2) fetches same-origin pages, `robots.txt`, and XML sitemaps during multi-page deep crawl audits; and (3) connects to optional, user-consented intelligence endpoints (DNS-over-HTTPS via Cloudflare/Google, ASN lookup via ipapi.co, and Certificate Transparency logs via crt.sh). Network requests are never initiated automatically during normal browsing; they execute strictly on explicit user action for the targeted website. |
 
 **On-Demand Dynamic Injection & Scoped Execution Architecture:**
 SiteRadar enforces strict least-privilege principles in its runtime execution:

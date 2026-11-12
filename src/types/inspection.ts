@@ -1,5 +1,5 @@
 
-export type InspectionMode = 'quick' | 'full' | 'deep';
+export type InspectionMode = 'full' | 'deep';
 
 export type CollectionStatus =
   | 'completed'
@@ -359,6 +359,15 @@ export interface ResourceCategoryMetrics {
   opaqueCount: number;
 }
 
+export type LayoutScrollType =
+  | 'fixed-height'
+  | 'app-shell'
+  | 'finite'
+  | 'long-page'
+  | 'infinite-feed';
+
+export type ScrollConfidence = 'high' | 'medium' | 'low';
+
 export interface PerformanceData {
   navigationTiming?: {
     dnsLookupMs: number;
@@ -401,6 +410,10 @@ export interface PerformanceData {
   scrolledCacheHitBytes?: number;
   scrolledOpaqueResourceCount?: number;
   isInfiniteScrollDetected?: boolean;
+  layoutScrollType?: LayoutScrollType;
+  isFixedHeight?: boolean;
+  scrollConfidence?: ScrollConfidence;
+  scrollSignals?: string[];
 }
 
 export interface SecuritySignalsData {

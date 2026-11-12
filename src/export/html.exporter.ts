@@ -223,7 +223,7 @@ export function exportToHtml(inspection: WebsiteInspection): string {
   const targetUrl = sanitizeHref(sanitized.target?.url);
   const rawTargetUrl = sanitized.target?.url || '';
   const hostname = escapeHtml(sanitized.target?.hostname || 'Target Site');
-  const mode = escapeHtml((sanitized.mode || 'quick').toUpperCase());
+  const mode = escapeHtml((sanitized.mode || 'full').toUpperCase());
   const dateStr = escapeHtml(
     sanitized.target?.inspectedAt
       ? new Date(sanitized.target.inspectedAt).toUTCString()

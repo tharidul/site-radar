@@ -126,10 +126,9 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-3.5">
+    <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
         {/* Top Status & Overview Card */}
-        <div className="rounded-lg bg-white dark:bg-zinc-900 p-3.5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs space-y-3">
+        <div className="rounded-lg bg-white dark:bg-zinc-900 p-3.5 border border-zinc-200/80 dark:border-zinc-800 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2 min-w-0">
               <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold border ${statusColor(headersData.statusCode)}`}>
@@ -148,7 +147,7 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
               <button
                 type="button"
                 onClick={() => copyToClipboard(headersData.curlCommand, 'curl')}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-2xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all cursor-pointer active:scale-95 border border-zinc-200/60 dark:border-zinc-700"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-2xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors duration-100 cursor-pointer active:scale-95 border border-zinc-200/60 dark:border-zinc-700"
                 title="Copy request as cURL command"
               >
                 {copiedKey === 'curl' ? (
@@ -167,7 +166,7 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
               <button
                 type="button"
                 onClick={() => copyToClipboard(headersData.rawHeadersText, 'raw')}
-                className="inline-flex items-center gap-1 px-2 py-1 rounded text-2xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-all cursor-pointer active:scale-95 border border-zinc-200/60 dark:border-zinc-700"
+                className="inline-flex items-center gap-1 px-2 py-1 rounded text-2xs font-semibold bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-800 dark:text-zinc-200 transition-colors duration-100 cursor-pointer active:scale-95 border border-zinc-200/60 dark:border-zinc-700"
                 title="Copy raw response headers"
               >
                 {copiedKey === 'raw' ? (
@@ -232,7 +231,7 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
           </div>
 
           {/* Filter Pills */}
-          <div ref={filterScrollRef} className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+          <div ref={filterScrollRef} className="flex items-center gap-1 overflow-x-auto no-scrollbar horizontal-scroll-fade py-0.5">
             {[
               { id: 'all', label: `All (${stats.totalCount})` },
               { id: 'security', label: `Security (${stats.secureCount})` },
@@ -245,7 +244,7 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id as HeaderFilterTab)}
-                className={`px-2 py-1 text-2xs font-semibold rounded transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-2 py-1 text-2xs font-semibold rounded transition-colors duration-100 cursor-pointer whitespace-nowrap ${
                   activeFilter === tab.id
                     ? 'bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40]'
                     : 'bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200'
@@ -271,7 +270,7 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
               {filteredMissing.map((missing) => (
                 <div
                   key={missing.name}
-                  className="rounded-lg border border-amber-200/70 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 space-y-2 text-xs"
+                  className="deferred-list-item rounded-lg border border-amber-200/70 dark:border-amber-900/40 bg-amber-50/40 dark:bg-amber-950/20 p-3 space-y-2 text-xs"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
@@ -341,13 +340,13 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
                 return (
                   <div
                     key={header.name}
-                    className={`rounded-lg border bg-white dark:bg-zinc-900 transition-all ${
+                    className={`deferred-list-item rounded-lg border bg-white dark:bg-zinc-900 transition-colors duration-100 ${
                       isLeak
                         ? 'border-rose-200 dark:border-rose-900/50 bg-rose-50/10'
                         : isSecure
                         ? 'border-emerald-200/60 dark:border-emerald-900/40'
                         : 'border-zinc-200/80 dark:border-zinc-800'
-                    } p-3 space-y-1.5 text-xs shadow-2xs`}
+                    } p-3 space-y-1.5 text-xs`}
                   >
                     {/* Header Top Row */}
                     <div className="flex items-start justify-between gap-2">
@@ -428,7 +427,6 @@ export const HeadersView: React.FC<HeadersViewProps> = ({ inspection }) => {
             </div>
           )}
         </div>
-      </div>
     </div>
   );
 };

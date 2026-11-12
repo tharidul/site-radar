@@ -133,14 +133,7 @@ export class AccessibilityAnalyzer implements Analyzer {
     }
 
     const a11yRes = getModuleData<AccessibilityData>(modules, 'accessibility');
-    if (mode === 'quick' && !a11yRes.data) {
-      findings.push(
-        new FindingBuilder('a11y-axe-evaluation')
-          .setStatus('not-available')
-          .addEvidence('Mode Context', 'Automated axe-core comprehensive suite runs in Full Page Audit mode')
-          .build(),
-      );
-    } else if (!a11yRes.data) {
+    if (!a11yRes.data) {
       findings.push(
         new FindingBuilder('a11y-axe-evaluation')
           .setStatus('not-available')

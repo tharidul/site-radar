@@ -255,8 +255,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
   const failCount = audit.filter((c) => c.status === 'fail').length;
 
   return (
-    <div className="flex flex-col h-full bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
+    <div className="p-4 space-y-4 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
         {/* Top Header & Platform Selector */}
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div className="flex items-center gap-2">
@@ -271,9 +270,9 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
             <button
               type="button"
               onClick={() => setPlatform('twitter')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors duration-100 cursor-pointer ${
                 platform === 'twitter'
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
@@ -283,9 +282,9 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
             <button
               type="button"
               onClick={() => setPlatform('facebook')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors duration-100 cursor-pointer ${
                 platform === 'facebook'
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
@@ -295,9 +294,9 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
             <button
               type="button"
               onClick={() => setPlatform('google')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+              className={`flex items-center gap-1 px-2.5 py-1 rounded-md transition-colors duration-100 cursor-pointer ${
                 platform === 'google'
-                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white shadow-2xs'
+                  ? 'bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white'
                   : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white'
               }`}
             >
@@ -308,7 +307,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
         </div>
 
         {/* Live Visual Simulation Card */}
-        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2.5">
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               {platform === 'twitter'
@@ -434,7 +433,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
         </div>
 
         {/* Validation Matrix Checklist */}
-        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-3">
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
               Open Graph &amp; Twitter Meta Audit
@@ -488,7 +487,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
         </div>
 
         {/* Copy Ready Meta Tags Card */}
-        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 shadow-xs space-y-2.5">
+        <div className="rounded-xl border border-zinc-200/80 dark:border-zinc-800 bg-white dark:bg-zinc-900 p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <span className="text-2xs font-bold uppercase tracking-wider text-zinc-500 dark:text-zinc-400 flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52]" />
@@ -498,7 +497,7 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
             <button
               type="button"
               onClick={copyTags}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-2xs font-bold bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] hover:opacity-90 transition-all cursor-pointer active:scale-95 shadow-2xs"
+              className="inline-flex items-center gap-1 px-2.5 py-1 rounded text-2xs font-bold bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] hover:opacity-90 transition-colors duration-100 cursor-pointer active:scale-95"
             >
               {copied ? (
                 <>
@@ -518,7 +517,6 @@ export const SocialPreviewView: React.FC<SocialPreviewViewProps> = ({ inspection
             {generatedMetaTags}
           </div>
         </div>
-      </div>
     </div>
   );
 };

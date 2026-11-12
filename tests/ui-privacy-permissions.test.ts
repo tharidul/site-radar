@@ -6,6 +6,12 @@ import {
   getRequiredOriginPermissions,
   ensureOriginPermission,
 } from '../entrypoints/popup/App';
+import {
+  BROWSER_PERMISSION_SESSION_KEY,
+  ensureEphemeralBrowserSessionPermissions,
+  resetGrantedOriginPermissionsOnStartup,
+  revokeAllGrantedOrigins,
+} from '../src/security/ephemeral-permissions';
 
 const ROOT = path.resolve(__dirname, '..');
 
@@ -77,38 +83,40 @@ describe('UI Privacy, Permissions & Manifest Hardening (MED-05, MED-08, MED-09, 
     expect(cwsDoc).not.toMatch(/\|\s*`\*:\/\/\*\/\*`\s*\|\s*host_permissions\s*\|/);
   });
 
-  it('MED-11: getRequiredOriginPermissions scopes origins by inspection mode and scheme', () => {
-    expect(getRequiredOriginPermissions('https://example.com/blog/post?a=1', 'quick')).toEqual([
+  it('MED-11: getRequiredOriginPermissions scopes origins strictly to current site for both full and deep modes', () => {
+    expect(getRequiredOriginPermissions('https://example.com/blog/post?a=1', 'full')).toEqual([
       'https://example.com/*',
     ]);
     expect(getRequiredOriginPermissions('http://localhost:8080/app', 'full')).toEqual([
       'http://localhost:8080/*',
     ]);
-    expect(getRequiredOriginPermissions('https://example.com/', 'deep')).toEqual(['*://*/*']);
-    expect(getRequiredOriginPermissions('chrome://settings', 'quick')).toEqual([]);
+    expect(getRequiredOriginPermissions('https://example.com/sub/page', 'deep')).toEqual([
+      'https://example.com/*',
+    ]);
+    expect(getRequiredOriginPermissions('chrome://settings', 'full')).toEqual([]);
     expect(getRequiredOriginPermissions('about:blank', 'deep')).toEqual([]);
-    expect(getRequiredOriginPermissions(undefined, 'quick')).toEqual([]);
+    expect(getRequiredOriginPermissions(undefined, 'full')).toEqual([]);
   });
 
-  it('MED-11: ensureOriginPermission requests runtime permissions and handles denial or unsupported environments', async () => {
+  it('MED-11: ensureOriginPermission requests runtime permissions for current site only and handles denial or unsupported environments', async () => {
     const mockAdapter = new MockBrowserAdapter();
     const reqSpy = vi.spyOn(mockAdapter, 'requestPermissions');
 
-    const okQuick = await ensureOriginPermission('https://example.com/page', 'quick', mockAdapter);
-    expect(okQuick.granted).toBe(true);
+    const okFull = await ensureOriginPermission('https://example.com/page', 'full', mockAdapter);
+    expect(okFull.granted).toBe(true);
     expect(reqSpy).toHaveBeenCalledWith({ origins: ['https://example.com/*'] });
 
     const okDeep = await ensureOriginPermission('https://example.com/page', 'deep', mockAdapter);
     expect(okDeep.granted).toBe(true);
-    expect(reqSpy).toHaveBeenCalledWith({ origins: ['*://*/*'] });
+    expect(reqSpy).toHaveBeenCalledWith({ origins: ['https://example.com/*'] });
 
     const deniedAdapter = new MockBrowserAdapter();
     vi.spyOn(deniedAdapter, 'requestPermissions').mockResolvedValue(false);
-    const denied = await ensureOriginPermission('https://example.com/page', 'quick', deniedAdapter);
+    const denied = await ensureOriginPermission('https://example.com/page', 'full', deniedAdapter);
     expect(denied.granted).toBe(false);
     expect(denied.reason).toContain('https://example.com/*');
 
-    const nonHttp = await ensureOriginPermission('chrome://extensions', 'quick', deniedAdapter);
+    const nonHttp = await ensureOriginPermission('chrome://extensions', 'full', deniedAdapter);
     expect(nonHttp.granted).toBe(true);
 
     const throwingAdapter = new MockBrowserAdapter();
@@ -117,7 +125,7 @@ describe('UI Privacy, Permissions & Manifest Hardening (MED-05, MED-08, MED-09, 
     );
     const fallback = await ensureOriginPermission(
       'https://example.com/page',
-      'quick',
+      'full',
       throwingAdapter,
     );
     expect(fallback.granted).toBe(true);
@@ -136,5 +144,40 @@ describe('UI Privacy, Permissions & Manifest Hardening (MED-05, MED-08, MED-09, 
       'utf-8',
     );
     expect(optionsSource).not.toContain('--no-sandbox');
+  });
+
+  it('ephemeral permissions: revokes lingering granted origins on new browser session or startup while preserving them during live session', async () => {
+    const adapter = new MockBrowserAdapter();
+    await adapter.requestPermissions({
+      permissions: ['activeTab'],
+      origins: ['https://example.com/*', 'https://other.test/*'],
+    });
+
+    // Simulate fresh browser launch (storage.session is empty after browser close)
+    await ensureEphemeralBrowserSessionPermissions(adapter);
+
+    const afterLaunch = await adapter.getAllPermissions();
+    expect(afterLaunch.origins).toEqual([]);
+    expect(afterLaunch.permissions).toEqual(['activeTab']);
+
+    const sessionData = await adapter.getStorage<string>([BROWSER_PERMISSION_SESSION_KEY], 'session');
+    expect(sessionData[BROWSER_PERMISSION_SESSION_KEY]).toBeTruthy();
+
+    // Grant current site while browser session is live
+    await adapter.requestPermissions({ origins: ['https://live-site.com/*'] });
+    // Subsequent SW wakeups / popup opens within the same live session do NOT revoke it
+    await ensureEphemeralBrowserSessionPermissions(adapter);
+    const duringLiveSession = await adapter.getAllPermissions();
+    expect(duringLiveSession.origins).toEqual(['https://live-site.com/*']);
+
+    // Simulate explicit browser startup handler
+    const revoked = await resetGrantedOriginPermissionsOnStartup(adapter);
+    expect(revoked).toEqual(['https://live-site.com/*']);
+    expect((await adapter.getAllPermissions()).origins).toEqual([]);
+
+    // Direct helper test
+    await adapter.requestPermissions({ origins: ['https://another.com/*'] });
+    expect(await revokeAllGrantedOrigins(adapter)).toEqual(['https://another.com/*']);
+    expect((await adapter.getAllPermissions()).origins).toEqual([]);
   });
 });

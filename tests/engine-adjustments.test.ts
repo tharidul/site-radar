@@ -280,7 +280,7 @@ describe('Engine Adjustments & Refinements', () => {
       expect(canonicalFinding?.explanation).toContain('authoritative production domain');
     });
 
-    it('InspectionOrchestrator executes Quick Scan on localhost without scope or runtime errors', async () => {
+    it('InspectionOrchestrator executes Full Page Audit on localhost without scope or runtime errors', async () => {
       const adapter = new MockBrowserAdapter();
       adapter.setMockTab({
         id: 1,
@@ -291,7 +291,7 @@ describe('Engine Adjustments & Refinements', () => {
         incognito: false,
       });
       const orchestrator = new InspectionOrchestrator({ browserAdapter: adapter });
-      const result = await orchestrator.startInspection('quick', 1, { refreshPage: false });
+      const result = await orchestrator.startInspection('full', 1, { refreshPage: false });
       expect(result).toBeDefined();
       expect(result.id).toBeDefined();
       expect(result.target.isLocalDevelopment).toBe(true);

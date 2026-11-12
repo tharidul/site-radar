@@ -153,6 +153,13 @@ export class MockBrowserAdapter implements BrowserAdapter {
     return true;
   }
 
+  async getAllPermissions(): Promise<PermissionRequest> {
+    return {
+      permissions: [...(this.grantedPermissions.permissions || [])],
+      origins: [...(this.grantedPermissions.origins || [])],
+    };
+  }
+
   async sendMessage<M = unknown, R = unknown>(message: M): Promise<R> {
     for (const handler of this.messageHandlers) {
       const res = await handler(message);

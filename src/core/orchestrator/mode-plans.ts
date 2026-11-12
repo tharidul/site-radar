@@ -22,7 +22,7 @@ export interface ModePlan {
   maxConcurrency: number;
 }
 
-export const QUICK_SCAN_MODULES: readonly ModulePlanItem[] = [
+export const CORE_SCAN_MODULES: readonly ModulePlanItem[] = [
   {
     id: 'identity',
     name: 'Website Identity',
@@ -181,22 +181,12 @@ export const FULL_AUDIT_ADDITIONAL_MODULES: readonly ModulePlanItem[] = [
 
 export function getModePlan(mode: InspectionMode): ModePlan {
   switch (mode) {
-    case 'quick':
-      return {
-        mode: 'quick',
-        name: 'Quick Scan',
-        description: 'Fast, passive inspection across 8 core modules for active website overview',
-        modules: [...QUICK_SCAN_MODULES],
-        defaultTimeoutMs: 5000,
-        maxConcurrency: 3,
-      };
-
     case 'full':
       return {
         mode: 'full',
         name: 'Full Page Audit',
         description: 'Comprehensive active-tab audit including structured data, CSS/JS resources, and axe-core accessibility evaluations',
-        modules: [...QUICK_SCAN_MODULES, ...FULL_AUDIT_ADDITIONAL_MODULES].sort((a, b) => a.priority - b.priority),
+        modules: [...CORE_SCAN_MODULES, ...FULL_AUDIT_ADDITIONAL_MODULES].sort((a, b) => a.priority - b.priority),
         defaultTimeoutMs: 5000,
         maxConcurrency: 3,
       };
@@ -206,7 +196,7 @@ export function getModePlan(mode: InspectionMode): ModePlan {
         mode: 'deep',
         name: 'Website Deep Inspection',
         description: 'Full page audit combined with bounded same-origin crawler and external intelligence',
-        modules: [...QUICK_SCAN_MODULES, ...FULL_AUDIT_ADDITIONAL_MODULES].sort((a, b) => a.priority - b.priority),
+        modules: [...CORE_SCAN_MODULES, ...FULL_AUDIT_ADDITIONAL_MODULES].sort((a, b) => a.priority - b.priority),
         defaultTimeoutMs: 15000,
         maxConcurrency: 2,
       };

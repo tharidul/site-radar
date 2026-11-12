@@ -65,7 +65,7 @@ function renderFindingStatusIcon(finding: AuditFinding) {
       <span
         data-status="passed"
         title="Check passed"
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#10b981] text-white shrink-0 select-none shadow-2xs"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#10b981] text-white shrink-0 select-none"
       >
         <Check className="w-3 h-3 stroke-[3] text-white" />
       </span>
@@ -77,7 +77,7 @@ function renderFindingStatusIcon(finding: AuditFinding) {
       <span
         data-status="failed"
         title={`Failed${severity ? ` • ${severity.toUpperCase()}` : ''}`}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ef4444] text-white shrink-0 select-none shadow-2xs"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ef4444] text-white shrink-0 select-none"
       >
         <X className="w-3 h-3 stroke-[3] text-white" />
       </span>
@@ -89,7 +89,7 @@ function renderFindingStatusIcon(finding: AuditFinding) {
       <span
         data-status="warning"
         title={`Warning${severity ? ` • ${severity.toUpperCase()}` : ''}`}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#f59e0b] text-white shrink-0 select-none shadow-2xs"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#f59e0b] text-white shrink-0 select-none"
       >
         <AlertTriangle className="w-3 h-3 stroke-[2.5] text-white" />
       </span>
@@ -101,7 +101,7 @@ function renderFindingStatusIcon(finding: AuditFinding) {
       <span
         data-status="info"
         title="Info"
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0ea5e9] text-white shrink-0 select-none shadow-2xs"
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0ea5e9] text-white shrink-0 select-none"
       >
         <Info className="w-3 h-3 stroke-[2.5] text-white" />
       </span>
@@ -112,7 +112,7 @@ function renderFindingStatusIcon(finding: AuditFinding) {
     <span
       data-status="not-available"
       title={status === 'not-available' ? 'Not Available' : 'Not Applicable'}
-      className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-400 dark:bg-zinc-600 text-white shrink-0 select-none shadow-2xs"
+      className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-400 dark:bg-zinc-600 text-white shrink-0 select-none"
     >
       <Minus className="w-2.5 h-2.5 stroke-[3] text-white" />
     </span>
@@ -384,7 +384,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           </div>
         </div>
 
-        <Card padding="md" className="space-y-4 shadow-xs">
+        <Card padding="md" className="space-y-4">
           <div className="space-y-2 border-b border-zinc-200/80 dark:border-zinc-800 pb-3.5">
             <div className="flex items-start gap-2.5">
               <div className="mt-0.5 shrink-0">
@@ -462,7 +462,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       </div>
 
       {currentCategoryScore && (
-        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs space-y-2">
+        <div className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <div className="p-1.5 rounded-md bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
@@ -569,16 +569,13 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                     Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
                   </div>
                 )}
-                <div
-                  className="transition-colors"
-                  style={{ contentVisibility: 'auto', containIntrinsicSize: '0 56px' }}
-                >
+                <div className="deferred-list-item transition-colors duration-100">
                   <div
                     onClick={() => {
                       setSelectedFindingId(finding.id);
                       if (onSelectFinding) onSelectFinding(finding);
                     }}
-                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-all duration-150 ease-out active:scale-[0.995] cursor-pointer select-none group"
+                    className="p-3 hover:bg-zinc-50/70 dark:hover:bg-zinc-800/40 transition-colors duration-100 cursor-pointer select-none group"
                   >
                     <div className="flex items-center justify-between gap-2.5">
                       <div className="flex items-center gap-2 min-w-0">
@@ -616,7 +613,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                           onClick={(e) => handleCopyFinding(finding, e)}
                           title={copiedFindingId === finding.id ? 'Copied issue JSON!' : 'Copy issue JSON'}
                           aria-label={`Copy JSON for issue ${finding.ruleId}`}
-                          className={`p-1 rounded-md transition-all duration-150 cursor-pointer ${
+                          className={`p-1 rounded-md transition-colors duration-100 cursor-pointer ${
                             copiedFindingId === finding.id
                               ? 'text-emerald-600 dark:text-[#CEFF52] bg-emerald-500/15 dark:bg-[#CEFF52]/15'
                               : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-[#CEFF52] hover:bg-zinc-100 dark:hover:bg-zinc-800'
@@ -629,7 +626,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                           )}
                         </button>
 
-                        <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] shrink-0 transition-transform duration-150 ease-out group-hover:translate-x-0.5" />
+                        <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] shrink-0 transition-colors duration-100" />
                       </div>
                     </div>
 

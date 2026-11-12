@@ -15,7 +15,7 @@ describe('Scan Session Persistence & Restoration', () => {
   it('persists and restores session across in-memory loss (SW restart simulation)', async () => {
     const mockInspection: WebsiteInspection = {
       id: 'scan_test_123',
-      mode: 'quick',
+      mode: 'full',
       target: {
         url: 'http://localhost:3000/',
         origin: 'http://localhost:3000',
@@ -41,7 +41,7 @@ describe('Scan Session Persistence & Restoration', () => {
 
     const session: ActiveScanSession = {
       scanId: 'scan_test_123',
-      mode: 'quick',
+      mode: 'full',
       targetUrl: 'http://localhost:3000/',
       tabId: 42,
       state: 'completed',
@@ -73,7 +73,7 @@ describe('Scan Session Persistence & Restoration', () => {
   it('matches session by origin even if tabId differs (e.g. after tab reload)', async () => {
     const session: ActiveScanSession = {
       scanId: 'scan_origin_match',
-      mode: 'quick',
+      mode: 'full',
       targetUrl: 'http://localhost:3000/',
       tabId: 10,
       state: 'completed',
@@ -92,7 +92,7 @@ describe('Scan Session Persistence & Restoration', () => {
   it('purges storage when clearSessions is executed', async () => {
     const session: ActiveScanSession = {
       scanId: 'scan_to_clear',
-      mode: 'quick',
+      mode: 'full',
       targetUrl: 'http://localhost:3000/',
       tabId: 5,
       state: 'completed',

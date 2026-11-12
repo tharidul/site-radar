@@ -29,7 +29,7 @@ const MODULE_KEY_ALIASES: Record<string, string[]> = {
 };
 
 const SKIPPED_REASONS: Record<string, string> = {
-  accessibility: 'Automated axe-core WCAG analysis is omitted in Quick Scan mode. Available in Full Page Audit and Deep Audit.',
+  accessibility: 'Automated axe-core WCAG analysis runs in Full Page Audit and Deep Audit modes.',
   dns: 'External DoH queries, TLS cert verification, and ASN lookups run in Deep Audit mode.',
   privacy: 'In-depth tracker network profiling and cookie banner analysis run in Full Page Audit and Deep Audit modes.',
 };
@@ -109,18 +109,19 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
           return (
             <div
               key={def.key}
-              className="transition-colors"
+              className="deferred-list-item transition-colors duration-100"
             >
               <button
                 type="button"
+                aria-expanded={isExpanded}
                 onClick={() => toggleAccordion(def.key)}
-                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all duration-150 ease-out active:scale-[0.995] cursor-pointer select-none"
+                className="w-full flex items-center justify-between px-3.5 py-2.5 text-left hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors duration-100 cursor-pointer select-none"
               >
                 <div className="flex items-center gap-2 min-w-0">
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-orange-500 shrink-0 transition-transform duration-200 ease-out" />
+                    <ChevronDown className="w-4 h-4 text-orange-500 shrink-0 transition-colors duration-100" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 transition-transform duration-200 ease-out" />
+                    <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 transition-colors duration-100" />
                   )}
                   <span className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
                     {def.name}
@@ -145,7 +146,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
               </button>
 
               {isExpanded && (
-                <div className="px-3.5 pb-3.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 space-y-3 text-xs transition-all duration-200 ease-out animate-in fade-in-0 slide-in-from-top-1">
+                <div className="px-3.5 pb-3.5 pt-2 border-t border-zinc-100 dark:border-zinc-800 bg-zinc-50/50 dark:bg-zinc-950/60 space-y-3 text-xs transition-colors duration-100">
                   <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
                     {def.description}
                   </p>
@@ -182,7 +183,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <span className="font-semibold text-zinc-900 dark:text-zinc-100 text-xs block">
                         Detected Technologies ({(mod?.data as any).technologies.length})
                       </span>
-                      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 rounded-md overflow-hidden bg-white dark:bg-zinc-900 shadow-2xs">
+                      <div className="divide-y divide-zinc-100 dark:divide-zinc-800 rounded-md overflow-hidden bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800">
                         {((mod?.data as any).technologies as any[]).map((t: any, idx: number) => (
                           <div key={idx} className="p-2 flex items-center justify-between text-xs">
                             <div className="min-w-0 pr-2">

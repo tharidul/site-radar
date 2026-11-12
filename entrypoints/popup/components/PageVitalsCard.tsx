@@ -8,8 +8,12 @@ import {
   Layers,
   Globe,
   Activity,
+  PanelTop,
+  Layout,
+  ScrollText,
+  Infinity as InfinityIcon,
 } from 'lucide-react';
-import type { WebsiteInspection, PerformanceData } from '@/types/inspection';
+import type { WebsiteInspection, PerformanceData, LayoutScrollType } from '@/types/inspection';
 
 interface PageVitalsCardProps {
   inspection: WebsiteInspection;
@@ -85,6 +89,71 @@ function getSpeedRating(metric: 'ttfb' | 'fcp' | 'lcp' | 'load', ms?: number) {
   }
 }
 
+interface ScrollLayoutBadgeInfo {
+  type: Exclude<LayoutScrollType, 'finite'>;
+  label: string;
+  tooltip: string;
+  Icon: React.ComponentType<{ className?: string }>;
+}
+
+const SCROLL_LAYOUT_DISPLAY: Record<
+  Exclude<LayoutScrollType, 'finite'>,
+  { label: string; description: string; Icon: React.ComponentType<{ className?: string }> }
+> = {
+  'fixed-height': {
+    label: 'Fixed Height',
+    description: 'Viewport-locked page with no vertical scroll; auto-scroll skipped.',
+    Icon: PanelTop,
+  },
+  'app-shell': {
+    label: 'App Shell',
+    description: 'Scrollable inner container detected; measured via inner scroll container.',
+    Icon: Layout,
+  },
+  'long-page': {
+    label: 'Long Page',
+    description: 'Tall finite document measured across stepped viewport folds.',
+    Icon: ScrollText,
+  },
+  'infinite-feed': {
+    label: 'Infinite Feed (Bounded)',
+    description: 'Infinite scrolling detected; bounded to loaded content.',
+    Icon: InfinityIcon,
+  },
+};
+
+function getScrollLayoutBadge(perfData?: PerformanceData): ScrollLayoutBadgeInfo | null {
+  if (!perfData) return null;
+
+  const resolvedType: LayoutScrollType | undefined =
+    perfData.layoutScrollType ??
+    (perfData.isInfiniteScrollDetected
+      ? 'infinite-feed'
+      : perfData.isFixedHeight
+        ? 'fixed-height'
+        : undefined);
+
+  if (!resolvedType || resolvedType === 'finite') {
+    return null;
+  }
+
+  const config = SCROLL_LAYOUT_DISPLAY[resolvedType];
+  const tooltipParts: string[] = [config.description];
+  if (perfData.scrollConfidence) {
+    tooltipParts.push(`Confidence: ${perfData.scrollConfidence}`);
+  }
+  if (perfData.scrollSignals && perfData.scrollSignals.length > 0) {
+    tooltipParts.push(`Signals: ${perfData.scrollSignals.join(', ')}`);
+  }
+
+  return {
+    type: resolvedType,
+    label: config.label,
+    tooltip: tooltipParts.join(' · '),
+    Icon: config.Icon,
+  };
+}
+
 export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, liveMetrics }) => {
   const findings = inspection.findings || [];
 
@@ -130,7 +199,17 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
     const sWire = perfData?.scrolledWireTransferBytes ?? perfData?.scrolledTransferSizeApprox;
     const sDecoded = perfData?.scrolledDecodedBytes ?? perfData?.scrolledDecodedSizeApprox;
     const sResCount = perfData?.scrolledResourceCount;
-    if (sWire !== undefined || sResCount !== undefined || sDecoded !== undefined) {
+    const isInf =
+      perfData?.isInfiniteScrollDetected ??
+      (perfData?.layoutScrollType === 'infinite-feed' ? true : undefined);
+    if (
+      sWire !== undefined ||
+      sResCount !== undefined ||
+      sDecoded !== undefined ||
+      isInf !== undefined ||
+      perfData?.layoutScrollType !== undefined ||
+      perfData?.isFixedHeight !== undefined
+    ) {
       return {
         wireBytes: sWire,
         transferBytes: sWire,
@@ -139,11 +218,13 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
         cacheHitCount: perfData?.scrolledCacheHitCount,
         cacheHitBytes: perfData?.scrolledCacheHitBytes,
         opaqueResourceCount: perfData?.scrolledOpaqueResourceCount,
-        isInfiniteScroll: perfData?.isInfiniteScrollDetected,
+        isInfiniteScroll: isInf,
       };
     }
     return null;
   }, [perfData]);
+
+  const scrollLayoutBadge = useMemo(() => getScrollLayoutBadge(perfData), [perfData]);
 
   const lazyWire =
     scrolledData?.wireBytes && wireBytes && scrolledData.wireBytes > wireBytes
@@ -263,12 +344,12 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
           const isBad = ['Slow', 'Poor'].includes(m.rating.label);
 
           const ratingPillClass = isGood
-            ? 'bg-emerald-500/10 text-emerald-600 dark:text-[#CEFF52]'
+            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100'
             : isWarn
-            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-amber-700 dark:text-[#fbbf24]'
             : isBad
-            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
-            : 'bg-zinc-500/10 text-zinc-500';
+            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-rose-700 dark:text-[#fb7185]'
+            : 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-500 dark:text-zinc-400';
 
           return (
             <div
@@ -421,33 +502,35 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
           </div>
         )}
 
-        {/* Network Efficiency Chips (Cache & Cross-origin) */}
-        {(displayCacheCount > 0 || displayOpaqueCount > 0 || scrolledData?.isInfiniteScroll) && (
+        {/* Network Efficiency & Layout Chips */}
+        {(displayCacheCount > 0 || displayOpaqueCount > 0 || Boolean(scrollLayoutBadge)) && (
           <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 flex items-center gap-2 flex-wrap">
             {displayCacheCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
                 title="Assets served directly from browser cache without network transfer."
               >
-                <Layers className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
                 {`${formatBytes(displayCacheBytes)} cached (${displayCacheCount} reqs)`}
               </span>
             )}
             {displayOpaqueCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-amber-700 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
                 title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers."
               >
-                <Globe className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
+                <Globe className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
                 {`${displayOpaqueCount} cross-origin`}
               </span>
             )}
-            {scrolledData?.isInfiniteScroll && (
+            {scrollLayoutBadge && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-sky-700 dark:text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded-md"
-                title="Infinite scrolling detected; bounded to loaded content."
+                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
+                title={scrollLayoutBadge.tooltip}
+                data-scroll-layout={scrollLayoutBadge.type}
               >
-                Infinite Feed (Bounded)
+                <scrollLayoutBadge.Icon className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
+                {scrollLayoutBadge.label}
               </span>
             )}
           </div>

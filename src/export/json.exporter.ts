@@ -90,7 +90,7 @@ export function exportToJson(
     exportFormat: 'website-intelligence-json',
     exportedAt: new Date().toISOString(),
     id: inspection.id || `inspection_${Date.now()}`,
-    mode: inspection.mode || 'quick',
+    mode: inspection.mode || 'full',
     target: {
       url: inspection.target?.url || '',
       origin: inspection.target?.origin || '',

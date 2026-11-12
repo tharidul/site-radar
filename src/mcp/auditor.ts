@@ -192,7 +192,7 @@ export class SiteRadarAuditor {
     }
 
     // Run all analyzers
-    const engineMode: InspectionMode = mode === 'fast' ? 'quick' : 'deep';
+    const engineMode: InspectionMode = mode === 'fast' ? 'full' : 'deep';
     const findings = await runAllAnalyzers({
       target,
       mode: engineMode,

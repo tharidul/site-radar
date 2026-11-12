@@ -14,7 +14,7 @@ import type { WebsiteInspection } from '../src/types/inspection';
 function makeInspection(): WebsiteInspection {
   return {
     id: 'scan_low_test',
-    mode: 'quick',
+    mode: 'full',
     target: {
       url: 'https://example.com/',
       origin: 'https://example.com',
@@ -228,7 +228,7 @@ describe('LOW-03: Ephemeral RAM-only sessions when session storage is unsupporte
   it('does not fall back to local disk storage on persistSession, restoreFromStorage, or clearStorageSession', async () => {
     const session: ActiveScanSession = {
       scanId: 'scan_ram_only',
-      mode: 'quick',
+      mode: 'full',
       targetUrl: 'https://example.com/',
       tabId: 7,
       state: 'completed',

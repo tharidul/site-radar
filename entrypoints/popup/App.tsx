@@ -7,6 +7,7 @@ import { MESSAGE_CHANNELS, type ScanProgressEvent } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
 import { getBrowserAdapter } from '@/browser/adapters';
 import { validateScheme, type SchemeValidationResult } from '@/security/scheme-validator';
+import { ensureEphemeralBrowserSessionPermissions } from '@/security/ephemeral-permissions';
 import { isSameOrigin } from '@/security/url-normalizer';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
 
@@ -25,9 +26,57 @@ import { SocialPreviewView } from './components/SocialPreviewView';
 
 export type ScanStatus = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
+export interface LiveMetricsSnapshot {
+  resourceCount: number;
+  wireTransferBytes: number;
+  decodedBytes: number;
+  cacheHitCount: number;
+  cacheHitBytes: number;
+  opaqueResourceCount: number;
+}
+
+/** Returns true only when live metrics polling should be active on the Overview tab. */
+export function shouldPollLiveMetrics(
+  scanStatus: ScanStatus,
+  activeDashboardTab: DashboardTab,
+  tabId?: number,
+): boolean {
+  return scanStatus === 'completed' && activeDashboardTab === 'overview' && Boolean(tabId);
+}
+
+/**
+ * Returns the previous metrics reference unchanged when all 6 numeric counters match
+ * so React skips unnecessary root re-renders during 1.2s polling.
+ */
+export function reconcileLiveMetrics(
+  prev: LiveMetricsSnapshot | null,
+  next: LiveMetricsSnapshot,
+): LiveMetricsSnapshot {
+  if (
+    prev &&
+    prev.resourceCount === next.resourceCount &&
+    prev.wireTransferBytes === next.wireTransferBytes &&
+    prev.decodedBytes === next.decodedBytes &&
+    prev.cacheHitCount === next.cacheHitCount &&
+    prev.cacheHitBytes === next.cacheHitBytes &&
+    prev.opaqueResourceCount === next.opaqueResourceCount
+  ) {
+    return prev;
+  }
+
+  return {
+    resourceCount: next.resourceCount,
+    wireTransferBytes: next.wireTransferBytes,
+    decodedBytes: next.decodedBytes,
+    cacheHitCount: next.cacheHitCount,
+    cacheHitBytes: next.cacheHitBytes,
+    opaqueResourceCount: next.opaqueResourceCount,
+  };
+}
+
 export function getRequiredOriginPermissions(
   url: string | undefined,
-  mode: InspectionMode,
+  _mode?: InspectionMode,
 ): string[] {
   if (!url) return [];
 
@@ -40,10 +89,6 @@ export function getRequiredOriginPermissions(
 
   if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
     return [];
-  }
-
-  if (mode === 'deep') {
-    return ['*://*/*'];
   }
 
   return [`${parsed.protocol}//${parsed.host}/*`];
@@ -74,10 +119,7 @@ export async function ensureOriginPermission(
     if (!granted) {
       return {
         granted: false,
-        reason:
-          mode === 'deep'
-            ? 'Host permission (*://*/*) is required to run Deep Inspection.'
-            : `Host permission (${origins[0]}) is required to inspect this site.`,
+        reason: `Host permission (${origins[0]}) is required to inspect this site.`,
       };
     }
     return { granted: true };
@@ -138,7 +180,7 @@ class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundary
 export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } = {}) {
   const isSidepanel = propIsSidepanel ?? (typeof window !== 'undefined' && window.location.pathname.includes('sidepanel'));
   const [scanStatus, setScanStatus] = useState<ScanStatus>('idle');
-  const [selectedMode, setSelectedMode] = useState<InspectionMode>('quick');
+  const [selectedMode, setSelectedMode] = useState<InspectionMode>('full');
   const [inspection, setInspection] = useState<WebsiteInspection | null>(null);
   const [progress, setProgress] = useState<ScanProgressEvent | null>(null);
   const [activeTab, setActiveTab] = useState<TabInfo | null>(null);
@@ -149,17 +191,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
   const [theme, setTheme] = useState<AppTheme>('dark');
-  const [refreshPage, setRefreshPage] = useState<boolean>(false);
+  const [refreshPage, setRefreshPage] = useState<boolean>(true);
   const activeScanIdRef = useRef<string | null>(null);
   const pendingCancelRef = useRef<boolean>(false);
-  const [liveMetrics, setLiveMetrics] = useState<{
-    resourceCount: number;
-    wireTransferBytes: number;
-    decodedBytes: number;
-    cacheHitCount: number;
-    cacheHitBytes: number;
-    opaqueResourceCount: number;
-  } | null>(null);
+  const [liveMetrics, setLiveMetrics] = useState<LiveMetricsSnapshot | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -170,6 +205,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         const [savedTheme, tab] = await Promise.all([
           loadSavedTheme().catch(() => 'dark' as AppTheme),
           adapter.getActiveTab().catch(() => null),
+          ensureEphemeralBrowserSessionPermissions(adapter).catch(() => {}),
         ]);
 
         if (mounted) {
@@ -367,18 +403,22 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       return;
     }
 
+    if (!shouldPollLiveMetrics(scanStatus, activeDashboardTab, activeTab.id)) {
+      return;
+    }
+
+    const tabId = activeTab.id;
     let isSubscribed = true;
 
     const pollLiveMetrics = async () => {
       try {
-        if (!activeTab.id) return;
         const res = await messageBus.sendToTab(
-          activeTab.id,
+          tabId,
           MESSAGE_CHANNELS.GET_LIVE_METRICS,
           undefined,
         );
         if (isSubscribed && res && res.success && typeof res.resourceCount === 'number') {
-          setLiveMetrics(res);
+          setLiveMetrics((prev) => reconcileLiveMetrics(prev, res));
         }
       } catch {
         // Tab may have navigated or content script not ready
@@ -392,7 +432,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       isSubscribed = false;
       clearInterval(interval);
     };
-  }, [scanStatus, activeTab?.id]);
+  }, [scanStatus, activeDashboardTab, activeTab?.id]);
 
   const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
@@ -420,7 +460,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         : 'Initiating audit pipeline...',
       percent: 3,
       completedModules: 0,
-      totalModules: selectedMode === 'quick' ? 8 : selectedMode === 'full' ? 10 : 15,
+      totalModules: selectedMode === 'full' ? 15 : 20,
       timestamp: Date.now(),
     });
 
@@ -631,7 +671,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         </div>
       )}
 
-      <main className={`flex-1 min-h-0 ${activeDashboardTab === 'overview' && inspection && scanStatus === 'completed' ? 'flex flex-col overflow-hidden' : 'overflow-y-auto'}`}>
+      <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
         {scanStatus === 'running' && (
           <LiveProgressBar
             progress={progress}

@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   LayoutGrid,
   AlertTriangle,
@@ -9,8 +8,10 @@ import {
   Info,
   Terminal,
   Share2,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
-import { useHorizontalScroll } from '@/utils/useHorizontalScroll';
+import { useHorizontalScroll, type HorizontalScrollState } from '@/utils/useHorizontalScroll';
 
 export type DashboardTab =
   | 'overview'
@@ -48,7 +49,27 @@ export const TabBar: React.FC<TabBarProps> = ({
   onSelectTab,
   issuesCount,
 }) => {
-  const scrollRef = useHorizontalScroll<HTMLDivElement>();
+  const [scrollState, setScrollState] = useState<HorizontalScrollState>({
+    hasOverflow: false,
+    canScrollLeft: false,
+    canScrollRight: false,
+    isDragging: false,
+  });
+
+  const handleScrollStateChange = useCallback((next: HorizontalScrollState) => {
+    setScrollState((prev) =>
+      prev.hasOverflow === next.hasOverflow &&
+      prev.canScrollLeft === next.canScrollLeft &&
+      prev.canScrollRight === next.canScrollRight &&
+      prev.isDragging === next.isDragging
+        ? prev
+        : next,
+    );
+  }, []);
+
+  const scrollRef = useHorizontalScroll<HTMLDivElement>({
+    onScrollStateChange: handleScrollStateChange,
+  });
 
   useEffect(() => {
     const el = scrollRef.current;
@@ -59,11 +80,38 @@ export const TabBar: React.FC<TabBarProps> = ({
     }
   }, [activeTab]);
 
+  const scrollByStep = (direction: -1 | 1) => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const step = Math.max(120, Math.round(el.clientWidth * 0.45));
+    if (typeof el.scrollBy === 'function') {
+      el.scrollBy({ left: direction * step, behavior: 'smooth' });
+    } else {
+      el.scrollLeft += direction * step;
+    }
+  };
+
   return (
-    <div className="relative border-b border-zinc-200/80 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 px-2 select-none">
+    <div className="relative flex items-center border-b border-zinc-200/80 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 px-2 select-none">
+      {scrollState.canScrollLeft ? (
+        <button
+          type="button"
+          onClick={() => scrollByStep(-1)}
+          aria-label="Scroll tabs left"
+          title="Scroll tabs left"
+          className="absolute left-1 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-[#f8f8fa]/95 dark:bg-zinc-950/95 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/80 dark:hover:bg-zinc-800 shadow-xs transition-colors cursor-pointer"
+        >
+          <ChevronLeft className="w-3.5 h-3.5" />
+        </button>
+      ) : null}
+
       <div
         ref={scrollRef}
-        className="flex items-center gap-1 overflow-x-auto overflow-y-hidden no-scrollbar pt-1 pb-0 scroll-smooth"
+        role="tablist"
+        aria-label="Audit views"
+        className={`flex-1 min-w-0 flex items-center gap-1 overflow-x-auto overflow-y-hidden no-scrollbar horizontal-scroll-fade pt-1 pb-0 ${
+          scrollState.isDragging ? 'cursor-grabbing' : scrollState.hasOverflow ? 'cursor-grab' : ''
+        }`}
       >
         {STATIC_TABS.map((tab) => {
           const Icon = tab.icon;
@@ -78,8 +126,10 @@ export const TabBar: React.FC<TabBarProps> = ({
             >
               <button
                 type="button"
+                role="tab"
+                aria-selected={isActive}
                 onClick={() => onSelectTab(tab.id)}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-all duration-150 ease-out active:scale-[0.97] cursor-pointer whitespace-nowrap shrink-0 ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold transition-colors duration-150 ease-out active:scale-[0.97] cursor-pointer whitespace-nowrap shrink-0 ${
                   isActive
                     ? 'text-[#152E40] dark:text-[#CEFF52]'
                     : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/40 dark:hover:bg-zinc-800/60 rounded-md'
@@ -108,7 +158,18 @@ export const TabBar: React.FC<TabBarProps> = ({
           );
         })}
       </div>
+
+      {scrollState.canScrollRight ? (
+        <button
+          type="button"
+          onClick={() => scrollByStep(1)}
+          aria-label="Scroll tabs right"
+          title="More tabs (drag or scroll)"
+          className="absolute right-1 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-[#f8f8fa]/95 dark:bg-zinc-950/95 border border-zinc-200/80 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/80 dark:hover:bg-zinc-800 shadow-xs transition-colors cursor-pointer"
+        >
+          <ChevronRight className="w-3.5 h-3.5" />
+        </button>
+      ) : null}
     </div>
   );
 };
-
