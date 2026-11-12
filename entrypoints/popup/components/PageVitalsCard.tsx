@@ -65,27 +65,27 @@ function formatTiming(rawMs?: number, fallback?: string): string | undefined {
   return undefined;
 }
 
-function getSpeedRating(metric: 'ttfb' | 'fcp' | 'lcp' | 'load', ms?: number) {
+function getSpeedRating(metric: 'ttfb' | 'fcp' | 'lcp' | 'load', ms?: number): { label: string } {
   if (ms === undefined || ms === null || isNaN(ms) || ms < 0) {
-    return { label: '—', colorClass: 'text-zinc-500', barClass: 'bg-zinc-300 dark:bg-zinc-700', pct: 0 };
+    return { label: '—' };
   }
   switch (metric) {
     case 'ttfb':
-      if (ms <= 800) return { label: 'Fast', colorClass: 'text-[#CEFF52]', barClass: 'bg-[#CEFF52]', pct: 100 };
-      if (ms <= 1800) return { label: 'Moderate', colorClass: 'text-amber-400', barClass: 'bg-amber-400', pct: 60 };
-      return { label: 'Slow', colorClass: 'text-rose-400', barClass: 'bg-rose-400', pct: 25 };
+      if (ms <= 800) return { label: 'Fast' };
+      if (ms <= 1800) return { label: 'Moderate' };
+      return { label: 'Slow' };
     case 'fcp':
-      if (ms <= 1800) return { label: 'Good', colorClass: 'text-[#CEFF52]', barClass: 'bg-[#CEFF52]', pct: 100 };
-      if (ms <= 3000) return { label: 'Moderate', colorClass: 'text-amber-400', barClass: 'bg-amber-400', pct: 60 };
-      return { label: 'Slow', colorClass: 'text-rose-400', barClass: 'bg-rose-400', pct: 25 };
+      if (ms <= 1800) return { label: 'Good' };
+      if (ms <= 3000) return { label: 'Moderate' };
+      return { label: 'Slow' };
     case 'lcp':
-      if (ms <= 2500) return { label: 'Good', colorClass: 'text-[#CEFF52]', barClass: 'bg-[#CEFF52]', pct: 100 };
-      if (ms <= 4000) return { label: 'Needs Work', colorClass: 'text-amber-400', barClass: 'bg-amber-400', pct: 60 };
-      return { label: 'Poor', colorClass: 'text-rose-400', barClass: 'bg-rose-400', pct: 25 };
+      if (ms <= 2500) return { label: 'Good' };
+      if (ms <= 4000) return { label: 'Needs Work' };
+      return { label: 'Poor' };
     case 'load':
-      if (ms <= 2500) return { label: 'Fast', colorClass: 'text-[#CEFF52]', barClass: 'bg-[#CEFF52]', pct: 100 };
-      if (ms <= 5000) return { label: 'Normal', colorClass: 'text-sky-400', barClass: 'bg-sky-400', pct: 60 };
-      return { label: 'Slow', colorClass: 'text-rose-400', barClass: 'bg-rose-400', pct: 25 };
+      if (ms <= 2500) return { label: 'Fast' };
+      if (ms <= 5000) return { label: 'Normal' };
+      return { label: 'Slow' };
   }
 }
 
@@ -325,7 +325,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
             <Activity className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
+            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
               Page Loading Times &amp; Data Usage
             </h3>
             <p className="text-2xs text-zinc-500 dark:text-zinc-400">
@@ -335,9 +335,9 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
         </div>
       </div>
 
-      {/* 4 Performance Metric Cards: Clean unclipped layout */}
-      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 gap-2.5">
-        {timingMetrics.map((m) => {
+      {/* 4 Performance Metrics: Fused strip with dividers, no nested cards or bars */}
+      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 rounded-md bg-zinc-50/70 dark:bg-zinc-950/50 border border-zinc-200/60 dark:border-zinc-800/80">
+        {timingMetrics.map((m, idx) => {
           const Icon = m.icon;
           const isGood = ['Fast', 'Good'].includes(m.rating.label);
           const isWarn = ['Moderate', 'Normal', 'Needs Work'].includes(m.rating.label);
@@ -351,139 +351,132 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
             ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-rose-700 dark:text-[#fb7185]'
             : 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-500 dark:text-zinc-400';
 
+          const dividerClass = [
+            idx % 2 === 1 ? 'border-l border-zinc-200/60 dark:border-zinc-800/80' : '',
+            idx >= 2 ? 'border-t min-[440px]:border-t-0 border-zinc-200/60 dark:border-zinc-800/80' : '',
+            idx > 0 ? 'min-[440px]:border-l min-[440px]:border-zinc-200/60 dark:min-[440px]:border-zinc-800/80' : '',
+          ]
+            .filter(Boolean)
+            .join(' ');
+
           return (
             <div
               key={m.key}
               title={`${m.name} (Target: ${m.target})`}
-              className="p-3 rounded-lg bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800/80 flex flex-col justify-between"
+              className={`px-3.5 py-3 flex flex-col justify-between gap-2.5 min-w-0 ${dividerClass}`}
             >
-              {/* Row 1: Label + Target threshold */}
-              <div className="flex items-center justify-between gap-1">
-                <div className="flex items-center gap-1.5 shrink-0">
+              {/* Row 1: Icon + Label (left) & Rating Badge (right) */}
+              <div className="flex items-center justify-between gap-1.5">
+                <div className="flex items-center gap-1.5 min-w-0">
                   <Icon className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
-                  <span className="text-2xs font-bold text-zinc-700 dark:text-zinc-200 uppercase tracking-wider whitespace-nowrap">
+                  <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200 uppercase tracking-wider whitespace-nowrap">
                     {m.label}
                   </span>
                 </div>
-                <span className="text-2xs font-mono text-zinc-400 dark:text-zinc-500 shrink-0 whitespace-nowrap">
-                  {m.target}
+                <span className={`text-2xs font-medium px-1.5 py-0.2 rounded shrink-0 ${ratingPillClass}`}>
+                  {m.rating.label}
                 </span>
               </div>
 
-              {/* Row 2: Metric Value */}
-              <div className="my-1.5">
-                <div className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 font-mono tabular-nums tracking-tight">
+              {/* Row 2: Metric Value (left) & Target threshold (right) */}
+              <div className="flex items-baseline justify-between gap-1.5">
+                <div className="text-2xl font-normal text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight leading-none">
                   {m.value}
                 </div>
-              </div>
-
-              {/* Row 3: Status rating badge + calibrated gauge */}
-              <div className="space-y-1.5 pt-1.5 border-t border-zinc-200/40 dark:border-zinc-800/50">
-                <div className="flex items-center justify-between gap-1">
-                  <span className={`text-2xs font-semibold px-1.5 py-0.2 rounded shrink-0 ${ratingPillClass}`}>
-                    {m.rating.label}
-                  </span>
-                  <span className="text-2xs font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
-                    {m.rating.pct}%
-                  </span>
-                </div>
-                <div className="h-1 w-full bg-zinc-200 dark:bg-zinc-800 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full ${m.rating.barClass} transition-all duration-300`}
-                    style={{ width: `${m.rating.pct}%` }}
-                  />
-                </div>
+                <span className="text-2xs text-zinc-400 dark:text-zinc-500 tabular-nums shrink-0 whitespace-nowrap">
+                  {m.target}
+                </span>
               </div>
             </div>
           );
         })}
       </div>
 
-      {/* Simple, Unified Data Usage Section (Single Card - No Overlaps, No Duplicate Boxes) */}
-      <div className="p-3.5 rounded-lg bg-zinc-50 dark:bg-zinc-950/60 border border-zinc-200/60 dark:border-zinc-800/80 space-y-3">
+      {/* Simple, Unified Data Usage Section (Single Fused Container) */}
+      <div className="p-3.5 rounded-md bg-zinc-50/70 dark:bg-zinc-950/50 border border-zinc-200/60 dark:border-zinc-800/80 space-y-3">
         {/* Header */}
         <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200/50 dark:border-zinc-800/60">
           <div className="flex items-center gap-2">
             <HardDrive className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
-            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">Data Usage</span>
+            <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">Data Usage</span>
           </div>
 
           {isLive && (
-            <span className="text-2xs font-mono font-bold text-emerald-600 dark:text-[#CEFF52] uppercase tracking-wider">
+            <span className="text-2xs font-medium text-emerald-600 dark:text-[#CEFF52] uppercase tracking-wider">
               Live
             </span>
           )}
         </div>
 
-        {/* Content: Initial vs Full Page (if delta exists) or Single Viewport */}
+        {/* Content: Initial vs Full Page (fused with divider) or Single Viewport */}
         {hasDelta ? (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 divide-x divide-zinc-200/60 dark:divide-zinc-800/80">
             {/* Initial Load */}
-            <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 space-y-1.5 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+            <div className="pr-3.5 space-y-1.5 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Initial Load
                 </span>
-                <span className="text-2xs font-mono font-bold text-zinc-600 dark:text-zinc-300">
+                <span className="text-2xs font-normal text-zinc-600 dark:text-zinc-300 tabular-nums">
                   {totalRequests} {totalRequests === 1 ? 'Request' : 'Requests'}
                 </span>
               </div>
-              <div className="flex items-baseline gap-1.5 font-mono">
-                <span className="text-lg font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-normal text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight leading-none">
                   {formatBytes(initialWire)}
                 </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   transferred
                 </span>
               </div>
               {initialDecoded && initialDecoded > 0 && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
                   {formatBytes(initialDecoded)} extracted
                 </div>
               )}
             </div>
 
             {/* Full Page */}
-            <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 space-y-1.5 min-w-0">
-              <div className="flex items-center justify-between">
-                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+            <div className="pl-3.5 space-y-1.5 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Full Page
                 </span>
-                <span className="text-2xs font-mono font-bold text-zinc-900 dark:text-[#CEFF52]">
+                <span className="text-2xs font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums">
                   {effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'}
                 </span>
               </div>
-              <div className="flex items-baseline gap-1.5 font-mono">
-                <span className="text-lg font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight leading-none">
                   {formatBytes(effectiveWire)}
                 </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   transferred
                 </span>
               </div>
               {effectiveDecoded && effectiveDecoded > 0 && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 font-mono">
+                <div className="text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
                   {formatBytes(effectiveDecoded)} extracted
                 </div>
               )}
             </div>
           </div>
         ) : (
-          <div className="p-3 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/70 dark:border-zinc-800/80 flex items-center justify-between gap-4">
-            <div className="space-y-1">
+          <div className="flex items-center justify-between gap-4">
+            <div className="space-y-1.5">
               <div className="flex items-center gap-2">
-                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
                   Total Transfer
                 </span>
-                <span className="text-2xs font-mono font-bold text-zinc-900 dark:text-[#CEFF52]">
+                <span className="text-2xs font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums">
                   ({effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'})
                 </span>
               </div>
-              <div className="flex items-baseline gap-1.5 font-mono">
-                <span className="text-lg font-extrabold text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-2xl font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight leading-none">
                   {formatBytes(effectiveWire)}
                 </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400 font-sans">
+                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
                   transferred
                 </span>
               </div>
@@ -491,10 +484,10 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
 
             {effectiveDecoded && effectiveDecoded > 0 && (
               <div className="text-right space-y-1">
-                <span className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
+                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
                   Extracted in Memory
                 </span>
-                <div className="text-sm font-extrabold text-zinc-800 dark:text-zinc-200 font-mono tabular-nums">
+                <div className="text-base font-normal text-zinc-800 dark:text-zinc-200 tabular-nums">
                   {formatBytes(effectiveDecoded)}
                 </div>
               </div>
@@ -507,7 +500,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
           <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 flex items-center gap-2 flex-wrap">
             {displayCacheCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md tabular-nums"
                 title="Assets served directly from browser cache without network transfer."
               >
                 <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
@@ -516,7 +509,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
             )}
             {displayOpaqueCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md tabular-nums"
                 title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers."
               >
                 <Globe className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
@@ -525,7 +518,7 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
             )}
             {scrollLayoutBadge && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs font-mono text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
                 title={scrollLayoutBadge.tooltip}
                 data-scroll-layout={scrollLayoutBadge.type}
               >

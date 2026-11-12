@@ -20,7 +20,7 @@ export interface SanitizedModuleSummary {
 
 export interface SanitizedJsonReport {
   schemaVersion: '1.0.0';
-  exportFormat: 'website-intelligence-json';
+  exportFormat: 'siteradar-json';
   exportedAt: string;
   id: string;
   mode: string;
@@ -87,7 +87,7 @@ export function exportToJson(
 
   const exportPayload: Record<string, unknown> = {
     schemaVersion: '1.0.0',
-    exportFormat: 'website-intelligence-json',
+    exportFormat: 'siteradar-json',
     exportedAt: new Date().toISOString(),
     id: inspection.id || `inspection_${Date.now()}`,
     mode: inspection.mode || 'full',

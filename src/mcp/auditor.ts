@@ -80,10 +80,14 @@ export class SiteRadarAuditor {
       }
     }
 
-    // Set up HappyDOM with the HTML
-    const domWin = new HappyWindow({ url: targetUrl });
+    const effectiveUrl = browserData?.finalUrl || targetUrl;
+
+    // Set up HappyDOM with the full HTML document so <html> and <head> attributes are preserved
+    const domWin = new HappyWindow({ url: effectiveUrl });
     const domDoc = domWin.document;
-    domDoc.body.innerHTML = html;
+    domDoc.open();
+    domDoc.write(html);
+    domDoc.close();
 
     // Run all registered DOM page collectors
     const modules: Record<string, CollectionResult<unknown>> = {};
@@ -92,7 +96,7 @@ export class SiteRadarAuditor {
         modules[modId] = await collector.collect({
           document: domDoc as any,
           window: domWin as any,
-          url: targetUrl,
+          url: effectiveUrl,
         });
       } catch (err: any) {
         modules[modId] = {
@@ -108,8 +112,8 @@ export class SiteRadarAuditor {
       }
     }
 
-    // Augment with Response Headers
-    const headersData = HeadersService.processHeaders(responseHeaders, statusCode, statusText, targetUrl);
+    // Augment with Response Headers and wire them into Security collector data
+    const headersData = HeadersService.processHeaders(responseHeaders, statusCode, statusText, effectiveUrl);
     modules['headers'] = {
       module: 'headers',
       status: 'completed',
@@ -118,8 +122,14 @@ export class SiteRadarAuditor {
       coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
       limitations: [],
       errors: [],
-      sources: ['HttpHeadResponse'],
+      sources: ['HttpGetResponse'],
     };
+
+    const secModule = modules['security'] || modules['securitySignals'];
+    if (secModule && secModule.data) {
+      (secModule.data as any).securityHeaders = responseHeaders;
+      (secModule.data as any).responseHeaders = headersData;
+    }
 
     // If browser data is available, inject the live high-fidelity metrics
     if (browserData) {
@@ -221,10 +231,33 @@ export class SiteRadarAuditor {
       else if (f.status === 'error') errorFindings++;
     }
 
+    const moduleAliases: Record<string, string> = {
+      securitySignals: 'security',
+      securityHeaders: 'security',
+      privacySignals: 'privacy',
+      seo: 'metadata',
+      content: 'dom',
+    };
+    const seenModules = new Set<string>();
+    let completedModules = 0;
+    let partialModules = 0;
+    let failedModules = 0;
+    let blockedModules = 0;
+    for (const [key, mod] of Object.entries(modules)) {
+      const canonical = moduleAliases[key] || key;
+      if (seenModules.has(canonical)) continue;
+      seenModules.add(canonical);
+      if (mod.status === 'completed') completedModules++;
+      else if (mod.status === 'partial') partialModules++;
+      else if (mod.status === 'blocked') blockedModules++;
+      else if (mod.status === 'failed') failedModules++;
+    }
+
     const summary: InspectionSummary = {
-      completedModules: Object.values(modules).filter((m) => m.status === 'completed').length,
-      partialModules: Object.values(modules).filter((m) => m.status === 'partial').length,
-      failedModules: Object.values(modules).filter((m) => m.status === 'failed' || m.status === 'blocked').length,
+      completedModules,
+      partialModules,
+      failedModules,
+      blockedModules,
       totalFindings: findings.length,
       passedFindings,
       warningFindings,

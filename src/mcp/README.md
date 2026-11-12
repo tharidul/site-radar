@@ -1,6 +1,6 @@
 # SiteRadar MCP Server (Model Context Protocol)
 
-The **SiteRadar MCP Server** exposes the SiteRadar / Website Intelligence audit engine as standardized MCP tools. It enables AI coding assistants and autonomous agents (such as Antigravity, Claude Desktop, Cursor, and Codex) to audit websites, inspect security headers, evaluate SEO/AEO, detect tech stacks, and run live WCAG 2.2 AA accessibility evaluations on demand.
+The **SiteRadar MCP Server** exposes the SiteRadar audit engine as standardized MCP tools. It enables AI coding assistants and autonomous agents (such as Antigravity, Claude Desktop, Cursor, and Codex) to audit websites, inspect security headers, evaluate SEO/AEO, detect tech stacks, and run live WCAG 2.2 AA accessibility evaluations on demand.
 
 ---
 
@@ -54,7 +54,7 @@ The server is preconfigured in `.agents/mcp_config.json`:
       "command": "npx",
       "args": [
         "tsx",
-        "/path/to/website-intelligence/src/mcp/index.ts"
+        "/path/to/site-radar/src/mcp/index.ts"
       ]
     }
   }
@@ -65,7 +65,7 @@ The server is preconfigured in `.agents/mcp_config.json`:
 Add to **Settings > Features > MCP**:
 - **Name:** `siteradar`
 - **Type:** `command`
-- **Command:** `npx tsx /path/to/website-intelligence/src/mcp/index.ts`
+- **Command:** `npx tsx /path/to/site-radar/src/mcp/index.ts`
 
 ---
 

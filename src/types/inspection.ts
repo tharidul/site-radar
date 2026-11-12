@@ -81,6 +81,7 @@ export interface InspectionSummary {
   completedModules: number;
   partialModules: number;
   failedModules: number;
+  blockedModules?: number;
   totalFindings: number;
   passedFindings?: number;
   warningFindings?: number;

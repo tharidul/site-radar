@@ -76,6 +76,28 @@ describe('LOW-07: RobotsParser typed getters & BoundedSpider integration', () =>
       sitemaps: ['https://example.com/sitemap.xml'],
     });
   });
+
+  it('sends SiteRadarBot/1.0 User-Agent header when fetching pages in BoundedSpider.crawl', async () => {
+    const pageFetchHeaders: Array<HeadersInit | undefined> = [];
+    vi.spyOn(globalThis, 'fetch').mockImplementation(async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.endsWith('/robots.txt')) {
+        return new Response('User-agent: *\nAllow: /\n', { status: 200 });
+      }
+      pageFetchHeaders.push(init?.headers);
+      return new Response('<html><head><title>Home</title></head><body>Ok</body></html>', {
+        status: 200,
+        headers: { 'content-type': 'text/html' },
+      });
+    });
+
+    const spider = new BoundedSpider({ maxPages: 1, maxDepth: 0 });
+    await spider.crawl('https://example.com/');
+
+    expect(pageFetchHeaders.length).toBeGreaterThan(0);
+    const headers = pageFetchHeaders[0] as Record<string, string>;
+    expect(headers['User-Agent']).toBe('SiteRadarBot/1.0');
+  });
 });
 
 describe('LOW-08: ResponsiveCollector tap target evaluation cap', () => {

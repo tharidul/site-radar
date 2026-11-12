@@ -237,7 +237,7 @@ SiteRadar enforces strict least-privilege principles in its runtime execution:
 ### Known Limitations
 
 - API keys entered in Settings are stored in service worker memory only. They are cleared when the service worker restarts (browser restart, or after ~30s of extension inactivity). This is by design and disclosed in the UI.
-- The deep crawl spider identifies itself as `WebsiteIntelligenceBot/1.0` to target servers. Some websites with aggressive bot protection may block these requests.
+- The deep crawl spider identifies itself as `SiteRadarBot/1.0` to target servers. Some websites with aggressive bot protection may block these requests.
 - Security header analysis via background HEAD fetch may fail on servers that block HEAD requests or enforce strict bot filtering. This is non-fatal; the extension falls back to DOM-based analysis.
 - The extension cannot inspect `chrome://`, `about:blank`, `file://`, or other internal browser pages.
 

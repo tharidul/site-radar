@@ -3,6 +3,8 @@ import { createHash } from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { exportToHtml, sha256Base64 } from '../src/export/html.exporter';
+import { exportToJson } from '../src/export/json.exporter';
+import { generateReportFilename } from '../src/export/download';
 import {
   InspectionOrchestrator,
   detectMainWorldTechnologies,
@@ -248,5 +250,18 @@ describe('LOW-03: Ephemeral RAM-only sessions when session storage is unsupporte
     const freshOrchestrator = new InspectionOrchestrator({ browserAdapter: adapter });
     const restored = await freshOrchestrator.restoreFromStorage(7, 'https://example.com/');
     expect(restored).toBeUndefined();
+  });
+});
+
+describe('SiteRadar Export Branding', () => {
+  it('exports JSON reports with siteradar-json format identifier', () => {
+    const parsed = JSON.parse(exportToJson(makeInspection()));
+    expect(parsed.exportFormat).toBe('siteradar-json');
+  });
+
+  it('generates report filenames with siteradar- prefix', () => {
+    const filename = generateReportFilename('example.com', 'full', 'json', 1700000000000);
+    expect(filename.startsWith('siteradar-')).toBe(true);
+    expect(filename).toBe('siteradar-example.com-full-2023-11-14.json');
   });
 });

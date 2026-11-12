@@ -380,7 +380,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     {tech.name}
                   </span>
                   {tech.version && (
-                    <span className="shrink-0 text-2xs font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
+                    <span className="shrink-0 text-2xs font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300 tabular-nums">
                       v{tech.version}
                     </span>
                   )}

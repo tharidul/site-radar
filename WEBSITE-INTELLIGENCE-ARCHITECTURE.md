@@ -1,4 +1,4 @@
-# Website Intelligence & Security Auditor
+# SiteRadar
 ## Complete Extension System Architecture and Project Structure
 
 **Status:** Architecture baseline  
@@ -16,7 +16,7 @@
 
 ## 1. Product definition
 
-Website Intelligence & Security Auditor is a cross-browser extension that inspects the currently open website, evaluates its technical characteristics, and presents evidence-based findings about SEO, accessibility, performance, security indicators, privacy, technologies, content, and infrastructure.
+SiteRadar is a cross-browser extension that inspects the currently open website, evaluates its technical characteristics, and presents evidence-based findings about SEO, accessibility, performance, security indicators, privacy, technologies, content, and infrastructure.
 
 The product has three inspection modes:
 
@@ -127,7 +127,7 @@ The extension must distinguish observed facts from inferred signals. Every findi
 The structure below is a target architecture. WXT starter conventions and generated files should be retained where appropriate; do not replace generated configuration blindly.
 
 ```text
-website-intelligence/
+site-radar/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml

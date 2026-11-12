@@ -441,12 +441,49 @@
     font-variant-numeric: tabular-nums;
   }
 
+  @keyframes siteradar-orbit-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes siteradar-step-enter {
+    from {
+      opacity: 0;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .siteradar-orbit-spin {
+    animation: siteradar-orbit-spin 2.8s linear infinite;
+  }
+
+  .siteradar-step-enter {
+    animation: siteradar-step-enter 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
+    }
+
+    .siteradar-orbit-spin,
+    .siteradar-step-enter {
+      animation: none !important;
+    }
+
+    .siteradar-progress-arc {
+      transition: none !important;
     }
   }
 }

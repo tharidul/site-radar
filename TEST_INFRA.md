@@ -1,5 +1,5 @@
 # Test Infrastructure & Quality Assurance Specification
-## Website Intelligence & Security Auditor
+## SiteRadar
 
 **Target:** Cross-Browser WebExtension (Google Chrome MV3 & Mozilla Firefox MV3)  
 **Test Runner:** Vitest v5.1.0 (with Happy-DOM environment & WXT Vitest plugin)  
@@ -11,7 +11,7 @@
 
 ## 1. Test Philosophy
 
-The Website Intelligence & Security Auditor operates in privacy-sensitive, multi-browser environments where security guarantees (SSRF prevention, zero secret retention, local-only processing) are mission-critical. The testing infrastructure is designed around the following core tenets:
+SiteRadar operates in privacy-sensitive, multi-browser environments where security guarantees (SSRF prevention, zero secret retention, local-only processing) are mission-critical. The testing infrastructure is designed around the following core tenets:
 
 1. **Opaque-Box & Requirement-Driven**:
    - Tests evaluate system behavior exclusively against authoritative interface contracts defined in `src/types/` (`inspection.ts`, `browser.ts`, `security.ts`, `crawler.ts`, `intelligence.ts`, `messaging.ts`) and requirements in `WEBSITE-INTELLIGENCE-ARCHITECTURE.md` and `PROJECT.md`.

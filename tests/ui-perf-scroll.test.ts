@@ -403,5 +403,43 @@ describe('UI Scroll Performance & Polling Hardening', () => {
       expect(legacyFixed).not.toBeNull();
       expect(legacyFixed!.textContent).toContain('Fixed Height');
     });
+
+    it('renders fused timing metrics with dividers, unified sans font (no font-mono), and no bottom progress bars', () => {
+      renderWithPerfData({
+        resourceCount: 12,
+        wireTransferBytes: 8192,
+        navigationTiming: {
+          dnsLookupMs: 10,
+          tcpConnectMs: 20,
+          ttfbMs: 109,
+          domLoadMs: 420,
+          fullLoadMs: 989,
+        },
+        paintTiming: {
+          fcpMs: 284,
+        },
+        webVitals: {
+          lcpMs: 668,
+        },
+      });
+
+      expect(container.textContent).toContain('109ms');
+      expect(container.textContent).toContain('284ms');
+      expect(container.textContent).toContain('668ms');
+      expect(container.textContent).toContain('989ms');
+
+      // Single unified font: no font-mono anywhere in PageVitalsCard
+      expect(container.querySelector('.font-mono')).toBeNull();
+      // Larger, non-bold metric values
+      expect(container.querySelector('.font-bold')).toBeNull();
+      expect(container.querySelector('.font-extrabold')).toBeNull();
+      expect(container.querySelector('.text-2xl.font-normal')).not.toBeNull();
+      // No bottom gauge bars
+      expect(container.querySelector('.h-1.w-full')).toBeNull();
+      // Fused grid container uses dividers instead of 4 separate gap-2.5 cards
+      const fusedGrid = container.querySelector('.grid.grid-cols-2');
+      expect(fusedGrid).not.toBeNull();
+      expect(fusedGrid!.className).not.toContain('gap-2.5');
+    });
   });
 });

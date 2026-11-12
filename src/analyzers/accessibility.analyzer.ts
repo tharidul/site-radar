@@ -263,6 +263,9 @@ export class AccessibilityAnalyzer implements Analyzer {
       const elementCount = domRes.data.elementCount ?? 0;
 
       if (maxDepth > 32 || elementCount > 2000) {
+        const bloatReasons: string[] = [];
+        if (maxDepth > 32) bloatReasons.push(`deeply nested wrapper hierarchies (${maxDepth} > 32 levels)`);
+        if (elementCount > 2000) bloatReasons.push(`bloated node trees (${elementCount} > 2,000 elements)`);
         findings.push(
           new FindingBuilder('ago-dom-token-bloat')
             .setStatus('warning')
@@ -271,7 +274,7 @@ export class AccessibilityAnalyzer implements Analyzer {
             .addEvidence('Max DOM Nesting Depth', `${maxDepth} (Threshold: <= 32)`)
             .addEvidence('Total DOM Elements', `${elementCount} (Threshold: <= 2000)`)
             .setExpectedBehavior('Keep DOM nesting depth under 32 levels and total elements under 2,000 for efficient AI agent parsing.')
-            .setExplanation('Deeply nested wrapper hierarchies (> 32 levels) and bloated node trees consume excessive token context when parsed by AI agent vision and accessibility drivers, risking prompt truncation and slower agent response times.')
+            .setExplanation(`Excessive DOM complexity (${bloatReasons.join(' and ')}) consumes excessive token context when parsed by AI agent vision and accessibility drivers, risking prompt truncation and slower agent response times.`)
             .setRecommendation('Flatten wrapper <div> nesting and implement virtualized scrolling or clean component structures to keep agent DOM parsing lightweight.')
             .build(),
         );

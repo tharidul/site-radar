@@ -673,11 +673,24 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
 
       <main className="flex-1 min-h-0 overflow-y-auto overscroll-y-contain">
         {scanStatus === 'running' && (
-          <LiveProgressBar
-            progress={progress}
-            onCancel={handleCancelInspection}
-            isCancelling={isCancelling}
-          />
+          <div className="min-h-full w-full flex items-center justify-center">
+            <LiveProgressBar
+              progress={progress}
+              onCancel={handleCancelInspection}
+              isCancelling={isCancelling}
+              targetHost={
+                activeTab?.url
+                  ? (() => {
+                      try {
+                        return new URL(activeTab.url).hostname || undefined;
+                      } catch {
+                        return undefined;
+                      }
+                    })()
+                  : undefined
+              }
+            />
+          </div>
         )}
 
         {scanStatus === 'cancelled' && (

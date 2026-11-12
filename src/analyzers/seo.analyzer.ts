@@ -4,6 +4,7 @@ import type { Analyzer, AnalyzerContext } from './types';
 import { getModuleData } from './types';
 import { FindingBuilder } from './finding-builder';
 import { isLocalDevelopmentHost } from '../security/private-network.guard';
+import { canonicalUrlsMatch } from '../utils/canonical';
 
 export class SeoAnalyzer implements Analyzer {
   readonly id = 'seo-analyzer';
@@ -150,7 +151,7 @@ export class SeoAnalyzer implements Analyzer {
             .build(),
         );
       } else {
-        const canonicalMatches = Boolean(seoData.canonicalMatches);
+        const canonicalMatches = Boolean(seoData.canonicalMatches) || canonicalUrlsMatch(target.url, canonical);
         if (canonicalMatches) {
           findings.push(
             new FindingBuilder('seo-canonical-matches')

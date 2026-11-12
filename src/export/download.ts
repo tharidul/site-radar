@@ -22,7 +22,7 @@ export function generateReportFilename(
   const safeHost = sanitizeFilenamePart(hostname);
   const safeMode = sanitizeFilenamePart(mode);
   const dateStr = new Date(timestamp).toISOString().split('T')[0];
-  return `website-intelligence-${safeHost}-${safeMode}-${dateStr}.${extension}`;
+  return `siteradar-${safeHost}-${safeMode}-${dateStr}.${extension}`;
 }
 
 export function triggerBlobDownload(content: string, filename: string, mimeType: string): void {

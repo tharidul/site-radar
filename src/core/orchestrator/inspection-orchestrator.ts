@@ -706,23 +706,69 @@ export class InspectionOrchestrator {
             typeof AbortSignal.any === 'function'
               ? AbortSignal.any([signal, timeoutSignal])
               : timeoutSignal;
-          const resp = await fetch(inspection.target.url, {
+          let resp = await fetch(inspection.target.url, {
             method: 'HEAD',
             credentials: 'omit',
             cache: 'no-cache',
             signal: fetchSignal,
           });
+          let headerMethod: 'HEAD' | 'GET' = 'HEAD';
           const headersMap: Record<string, string> = {};
           resp.headers.forEach((val, key) => {
             headersMap[key.toLowerCase()] = val;
           });
+
+          const hasCoreSecurityHeaders =
+            'strict-transport-security' in headersMap ||
+            'content-security-policy' in headersMap ||
+            'x-frame-options' in headersMap ||
+            'x-content-type-options' in headersMap;
+
+          // Some CDN/WAF edges return stripped headers or 403/405 for HEAD; retry with GET when needed
+          if (resp.status >= 400 || !hasCoreSecurityHeaders) {
+            try {
+              const getResp = await fetch(inspection.target.url, {
+                method: 'GET',
+                credentials: 'omit',
+                cache: 'no-cache',
+                signal: fetchSignal,
+              });
+              try {
+                await getResp.body?.cancel();
+              } catch {
+                // Ignore stream cancel errors
+              }
+              const getHeaders: Record<string, string> = {};
+              getResp.headers.forEach((val, key) => {
+                getHeaders[key.toLowerCase()] = val;
+              });
+              const getHasSecurityHeaders =
+                'strict-transport-security' in getHeaders ||
+                'content-security-policy' in getHeaders ||
+                'x-frame-options' in getHeaders ||
+                'x-content-type-options' in getHeaders;
+              if (
+                (getResp.ok && resp.status >= 400) ||
+                getHasSecurityHeaders ||
+                Object.keys(getHeaders).length > Object.keys(headersMap).length
+              ) {
+                resp = getResp;
+                headerMethod = 'GET';
+                Object.keys(headersMap).forEach((k) => delete headersMap[k]);
+                Object.assign(headersMap, getHeaders);
+              }
+            } catch {
+              // Keep HEAD headers if GET fallback fails
+            }
+          }
+
           if (Object.keys(headersMap).length > 0) {
             const headersData = HeadersService.processHeaders(
               headersMap,
               resp.status,
               resp.statusText,
               inspection.target.url,
-              'HEAD',
+              headerMethod,
             );
 
             inspection.modules['headers'] = {
@@ -733,7 +779,7 @@ export class InspectionOrchestrator {
               coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
               limitations: [],
               errors: [],
-              sources: ['HttpHeadResponse'],
+              sources: [headerMethod === 'GET' ? 'HttpGetResponse' : 'HttpHeadResponse'],
             };
 
             const secModule = inspection.modules['security'] || inspection.modules['securitySignals'];
@@ -1343,19 +1389,27 @@ export class InspectionOrchestrator {
     let completedModules = 0;
     let partialModules = 0;
     let failedModules = 0;
+    let blockedModules = 0;
 
+    const moduleAliases: Record<string, string> = {
+      securitySignals: 'security',
+      securityHeaders: 'security',
+      privacySignals: 'privacy',
+      seo: 'metadata',
+      content: 'dom',
+    };
     const seenCanonical = new Set<string>();
 
     for (const [key, res] of Object.entries(modules)) {
-      const canonicalKey =
-        key === 'securitySignals' ? 'security' : key === 'privacySignals' ? 'privacy' : key;
+      const canonicalKey = moduleAliases[key] || key;
 
       if (seenCanonical.has(canonicalKey)) continue;
       seenCanonical.add(canonicalKey);
 
       if (res.status === 'completed') completedModules++;
       else if (res.status === 'partial') partialModules++;
-      else if (res.status === 'failed' || res.status === 'blocked') failedModules++;
+      else if (res.status === 'blocked') blockedModules++;
+      else if (res.status === 'failed') failedModules++;
     }
 
     let passedFindings = 0;
@@ -1380,6 +1434,7 @@ export class InspectionOrchestrator {
       completedModules,
       partialModules,
       failedModules,
+      blockedModules,
       totalFindings: findings.length,
       passedFindings,
       warningFindings,

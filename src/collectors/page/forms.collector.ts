@@ -103,6 +103,25 @@ export class FormsCollector implements PageCollector<FormsData> {
       if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image') {
         return;
       }
+      if (el.hasAttribute('hidden') || el.getAttribute('aria-hidden') === 'true') {
+        return;
+      }
+      const elName = el.getAttribute('name') || '';
+      const elId = el.getAttribute('id') || '';
+      if (/^(?:g-recaptcha-response|h-captcha-response|cf-turnstile-response)/i.test(elName) ||
+          /^(?:g-recaptcha-response|h-captcha-response|cf-turnstile-response)/i.test(elId)) {
+        return;
+      }
+      if (context.window && typeof context.window.getComputedStyle === 'function') {
+        try {
+          const style = context.window.getComputedStyle(el);
+          if (style && (style.display === 'none' || style.visibility === 'hidden')) {
+            return;
+          }
+        } catch {
+          // Ignore computed style errors in non-standard DOMs
+        }
+      }
 
       totalInputCount++;
 

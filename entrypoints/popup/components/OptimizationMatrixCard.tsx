@@ -122,7 +122,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
           <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
             AI &amp; Search Optimization (The O&apos;s)
           </span>
-          <span className="text-2xs font-mono font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 tabular-nums">
+          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 tabular-nums">
             {averageScore}% index
           </span>
         </div>
@@ -146,7 +146,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
             title={`View ${row.name} findings (${row.score}%)`}
           >
             <div className="flex items-baseline gap-2 min-w-[125px] shrink-0">
-              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100">
+              <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100">
                 {row.name}
               </span>
               <span className="text-xs text-zinc-500 dark:text-zinc-400">
@@ -170,7 +170,7 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
                   }}
                 />
               </div>
-              <span className="font-mono font-bold text-xs text-zinc-900 dark:text-zinc-100 tabular-nums w-8 text-right">
+              <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100 tabular-nums w-8 text-right">
                 {row.score}%
               </span>
               <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] group-hover:translate-x-0.5 transition-transform" />

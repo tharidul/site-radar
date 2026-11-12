@@ -396,7 +396,7 @@ export class BoundedSpider {
           redirect: 'manual',
           headers: {
             Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'User-Agent': 'WebsiteIntelligenceBot/1.0',
+            'User-Agent': 'SiteRadarBot/1.0',
           },
         });
 

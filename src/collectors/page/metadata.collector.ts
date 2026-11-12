@@ -1,6 +1,7 @@
 
 import type { SeoData } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
+import { canonicalUrlsMatch } from '../../utils/canonical';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
 
 export class MetadataCollector implements PageCollector<SeoData> {
@@ -64,13 +65,7 @@ export class MetadataCollector implements PageCollector<SeoData> {
           resolved.password = '';
           canonicalUrl = resolved.toString();
           if (pageUrl) {
-            const currentUrl = new URL(pageUrl);
-            currentUrl.username = '';
-            currentUrl.password = '';
-            currentUrl.hash = '';
-            const testCanonical = new URL(canonicalUrl);
-            testCanonical.hash = '';
-            canonicalMatches = currentUrl.toString().replace(/\/$/, '') === testCanonical.toString().replace(/\/$/, '');
+            canonicalMatches = canonicalUrlsMatch(pageUrl, canonicalUrl);
           }
         } catch {
           canonicalUrl = rawHref;

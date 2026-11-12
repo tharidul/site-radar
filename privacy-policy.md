@@ -43,7 +43,7 @@ When you start an audit on a tab, SiteRadar accesses the following information l
 
 ## 4. Deep Crawl Mode
 
-In Deep Crawl mode, SiteRadar discovers internal links and fetches up to 50 additional pages directly from the same target domain. These requests originate directly from your browser to the host website, with User-Agent header `WebsiteIntelligenceBot/1.0`. Crawled data is processed in memory and discarded when the session ends.
+In Deep Crawl mode, SiteRadar discovers internal links and fetches up to 50 additional pages directly from the same target domain. These requests originate directly from your browser to the host website, with User-Agent header `SiteRadarBot/1.0`. Crawled data is processed in memory and discarded when the session ends.
 
 ---
 
