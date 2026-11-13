@@ -22,7 +22,21 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
   };
 
   private get api() {
-    return typeof browser !== 'undefined' ? browser : (typeof chrome !== 'undefined' ? (chrome as any) : null);
+    return (
+      (globalThis as any).browser ??
+      (typeof browser !== 'undefined' ? browser : undefined) ??
+      (globalThis as any).chrome ??
+      (typeof chrome !== 'undefined' ? (chrome as any) : null)
+    );
+  }
+
+  private extractOrigin(url?: string): string | undefined {
+    if (!url) return undefined;
+    try {
+      return new URL(url).origin;
+    } catch {
+      return undefined;
+    }
   }
 
   private getStorageArea(area: StorageArea = 'local'): any {
@@ -53,7 +67,7 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
       url: t.url,
       title: t.title,
       favIconUrl: t.favIconUrl,
-      origin: t.url ? new URL(t.url).origin : undefined,
+      origin: this.extractOrigin(t.url),
       windowId: t.windowId,
       incognito: Boolean(t.incognito),
       active: Boolean(t.active),
@@ -72,7 +86,7 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
         url: t.url,
         title: t.title,
         favIconUrl: t.favIconUrl,
-        origin: t.url ? new URL(t.url).origin : undefined,
+        origin: this.extractOrigin(t.url),
         windowId: t.windowId,
         incognito: Boolean(t.incognito),
         active: Boolean(t.active),
@@ -94,7 +108,7 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
         url: t.url,
         title: t.title,
         favIconUrl: t.favIconUrl,
-        origin: t.url ? new URL(t.url).origin : undefined,
+        origin: this.extractOrigin(t.url),
         windowId: t.windowId,
         incognito: Boolean(t.incognito),
         active: Boolean(t.active),
@@ -187,8 +201,10 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
 
     const target: any = {
       tabId: options.tabId,
-      allFrames: options.allFrames,
     };
+    if (options.allFrames !== undefined) {
+      target.allFrames = options.allFrames;
+    }
 
     const scriptDetails: any = { target };
     if (options.world) {
@@ -228,22 +244,40 @@ export class FirefoxMV3Adapter implements BrowserAdapter {
     await storageArea.clear();
   }
 
+  private normalizePermissionRequest(request: PermissionRequest): PermissionRequest {
+    if (!request.origins || request.origins.length === 0) {
+      return request;
+    }
+    const normalizedOrigins = request.origins.map((origin) => {
+      try {
+        // Firefox WebExtension host permission patterns do not permit ports (e.g. http://localhost:3000/* -> http://localhost/*)
+        return origin.replace(/^([a-zA-Z*]+:\/\/[^/:]+):\d+(\/.*)$/, '$1$2');
+      } catch {
+        return origin;
+      }
+    });
+    return {
+      ...request,
+      origins: Array.from(new Set(normalizedOrigins)),
+    };
+  }
+
   async hasPermissions(request: PermissionRequest): Promise<boolean> {
     const api = this.api;
     if (!api || !api.permissions) return false;
-    return await api.permissions.contains(request);
+    return Boolean(await api.permissions.contains(this.normalizePermissionRequest(request)));
   }
 
   async requestPermissions(request: PermissionRequest): Promise<boolean> {
     const api = this.api;
     if (!api || !api.permissions) return false;
-    return await api.permissions.request(request);
+    return Boolean(await api.permissions.request(this.normalizePermissionRequest(request)));
   }
 
   async removePermissions(request: PermissionRequest): Promise<boolean> {
     const api = this.api;
     if (!api || !api.permissions) return false;
-    return await api.permissions.remove(request);
+    return Boolean(await api.permissions.remove(this.normalizePermissionRequest(request)));
   }
 
   async getAllPermissions(): Promise<PermissionRequest> {

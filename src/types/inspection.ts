@@ -62,6 +62,19 @@ export interface AuditFinding {
   recommendation?: string;
   source: string;
   references?: string[];
+  realityState?: 'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE';
+  realityMultiplier?: number;
+  blastTier?: 'decorative' | 'content' | 'interactive' | 'critical_flow';
+  blastWeight?: number;
+  weightedDensity?: number;
+  violationPressure?: number;
+  corroborationTraces?: Array<{
+    policyId: string;
+    previousState: 'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE';
+    nextState: 'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE';
+    multiplierApplied: number;
+    reason: string;
+  }>;
 }
 
 export interface WebsiteTarget {

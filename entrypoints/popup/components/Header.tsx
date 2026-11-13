@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({
   );
   const showFavicon = Boolean(safeFaviconSrc && failedSrc !== safeFaviconSrc);
   return (
-    <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0 rounded-t-2xl">
+    <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0">
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -183,7 +183,7 @@ export const Header: React.FC<HeaderProps> = ({
             className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate select-all"
             title={tabUrl || 'No active tab'}
           >
-            {tabUrl || tabHostname || 'https://www.google.com'}
+            {tabUrl || tabHostname || 'No active tab'}
           </span>
         </div>
 

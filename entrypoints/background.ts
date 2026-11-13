@@ -71,14 +71,42 @@ function normalizeCrawlLimits(raw?: StoredCrawlLimits | null): Partial<CrawlLimi
   return Object.keys(normalized).length > 0 ? normalized : undefined;
 }
 
+declare const browser: any;
+
+function getWebExtApi(): any {
+  const runtimeBrowser =
+    (globalThis as any).browser ?? (typeof browser !== 'undefined' ? browser : undefined);
+  const runtimeChrome =
+    (globalThis as any).chrome ?? (typeof chrome !== 'undefined' ? chrome : undefined);
+
+  if (runtimeBrowser?.runtime?.id) {
+    try {
+      const baseUrl =
+        typeof runtimeBrowser.runtime.getURL === 'function' ? runtimeBrowser.runtime.getURL('') : '';
+      if (typeof baseUrl === 'string' && baseUrl.startsWith('moz-extension://')) {
+        return runtimeBrowser;
+      }
+    } catch {
+      // Ignore getURL errors in mocked contexts
+    }
+    if (!runtimeChrome?.runtime?.id) {
+      return runtimeBrowser;
+    }
+  }
+
+  return runtimeChrome ?? runtimeBrowser;
+}
+
 function isAuthorizedBackgroundSender(sender?: chrome.runtime.MessageSender | null): boolean {
-  if (sender?.id === 'mock-sender' && (typeof chrome === 'undefined' || !chrome.runtime?.id)) {
+  const api = getWebExtApi();
+  if (sender?.id === 'mock-sender' && !api?.runtime?.id) {
     return true;
   }
   return isInternalExtensionSender(sender);
 }
 
 export default defineBackground(() => {
+  const api = getWebExtApi();
   void consentManager.ensureLoaded();
   void ensureEphemeralBrowserSessionPermissions(getBrowserAdapter());
 
@@ -86,8 +114,16 @@ export default defineBackground(() => {
   const badgedTabIds = new Set<number>();
 
   const clearKeepaliveAlarm = (scanId: string) => {
-    if (typeof chrome !== 'undefined' && chrome.alarms?.clear) {
-      chrome.alarms.clear(`siteradar_keepalive_${scanId}`, () => {});
+    const alarmsApi = getWebExtApi()?.alarms;
+    if (alarmsApi?.clear) {
+      try {
+        const res = alarmsApi.clear(`siteradar_keepalive_${scanId}`);
+        if (res && typeof res.catch === 'function') {
+          res.catch(() => {});
+        }
+      } catch {
+        // Ignore alarm cleanup failures during shutdown
+      }
     }
   };
 
@@ -134,8 +170,9 @@ export default defineBackground(() => {
     }
 
     // Schedule keepalive alarm to prevent MV3 idle termination during active scans
-    if (typeof chrome !== 'undefined' && chrome.alarms?.create) {
-      chrome.alarms.create(`siteradar_keepalive_${scanId}`, {
+    const alarmsApi = getWebExtApi()?.alarms;
+    if (alarmsApi?.create) {
+      alarmsApi.create(`siteradar_keepalive_${scanId}`, {
         periodInMinutes: 0.4,
       });
     }
@@ -214,11 +251,11 @@ export default defineBackground(() => {
   };
 
   try {
-    const browserPermsApi = (globalThis as { browser?: { permissions?: { onAdded?: { addListener?: (cb: (p: { origins?: string[] }) => void) => void } } } }).browser?.permissions?.onAdded;
-    if (typeof chrome !== 'undefined' && chrome.permissions?.onAdded?.addListener) {
-      chrome.permissions.onAdded.addListener(handlePermissionsAdded);
-    } else if (typeof browserPermsApi?.addListener === 'function') {
-      browserPermsApi.addListener(handlePermissionsAdded);
+    const permsApi =
+      getWebExtApi()?.permissions?.onAdded ??
+      (typeof chrome !== 'undefined' ? chrome.permissions?.onAdded : undefined);
+    if (typeof permsApi?.addListener === 'function') {
+      permsApi.addListener(handlePermissionsAdded);
     }
   } catch {
     // Ignore in environments where permissions.onAdded is stubbed as unimplemented
@@ -309,8 +346,8 @@ export default defineBackground(() => {
     { requireInternalSender: true },
   );
 
-  if (typeof chrome !== 'undefined' && chrome.runtime?.onStartup) {
-    chrome.runtime.onStartup.addListener(() => {
+  if (api?.runtime?.onStartup) {
+    api.runtime.onStartup.addListener(() => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
       BadgeService.clear();
@@ -318,8 +355,8 @@ export default defineBackground(() => {
     });
   }
 
-  if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
-    chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
+  if (api?.tabs?.onUpdated) {
+    api.tabs.onUpdated.addListener((tabId: number, changeInfo: chrome.tabs.OnUpdatedInfo) => {
       // Skip irrelevant updates (title, favicon, audible, status='complete', etc.)
       if (!changeInfo.url && changeInfo.status !== 'loading') {
         return;
@@ -341,16 +378,16 @@ export default defineBackground(() => {
     });
   }
 
-  if (typeof chrome !== 'undefined' && chrome.tabs?.onRemoved) {
-    chrome.tabs.onRemoved.addListener((tabId) => {
+  if (api?.tabs?.onRemoved) {
+    api.tabs.onRemoved.addListener((tabId: number) => {
       if (badgedTabIds.delete(tabId)) {
         BadgeService.clear(tabId);
       }
     });
   }
 
-  if (typeof chrome !== 'undefined' && chrome.runtime?.onInstalled) {
-    chrome.runtime.onInstalled.addListener((details) => {
+  if (api?.runtime?.onInstalled) {
+    api.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
       void resetGrantedOriginPermissionsOnStartup(getBrowserAdapter());
@@ -358,9 +395,9 @@ export default defineBackground(() => {
       // On first install, open the onboarding & MCP welcome tab
       if (details.reason === 'install') {
         try {
-          if (chrome.tabs?.create && chrome.runtime?.getURL) {
-            chrome.tabs.create({
-              url: chrome.runtime.getURL('options.html#welcome'),
+          if (api.tabs?.create && api.runtime?.getURL) {
+            api.tabs.create({
+              url: api.runtime.getURL('options.html#welcome'),
               active: true,
             });
           }
@@ -369,17 +406,17 @@ export default defineBackground(() => {
         }
       }
 
-      if (chrome.contextMenus) {
+      if (api.contextMenus) {
         const registerContextMenus = () => {
           try {
-            chrome.contextMenus.create(
+            api.contextMenus.create(
               {
                 id: 'open-side-panel',
                 title: 'Open SiteRadar in Side Panel',
                 contexts: ['all'],
               },
               () => {
-                void chrome.runtime?.lastError;
+                void api.runtime?.lastError;
               },
             );
           } catch {
@@ -387,9 +424,9 @@ export default defineBackground(() => {
         };
 
         try {
-          if (typeof chrome.contextMenus.removeAll === 'function') {
-            chrome.contextMenus.removeAll(() => {
-              void chrome.runtime?.lastError;
+          if (typeof api.contextMenus.removeAll === 'function') {
+            api.contextMenus.removeAll(() => {
+              void api.runtime?.lastError;
               registerContextMenus();
             });
           } else {
@@ -401,21 +438,49 @@ export default defineBackground(() => {
     });
   }
 
-  if (typeof chrome !== 'undefined' && chrome.contextMenus?.onClicked) {
-    chrome.contextMenus.onClicked.addListener(async (info, tab) => {
-      if (info.menuItemId === 'open-side-panel' && tab?.windowId && (chrome as any).sidePanel?.open) {
-        try {
-          await (chrome as any).sidePanel.open({ windowId: tab.windowId });
-        } catch (err) {
-          console.warn('Failed to open side panel from context menu:', err);
+  if (api?.contextMenus?.onClicked) {
+    try {
+      api.contextMenus.onClicked.addListener((info: chrome.contextMenus.OnClickData, tab?: chrome.tabs.Tab) => {
+        if (info.menuItemId !== 'open-side-panel') {
+          return;
         }
-      }
-    });
+
+        const sidebarAction =
+          api.sidebarAction ??
+          (typeof chrome !== 'undefined' ? (chrome as any).sidebarAction : undefined);
+        if (typeof sidebarAction?.open === 'function') {
+          try {
+            // Invoke synchronously inside the user-gesture callback for Firefox
+            Promise.resolve(sidebarAction.open()).catch((err: unknown) => {
+              console.warn('Failed to open Firefox sidebar from context menu:', err);
+            });
+          } catch (err) {
+            console.warn('Failed to open Firefox sidebar from context menu:', err);
+          }
+          return;
+        }
+
+        const sidePanel =
+          (typeof chrome !== 'undefined' ? (chrome as any).sidePanel : undefined) ??
+          api.sidePanel;
+        if (tab?.windowId && typeof sidePanel?.open === 'function') {
+          try {
+            Promise.resolve(sidePanel.open({ windowId: tab.windowId })).catch((err: unknown) => {
+              console.warn('Failed to open side panel from context menu:', err);
+            });
+          } catch (err) {
+            console.warn('Failed to open side panel from context menu:', err);
+          }
+        }
+      });
+    } catch {
+      // Ignore in test environments where contextMenus.onClicked is stubbed as unimplemented
+    }
   }
 
   // CRIT-03: Register onConnect listener for UI-driven port keepalive
-  if (typeof chrome !== 'undefined' && chrome.runtime?.onConnect) {
-    chrome.runtime.onConnect.addListener((port) => {
+  if (api?.runtime?.onConnect) {
+    api.runtime.onConnect.addListener((port: chrome.runtime.Port) => {
       if (port.name === 'siteradar-scan-keepalive') {
         if (!isInternalExtensionSender(port.sender)) {
           try {
@@ -423,7 +488,7 @@ export default defineBackground(() => {
           } catch {}
           return;
         }
-        port.onMessage.addListener((msg) => {
+        port.onMessage.addListener((msg: unknown) => {
           if (msg === 'PING' || (msg && typeof msg === 'object' && (msg as any).type === 'PING')) {
             try {
               port.postMessage({ type: 'PONG', timestamp: Date.now() });
@@ -435,8 +500,8 @@ export default defineBackground(() => {
   }
 
   // CRIT-03: Register onAlarm listener for background alarm keepalive
-  if (typeof chrome !== 'undefined' && chrome.alarms?.onAlarm) {
-    chrome.alarms.onAlarm.addListener((alarm) => {
+  if (api?.alarms?.onAlarm) {
+    api.alarms.onAlarm.addListener((alarm: chrome.alarms.Alarm) => {
       if (alarm.name.startsWith('siteradar_keepalive_')) {
         const scanId = alarm.name.replace('siteradar_keepalive_', '');
         const session = inspectionOrchestrator.getSession(scanId);

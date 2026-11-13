@@ -204,19 +204,46 @@ export class CookieService {
     return true;
   }
 
+  private getCookiesApi(): typeof chrome.cookies | undefined {
+    const g = globalThis as {
+      browser?: { runtime?: { id?: string; getURL?: (p: string) => string }; cookies?: typeof chrome.cookies };
+      chrome?: { runtime?: { id?: string }; cookies?: typeof chrome.cookies };
+    };
+    const runtimeBrowser = g.browser;
+    const runtimeChrome = g.chrome ?? (typeof chrome !== 'undefined' ? chrome : undefined);
+
+    if (runtimeBrowser?.cookies) {
+      try {
+        const baseUrl =
+          typeof runtimeBrowser.runtime?.getURL === 'function' ? runtimeBrowser.runtime.getURL('') : '';
+        if (typeof baseUrl === 'string' && baseUrl.startsWith('moz-extension://')) {
+          return runtimeBrowser.cookies;
+        }
+      } catch {
+        // Ignore getURL errors in mocked contexts
+      }
+      if (!runtimeChrome?.cookies) {
+        return runtimeBrowser.cookies;
+      }
+    }
+
+    return runtimeChrome?.cookies ?? runtimeBrowser?.cookies;
+  }
+
   async getCookies(targetUrl: string): Promise<InspectedCookie[]> {
     try {
-      if (typeof chrome === 'undefined' || !chrome.cookies?.getAll) {
+      const cookiesApi = this.getCookiesApi();
+      if (!cookiesApi?.getAll) {
         return [...mockCookiesStore];
       }
 
       const urlObj = new URL(targetUrl);
-      const urlCookies = await chrome.cookies.getAll({ url: targetUrl });
+      const urlCookies = await cookiesApi.getAll({ url: targetUrl });
 
       const domain = urlObj.hostname;
       let domainCookies: chrome.cookies.Cookie[] = [];
       try {
-        domainCookies = await chrome.cookies.getAll({ domain });
+        domainCookies = await cookiesApi.getAll({ domain });
       } catch {
       }
 
@@ -261,7 +288,8 @@ export class CookieService {
     assertValidCookieDomain(targetUrl, cookie.domain);
 
     try {
-      if (typeof chrome === 'undefined' || !chrome.cookies?.set) {
+      const cookiesApi = this.getCookiesApi();
+      if (!cookiesApi?.set) {
         return this.setMockCookie(cookie);
       }
 
@@ -285,7 +313,7 @@ export class CookieService {
         details.expirationDate = cookie.expirationDate;
       }
 
-      const res = await chrome.cookies.set(details);
+      const res = await cookiesApi.set(details);
       return !!res;
     } catch (err: any) {
       if (err?.message?.includes('not implemented')) {
@@ -297,13 +325,14 @@ export class CookieService {
 
   async deleteCookie(targetUrl: string, cookie: InspectedCookie): Promise<boolean> {
     try {
-      if (typeof chrome === 'undefined' || !chrome.cookies?.remove) {
+      const cookiesApi = this.getCookiesApi();
+      if (!cookiesApi?.remove) {
         return this.deleteMockCookie(cookie);
       }
 
       const opUrl = buildCookieUrl(targetUrl, cookie.domain, cookie.path, cookie.secure);
 
-      const res = await chrome.cookies.remove({
+      const res = await cookiesApi.remove({
         url: opUrl,
         name: cookie.name,
         storeId: cookie.storeId,

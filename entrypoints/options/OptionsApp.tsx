@@ -271,9 +271,15 @@ export function OptionsApp() {
 
   const handleCopySnippet = (text: string, id: string) => {
     try {
-      navigator.clipboard.writeText(text);
-      setCopiedSnippet(id);
-      setTimeout(() => setCopiedSnippet(null), 2000);
+      if (navigator.clipboard?.writeText) {
+        void navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            setCopiedSnippet(id);
+            setTimeout(() => setCopiedSnippet(null), 2000);
+          })
+          .catch(() => {});
+      }
     } catch {}
   };
 

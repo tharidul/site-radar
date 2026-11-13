@@ -316,11 +316,11 @@ describe('ModeSelector comparison layout and explanations', () => {
     expect(deepRadio?.getAttribute('aria-checked')).toBe('false');
 
     expect(container.textContent).toContain('Audits only the tab currently open.');
-    expect(container.textContent).toContain('Speed, scripts & media weight');
+    expect(container.textContent).toContain('Page Vitals & DOM');
     expect(container.textContent).toContain('Full audit plus site & server checks.');
-    expect(container.textContent).toContain('Crawls linked same-site pages');
-    expect(container.textContent).toContain('Reads robots.txt & XML sitemaps');
-    expect(container.textContent).toContain('DNS, IP/ASN & TLS cert lookups');
+    expect(container.textContent).toContain('Multi-Page Crawler');
+    expect(container.textContent).toContain('Robots & Sitemaps');
+    expect(container.textContent).toContain('DNS, IP/ASN & TLS');
     expect(container.textContent).toContain('Start Full Page Audit');
 
     act(() => {

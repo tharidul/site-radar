@@ -2,42 +2,18 @@
 import React from 'react';
 import { ExternalLink, ShieldCheck, Bot } from 'lucide-react';
 import lkmlLogo from '../../../assets/lkml.png';
+import { openExtensionTab } from '../ext-api';
 
 function openLink(url: string) {
-  if (!url) return;
-  try {
-    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
-      chrome.tabs.create({ url, active: true });
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  } catch {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
+  openExtensionTab(url);
 }
 
 function openPrivacyPolicy() {
-  try {
-    if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('privacy-policy.html'), active: true });
-    } else {
-      window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
-    }
-  } catch {
-    window.open('privacy-policy.html', '_blank', 'noopener,noreferrer');
-  }
+  openExtensionTab('privacy-policy.html');
 }
 
 function openMcpGuide() {
-  try {
-    if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
-      chrome.tabs.create({ url: chrome.runtime.getURL('options.html#mcp'), active: true });
-    } else {
-      window.open('options.html#mcp', '_blank', 'noopener,noreferrer');
-    }
-  } catch {
-    window.open('options.html#mcp', '_blank', 'noopener,noreferrer');
-  }
+  openExtensionTab('options.html#mcp');
 }
 
 const GithubIcon: React.FC<{ className?: string }> = ({ className = 'w-3.5 h-3.5' }) => (

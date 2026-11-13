@@ -33,6 +33,72 @@ const RULE_CANONICAL_ALIASES: Record<string, string> = {
   'priv-missing-privacy-policy': 'privacy-policy-link',
 };
 
+function extractAffectedAndTotal(finding: AuditFinding): { affected: number; total: number } | null {
+  if (!finding.evidence || !Array.isArray(finding.evidence) || finding.evidence.length === 0) {
+    return null;
+  }
+
+  let affected: number | undefined;
+  let total: number | undefined;
+
+  for (const ev of finding.evidence) {
+    if (ev.value === undefined || ev.value === null) continue;
+    const val = typeof ev.value === 'number' ? ev.value : parseFloat(String(ev.value));
+    if (isNaN(val)) continue;
+
+    const label = (ev.label || '').toLowerCase();
+
+    if (
+      label.includes('total') ||
+      label.includes('evaluated') ||
+      label.includes('all images') ||
+      label.includes('all nodes')
+    ) {
+      if (
+        !label.includes('missing') &&
+        !label.includes('affected') &&
+        !label.includes('without') &&
+        !label.includes('unlabeled') &&
+        !label.includes('failing') &&
+        !label.includes('violation')
+      ) {
+        total = val;
+      }
+    }
+
+    if (
+      label.includes('missing') ||
+      label.includes('affected') ||
+      label.includes('without sri') ||
+      label.includes('without') ||
+      label.includes('unlabeled') ||
+      label.includes('failing') ||
+      (label.includes('violation') && !label.includes('total violations'))
+    ) {
+      if (!label.includes('total') || label.includes('missing') || label.includes('without') || label.includes('unlabeled')) {
+        affected = val;
+      }
+    }
+  }
+
+  if (affected !== undefined && total !== undefined && total > 0) {
+    return { affected, total };
+  }
+
+  return null;
+}
+
+function isCriticalFlowControl(finding: AuditFinding, blastWeight: number): boolean {
+  if (finding.blastTier === 'critical_flow') return true;
+  if (finding.blastTier === 'decorative' || finding.blastTier === 'content' || finding.blastTier === 'interactive') return false;
+  if (blastWeight >= 3.0) return true;
+  if (finding.ruleId.includes('image') || finding.ruleId.includes('alt') || finding.ruleId.includes('color-contrast')) return false;
+  const ruleIdLower = finding.ruleId.toLowerCase();
+  if (/checkout|payment|auth|password|login|submit/i.test(ruleIdLower)) return true;
+  if (finding.category.toLowerCase() === 'security' && finding.severity === 'critical') return true;
+  return false;
+}
+
 export function calculateCategoryScore(
   category: string,
   findings: AuditFinding[],
@@ -48,11 +114,20 @@ export function calculateCategoryScore(
   let unavailable = 0;
   let notApplicable = 0;
   let hasCriticalFailure = false;
+  let criticalCapTriggered = false;
   let isHeuristic = false;
 
   let earnedPoints = 0;
   let maxPossiblePoints = 0;
   const deductionsExplanation: string[] = [];
+
+  const realityCounts: Record<'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE' | 'PASS', number> = {
+    TRUE_DEFECT: 0,
+    ARCHITECTURAL_PATTERN: 0,
+    OBSERVABILITY_LIMIT: 0,
+    SYNTHETIC_NOISE: 0,
+    PASS: 0,
+  };
 
   const seenCanonicalRules = new Set<string>();
 
@@ -76,36 +151,130 @@ export function calculateCategoryScore(
 
     const confidence = finding.confidence !== undefined ? finding.confidence : 1.0;
 
+    // Reality multiplier (mu)
+    let mu: number;
+    if (finding.realityMultiplier !== undefined) {
+      mu = finding.realityMultiplier;
+    } else if (finding.realityState === 'ARCHITECTURAL_PATTERN' || finding.realityState === 'OBSERVABILITY_LIMIT') {
+      mu = 0.0;
+    } else if (finding.realityState === 'SYNTHETIC_NOISE') {
+      mu = 0.05;
+    } else {
+      mu = 1.0;
+    }
+
+    // Special Reality State handling
+    if (finding.realityState === 'ARCHITECTURAL_PATTERN') {
+      passed++;
+      earnedPoints += weight * 1.0;
+      maxPossiblePoints += weight;
+      realityCounts.ARCHITECTURAL_PATTERN++;
+      continue;
+    }
+
+    if (finding.realityState === 'OBSERVABILITY_LIMIT') {
+      unavailable++;
+      realityCounts.OBSERVABILITY_LIMIT++;
+      continue;
+    }
+
     switch (finding.status) {
       case 'passed':
         passed++;
         earnedPoints += weight * 1.0;
         maxPossiblePoints += weight;
+        realityCounts.PASS++;
         break;
-      case 'warning':
+
+      case 'warning': {
         warnings++;
-        earnedPoints += weight * (1.0 - 0.5 * confidence);
-        maxPossiblePoints += weight;
-        deductionsExplanation.push(
-          `Warning on ${rule?.title || finding.ruleId}: -${Math.round(weight * 0.5 * confidence)} pts (confidence: ${Math.round(confidence * 100)}%)`,
-        );
-        break;
-      case 'failed':
-        failed++;
-        maxPossiblePoints += weight;
-        if (finding.severity === 'critical') {
-          hasCriticalFailure = true;
+        if (finding.realityState === 'SYNTHETIC_NOISE') {
+          realityCounts.SYNTHETIC_NOISE++;
+        } else {
+          realityCounts.TRUE_DEFECT++;
         }
-        deductionsExplanation.push(
-          `Failed check ${rule?.title || finding.ruleId} [${finding.severity}]: -${weight} pts`,
-        );
+
+        const effectiveDeduction = weight * 0.5 * confidence * mu;
+        earnedPoints += weight * (1.0 - effectiveDeduction / weight);
+        maxPossiblePoints += weight;
+        if (effectiveDeduction > 0) {
+          deductionsExplanation.push(
+            `Warning on ${rule?.title || finding.ruleId}: -${Math.round(effectiveDeduction)} pts (confidence: ${Math.round(confidence * 100)}%)`,
+          );
+        }
         break;
+      }
+
+      case 'failed': {
+        failed++;
+        if (finding.realityState === 'SYNTHETIC_NOISE') {
+          realityCounts.SYNTHETIC_NOISE++;
+        } else {
+          realityCounts.TRUE_DEFECT++;
+        }
+
+        // Compute Violation Density (delta_r) and Pressure (P_r)
+        let density: number | undefined;
+        let Pr = 1.0;
+        const counts = extractAffectedAndTotal(finding);
+
+        const blastWeight = finding.blastWeight || (
+          finding.blastTier === 'decorative' ? 0.25 :
+          finding.blastTier === 'interactive' ? 1.5 :
+          finding.blastTier === 'critical_flow' ? 3.0 :
+          finding.blastTier === 'content' ? 1.0 :
+          (finding.ruleId.includes('image') || finding.ruleId.includes('alt')) ? 0.25 :
+          (finding.ruleId.includes('button') || finding.ruleId.includes('interactive')) ? 1.5 :
+          1.0
+        );
+
+        if (finding.violationPressure !== undefined) {
+          Pr = finding.violationPressure;
+          density = finding.weightedDensity;
+        } else if (counts && counts.total > 0) {
+          density = counts.affected / counts.total;
+          Pr = Math.min(1.0, Math.pow(density, 0.6) + 0.25 * (1.0 - Math.exp(-0.08 * blastWeight * counts.affected)));
+        } else if (finding.weightedDensity !== undefined) {
+          density = finding.weightedDensity;
+          const affected = 1;
+          Pr = Math.min(1.0, Math.pow(density, 0.6) + 0.25 * (1.0 - Math.exp(-0.08 * blastWeight * affected)));
+        } else {
+          Pr = 1.0;
+        }
+
+        finding.violationPressure = Pr;
+        if (density !== undefined) {
+          finding.weightedDensity = density;
+        }
+
+        const effectiveDeduction = weight * mu * Pr;
+        earnedPoints += weight * (1.0 - Math.min(1.0, mu * Pr));
+        maxPossiblePoints += weight;
+
+        if (finding.severity === 'critical' && mu > 0.5) {
+          hasCriticalFailure = true;
+          if (Pr >= 0.8 && isCriticalFlowControl(finding, blastWeight)) {
+            criticalCapTriggered = true;
+          }
+        }
+
+        if (effectiveDeduction > 0) {
+          deductionsExplanation.push(
+            `Failed check ${rule?.title || finding.ruleId} [${finding.severity}]: -${Math.round(effectiveDeduction)} pts`,
+          );
+        }
+        break;
+      }
+
       case 'info':
         break;
+
       case 'not-available':
       case 'error':
         unavailable++;
+        realityCounts.OBSERVABILITY_LIMIT++;
         break;
+
       case 'not-applicable':
         notApplicable++;
         break;
@@ -118,6 +287,9 @@ export function calculateCategoryScore(
     ? 0
     : (totalApplicable > 0 ? evaluatedChecks / totalApplicable : 1.0);
   const coveragePercent = Math.round(coverageRate * 100);
+  const telemetryCoverageIndex = totalApplicable > 0
+    ? Math.round((evaluatedChecks / totalApplicable) * 100)
+    : 100;
 
   let scoreRounded: number;
   if (evaluatedChecks === 0) {
@@ -131,9 +303,9 @@ export function calculateCategoryScore(
   } else {
     let rawScore = maxPossiblePoints > 0 ? (earnedPoints / maxPossiblePoints) * 100 : 100;
 
-    if (hasCriticalFailure && rawScore > 49) {
+    if (criticalCapTriggered && rawScore > 49) {
       rawScore = 49;
-      deductionsExplanation.push('Critical failure override applied: score capped at 49');
+      deductionsExplanation.push('Critical failure override applied: score capped at 49 on critical flow control');
     }
 
     let finalScore = rawScore;
@@ -161,10 +333,12 @@ export function calculateCategoryScore(
     totalChecks: evaluatedChecks,
     weight: CATEGORY_WEIGHTS[catLower] ?? 0.20,
     coveragePercent,
+    telemetryCoverageIndex,
+    realityCounts,
     isHeuristic,
     hasCriticalFailure,
     deductionsExplanation,
-    scoringFormula: 'Weighted severity points with confidence factor (Passed=100%, Warning=50-75%, Failed=0%), Critical Cap=49, Coverage Ceiling if <70%, Unobservable (0 evaluated)=0',
+    scoringFormula: 'Continuous violation pressure & reality multipliers with severity weights, Coverage Ceiling if <70%, Unobservable (0 evaluated)=0',
   };
 }
 

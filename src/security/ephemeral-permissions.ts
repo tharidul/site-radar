@@ -26,7 +26,15 @@ function supportsSessionStorage(adapter: BrowserAdapter): boolean {
   if (adapter.capabilities) {
     return adapter.capabilities.supportsSessionStorage;
   }
-  return typeof chrome !== 'undefined' && Boolean(chrome.storage?.session);
+  const g = globalThis as {
+    browser?: { storage?: { session?: unknown } };
+    chrome?: { storage?: { session?: unknown } };
+  };
+  return Boolean(
+    g.chrome?.storage?.session ??
+      (typeof chrome !== 'undefined' ? chrome.storage?.session : undefined) ??
+      g.browser?.storage?.session,
+  );
 }
 
 /**
@@ -192,11 +200,16 @@ export async function consumePendingPermissionScan(
     }
 
     if (addedOrigins && addedOrigins.length > 0 && Array.isArray(pending.origins)) {
+      const stripPort = (pattern: string) =>
+        pattern.replace(/^([a-zA-Z*]+:\/\/[^/:]+):\d+(\/.*)$/, '$1$2');
       const grantedSet = new Set(addedOrigins);
+      const grantedHostSet = new Set(addedOrigins.map(stripPort));
       const matches =
         grantedSet.has('*://*/*') ||
         grantedSet.has('<all_urls>') ||
-        pending.origins.some((origin) => grantedSet.has(origin));
+        pending.origins.some(
+          (origin) => grantedSet.has(origin) || grantedHostSet.has(stripPort(origin)),
+        );
       if (!matches) {
         return null;
       }

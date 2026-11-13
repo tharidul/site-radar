@@ -7,6 +7,8 @@ import {
 } from '../types/messaging';
 import { getBrowserAdapter, type BrowserAdapter } from '../browser/adapters';
 
+declare const browser: any;
+
 export interface MessageListenerOptions {
   requireInternalSender?: boolean;
 }
@@ -14,6 +16,74 @@ export interface MessageListenerOptions {
 interface ListenerEntry {
   handler: (payload: any, sender: chrome.runtime.MessageSender) => any;
   requireInternalSender: boolean;
+}
+
+const INTERNAL_EXTENSION_TAB_PATHS = new Set([
+  '/options.html',
+  '/popup.html',
+  '/sidepanel.html',
+]);
+
+function getExtensionRuntime(): any {
+  const runtimeBrowser =
+    (globalThis as any).browser ?? (typeof browser !== 'undefined' ? browser : undefined);
+  const runtimeChrome =
+    (globalThis as any).chrome ?? (typeof chrome !== 'undefined' ? chrome : undefined);
+
+  if (runtimeBrowser?.runtime?.id) {
+    try {
+      const baseUrl =
+        typeof runtimeBrowser.runtime.getURL === 'function' ? runtimeBrowser.runtime.getURL('') : '';
+      if (typeof baseUrl === 'string' && baseUrl.startsWith('moz-extension://')) {
+        return runtimeBrowser.runtime;
+      }
+    } catch {
+      // Ignore getURL errors in mocked contexts
+    }
+    if (!runtimeChrome?.runtime?.id) {
+      return runtimeBrowser.runtime;
+    }
+  }
+
+  return runtimeChrome?.runtime ?? runtimeBrowser?.runtime;
+}
+
+function parseExtensionUrl(rawUrl: string): { origin: string; pathname: string } | null {
+  try {
+    const parsed = new URL(rawUrl);
+    if (
+      (parsed.protocol !== 'chrome-extension:' && parsed.protocol !== 'moz-extension:') ||
+      !parsed.host
+    ) {
+      return null;
+    }
+    return {
+      origin: `${parsed.protocol}//${parsed.host}`,
+      pathname: parsed.pathname,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function resolveExtensionOrigin(runtime: any): string | null {
+  if (typeof runtime?.getURL === 'function') {
+    try {
+      const base = runtime.getURL('');
+      if (typeof base === 'string' && base.length > 0) {
+        const parsed = parseExtensionUrl(base);
+        if (parsed) {
+          return parsed.origin;
+        }
+      }
+    } catch {
+      // Ignore getURL errors in mocked/restricted contexts
+    }
+  }
+  if (runtime?.id) {
+    return `chrome-extension://${runtime.id}`;
+  }
+  return null;
 }
 
 /**
@@ -24,17 +94,37 @@ interface ListenerEntry {
 export function isInternalExtensionSender(
   sender?: chrome.runtime.MessageSender | null,
 ): boolean {
-  if (!sender || typeof chrome === 'undefined' || !chrome.runtime?.id) {
+  const runtime = getExtensionRuntime();
+  if (!sender || !runtime?.id) {
     return false;
   }
-  if (sender.id !== chrome.runtime.id || sender.tab !== undefined) {
+  if (sender.id !== runtime.id) {
     return false;
   }
-  const extensionOrigin = `chrome-extension://${chrome.runtime.id}`;
-  return (
-    typeof sender.url === 'string' &&
-    (sender.url === extensionOrigin || sender.url.startsWith(`${extensionOrigin}/`))
-  );
+
+  const extensionOrigin = resolveExtensionOrigin(runtime);
+  if (!extensionOrigin || typeof sender.url !== 'string') {
+    return false;
+  }
+
+  const parsedSenderUrl = parseExtensionUrl(sender.url);
+  if (!parsedSenderUrl || parsedSenderUrl.origin !== extensionOrigin) {
+    return false;
+  }
+
+  if (sender.tab !== undefined) {
+    if (sender.frameId !== 0 || !INTERNAL_EXTENSION_TAB_PATHS.has(parsedSenderUrl.pathname)) {
+      return false;
+    }
+    if (typeof sender.tab.url === 'string') {
+      const parsedTabUrl = parseExtensionUrl(sender.tab.url);
+      if (!parsedTabUrl || parsedTabUrl.origin !== extensionOrigin) {
+        return false;
+      }
+    }
+  }
+
+  return true;
 }
 
 export interface IMessageBus {
@@ -172,10 +262,12 @@ export class ExtensionMessageBus implements IMessageBus {
   private ensureRuntimeListener(): void {
     if (this.runtimeListenerAttached) return;
 
-    if (typeof chrome !== 'undefined' && chrome.runtime?.onMessage) {
+    const runtime = getExtensionRuntime();
+    if (runtime?.onMessage?.addListener) {
       this.runtimeListenerAttached = true;
-      chrome.runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
-        if (!sender || sender.id !== chrome.runtime.id) {
+      runtime.onMessage.addListener((message: any, sender: any, sendResponse: any) => {
+        const activeRuntime = getExtensionRuntime();
+        if (!sender || !activeRuntime?.id || sender.id !== activeRuntime.id) {
           return false;
         }
 

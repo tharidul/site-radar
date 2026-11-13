@@ -12,6 +12,7 @@ import type {
   StylesheetItem,
   ImageItem,
 } from '@/types/inspection';
+import { openExtensionTab } from '../ext-api';
 
 interface ResourcesViewProps {
   inspection: WebsiteInspection;
@@ -24,16 +25,7 @@ const INITIAL_PREVIEW_LIMIT = 20;
 function openResourceUrl(url?: string) {
   if (!url) return;
   if (!/^https?:\/\//i.test(url) && !url.startsWith('data:image/')) return;
-
-  try {
-    if (typeof chrome !== 'undefined' && chrome.tabs?.create) {
-      chrome.tabs.create({ url, active: true });
-    } else {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-  } catch {
-    window.open(url, '_blank', 'noopener,noreferrer');
-  }
+  openExtensionTab(url);
 }
 
 function getFilenameOrTruncated(urlStr: string): string {

@@ -8,6 +8,8 @@ export interface DetailedCategoryScore extends CategoryScore {
   unavailable: number;
   notApplicableCount?: number;
   deductionsExplanation?: string[];
+  telemetryCoverageIndex?: number;
+  realityCounts?: Record<'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE' | 'PASS', number>;
 }
 
 export interface ScoreCalculationResult {

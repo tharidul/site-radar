@@ -14,6 +14,7 @@ import {
 } from '@/security/ephemeral-permissions';
 import { isSameOrigin } from '@/security/url-normalizer';
 import { loadSavedTheme, saveTheme, applyThemeToDom, type AppTheme } from '@/utils/theme';
+import { getExtensionApi, openExtensionOptions, supportsSidePanelOpen } from './ext-api';
 
 import { Header } from './components/Header';
 import { TabBar, type DashboardTab } from './components/TabBar';
@@ -110,11 +111,9 @@ export async function ensureOriginPermission(
 
   try {
     if (adapter.browserType !== 'mock') {
-      const hasChromePermissions =
-        typeof chrome !== 'undefined' && typeof chrome.permissions?.request === 'function';
-      const browserApi = (globalThis as { browser?: { permissions?: { request?: unknown } } }).browser;
-      const hasFirefoxPermissions = typeof browserApi?.permissions?.request === 'function';
-      if (!hasChromePermissions && !hasFirefoxPermissions) {
+      const extApi = getExtensionApi();
+      const hasPermissionsApi = typeof extApi?.permissions?.request === 'function';
+      if (!hasPermissionsApi) {
         return { granted: true };
       }
     }
@@ -194,6 +193,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   const [activeCategoryFilter, setActiveCategoryFilter] = useState<string>('all');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isRequestingPermission, setIsRequestingPermission] = useState(false);
+  const [hasOriginPermission, setHasOriginPermission] = useState<boolean | null>(null);
   const [theme, setTheme] = useState<AppTheme>('dark');
   const [refreshPage, setRefreshPage] = useState<boolean>(true);
   const activeScanIdRef = useRef<string | null>(null);
@@ -301,8 +302,9 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       }
     };
 
-    if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
-      chrome.tabs.onUpdated.addListener(handleTabUpdated);
+    const extApi = getExtensionApi();
+    if (extApi?.tabs?.onUpdated) {
+      extApi.tabs.onUpdated.addListener(handleTabUpdated);
     }
 
     const handleTabActivated = async () => {
@@ -319,8 +321,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       }
     };
 
-    if (typeof chrome !== 'undefined' && chrome.tabs?.onActivated) {
-      chrome.tabs.onActivated.addListener(handleTabActivated);
+    if (extApi?.tabs?.onActivated) {
+      extApi.tabs.onActivated.addListener(handleTabActivated);
     }
 
     const unsubProgress = messageBus.onMessage(
@@ -362,11 +364,11 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       unsubProgress();
       unsubCompleted();
       unsubFailed();
-      if (typeof chrome !== 'undefined' && chrome.tabs?.onUpdated) {
-        chrome.tabs.onUpdated.removeListener(handleTabUpdated);
+      if (extApi?.tabs?.onUpdated) {
+        extApi.tabs.onUpdated.removeListener(handleTabUpdated);
       }
-      if (typeof chrome !== 'undefined' && chrome.tabs?.onActivated) {
-        chrome.tabs.onActivated.removeListener(handleTabActivated);
+      if (extApi?.tabs?.onActivated) {
+        extApi.tabs.onActivated.removeListener(handleTabActivated);
       }
     };
   }, []);
@@ -374,14 +376,15 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   // CRIT-03: Keepalive port connection to service worker during active scans
   useEffect(() => {
     if (scanStatus !== 'running') return;
-    if (typeof chrome === 'undefined' || !chrome.runtime?.connect) return;
+    const extApi = getExtensionApi();
+    if (!extApi?.runtime?.connect) return;
 
     let port: chrome.runtime.Port | null = null;
     let pingInterval: ReturnType<typeof setInterval> | null = null;
 
     try {
-      port = chrome.runtime.connect({ name: 'siteradar-scan-keepalive' });
-      port.postMessage('PING');
+      port = extApi.runtime.connect({ name: 'siteradar-scan-keepalive' });
+      port?.postMessage('PING');
 
       pingInterval = setInterval(() => {
         try {
@@ -391,7 +394,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         }
       }, 20000);
 
-      port.onDisconnect.addListener(() => {
+      port?.onDisconnect.addListener(() => {
         if (pingInterval) clearInterval(pingInterval);
         port = null;
       });
@@ -446,13 +449,52 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     };
   }, [scanStatus, activeDashboardTab, activeTab?.id]);
 
+  useEffect(() => {
+    let active = true;
+    const origins = getRequiredOriginPermissions(activeTab?.url, selectedMode);
+    if (origins.length === 0) {
+      setHasOriginPermission(true);
+      return;
+    }
+
+    const adapter = getBrowserAdapter();
+    const checkPermission = async () => {
+      try {
+        const granted = await adapter.hasPermissions({ origins });
+        if (active) setHasOriginPermission(granted);
+      } catch {
+        if (active) setHasOriginPermission(null);
+      }
+    };
+    void checkPermission();
+
+    const extApi = getExtensionApi();
+    const onPermsChanged = () => {
+      void checkPermission();
+    };
+    try {
+      extApi?.permissions?.onAdded?.addListener?.(onPermsChanged);
+      extApi?.permissions?.onRemoved?.addListener?.(onPermsChanged);
+    } catch {
+      // Ignore environments without permissions change events
+    }
+
+    return () => {
+      active = false;
+      try {
+        extApi?.permissions?.onAdded?.removeListener?.(onPermsChanged);
+        extApi?.permissions?.onRemoved?.removeListener?.(onPermsChanged);
+      } catch {}
+    };
+  }, [activeTab?.url, selectedMode]);
+
   const handleStartInspection = useCallback(async () => {
     if (!schemeValidation.valid) return;
 
     const adapter = getBrowserAdapter();
     const requiredOrigins = getRequiredOriginPermissions(activeTab?.url, selectedMode);
     if (requiredOrigins.length > 0) {
-      // Fire-and-forget before permissions.request() so Chrome's user gesture is preserved
+      // Fire-and-forget before permissions.request() so Chrome/Firefox user gesture is preserved
       // and background permissions.onAdded can auto-start if the popup closes on prompt.
       void savePendingPermissionScan(adapter, {
         origins: requiredOrigins,
@@ -464,7 +506,36 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       });
     }
 
-    const permissionResult = await ensureOriginPermission(activeTab?.url, selectedMode, adapter);
+    setIsRequestingPermission(true);
+    let firefoxCloseTimer: ReturnType<typeof setTimeout> | null = null;
+    const permPromise = ensureOriginPermission(activeTab?.url, selectedMode, adapter);
+
+    // Firefox keeps its toolbar popup open over the URL-bar permission doorhanger;
+    // if permission isn't already granted and the prompt stays pending briefly, close
+    // the popup so the prompt is clearly visible and background onAdded auto-starts on Allow.
+    if (
+      adapter.browserType === 'firefox' &&
+      !isSidepanel &&
+      requiredOrigins.length > 0 &&
+      hasOriginPermission !== true
+    ) {
+      firefoxCloseTimer = setTimeout(() => {
+        try {
+          window.close();
+        } catch {}
+      }, 150);
+    }
+
+    let permissionResult: { granted: boolean; reason?: string };
+    try {
+      permissionResult = await permPromise;
+    } finally {
+      if (firefoxCloseTimer !== null) {
+        clearTimeout(firefoxCloseTimer);
+      }
+      setIsRequestingPermission(false);
+    }
+
     if (!permissionResult.granted) {
       void clearPendingPermissionScan(adapter);
       setScanStatus('failed');
@@ -560,7 +631,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       setScanStatus('failed');
       setErrorMessage(err?.message || 'Error communicating with background service worker');
     }
-  }, [schemeValidation.valid, selectedMode, activeTab?.id, activeTab?.url, refreshPage]);
+  }, [schemeValidation.valid, selectedMode, activeTab?.id, activeTab?.url, refreshPage, isSidepanel, hasOriginPermission]);
 
   const handleCancelInspection = useCallback(async () => {
     setIsCancelling(true);
@@ -602,19 +673,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
   }, []);
 
   const handleOpenOptions = useCallback(() => {
-    try {
-      if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
-        chrome.tabs.create({ url: chrome.runtime.getURL('options.html'), active: true });
-      } else if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
-        chrome.runtime.openOptionsPage();
-      } else {
-        const adapter = getBrowserAdapter();
-        const optionsUrl = adapter.getURL('options.html');
-        window.open(optionsUrl, '_blank');
-      }
-    } catch {
-      window.open('options.html', '_blank');
-    }
+    openExtensionOptions();
   }, []);
 
   const handleToggleTheme = useCallback(() => {
@@ -633,14 +692,33 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
     }
   }, []);
 
-  const handleOpenSidePanel = useCallback(async () => {
+  const canOpenSidePanel = !isSidepanel && supportsSidePanelOpen();
+
+  const handleOpenSidePanel = useCallback(() => {
     try {
-      if (typeof chrome !== 'undefined' && (chrome as any).sidePanel?.open) {
-        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-        if (tab?.windowId) {
-          await (chrome as any).sidePanel.open({ windowId: tab.windowId });
-          window.close();
-        }
+      const extApi = getExtensionApi();
+      if (typeof extApi?.sidebarAction?.open === 'function') {
+        // Call synchronously inside click handler to preserve Firefox user gesture
+        void Promise.resolve(extApi.sidebarAction.open())
+          .then(() => window.close())
+          .catch((err) => {
+            console.warn('Failed to open Firefox sidebar:', err);
+          });
+        return;
+      }
+      if (typeof extApi?.sidePanel?.open === 'function' && extApi.tabs?.query) {
+        void Promise.resolve(extApi.tabs.query({ active: true, currentWindow: true }))
+          .then((tabs: Array<{ windowId?: number }>) => {
+            const tab = tabs?.[0];
+            if (tab?.windowId) {
+              return Promise.resolve(extApi.sidePanel.open({ windowId: tab.windowId })).then(() => {
+                window.close();
+              });
+            }
+          })
+          .catch((err) => {
+            console.warn('Failed to open side panel:', err);
+          });
       }
     } catch (err) {
       console.warn('Failed to open side panel:', err);
@@ -667,8 +745,8 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
       data-theme={theme}
       className={`flex flex-col ${
         isSidepanel
-          ? 'h-screen w-full min-w-[320px] rounded-none'
-          : 'h-[600px] w-[580px] rounded-lg'
+          ? 'h-screen w-full min-w-0 rounded-none'
+          : 'h-[600px] w-[580px] rounded-none'
       } bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
     >
       <div className="shrink-0">
@@ -687,7 +765,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           theme={theme}
           onToggleTheme={handleToggleTheme}
           onClose={isSidepanel ? undefined : handleClose}
-          onOpenSidePanel={handleOpenSidePanel}
+          onOpenSidePanel={canOpenSidePanel ? handleOpenSidePanel : undefined}
           isSidepanel={isSidepanel}
         />
       </div>
@@ -780,6 +858,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                   onStartInspection={handleStartInspection}
                   disabled={!schemeValidation.valid || !activeTab}
                   disabledReason={schemeValidation.reason || 'No active tab detected'}
+                  isRequestingPermission={isRequestingPermission}
                   refreshPage={refreshPage}
                   onToggleRefreshPage={setRefreshPage}
                 />

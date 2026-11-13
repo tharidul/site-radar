@@ -22,6 +22,7 @@ import { getModePlan } from './mode-plans';
 import { TaskScheduler, type ScheduledTask } from './scheduler';
 import { runAllAnalyzers } from '../../analyzers';
 import { calculateInspectionScores } from '../../scoring';
+import { CorroborationEngine } from '../../corroborator';
 import { runPageCollector } from '../../collectors/page';
 import { detectBackendFromHeaders } from '../../collectors/page/backend-signatures';
 import { WebsiteCrawler } from '../../crawler/crawler';
@@ -1266,6 +1267,13 @@ export class InspectionOrchestrator {
           });
         }
       }
+
+      const corroborator = new CorroborationEngine();
+      inspection.findings = corroborator.corroborate(inspection.findings, {
+        target: inspection.target,
+        modules: inspection.modules,
+        isLocalDevelopment: inspection.target.isLocalDevelopment,
+      });
 
       const scoreCalculation = calculateInspectionScores(inspection.findings);
       inspection.scores = scoreCalculation.scores;

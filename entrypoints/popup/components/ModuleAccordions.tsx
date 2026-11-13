@@ -4,6 +4,7 @@ import { ChevronDown, ChevronRight, AlertCircle, ShieldAlert, Check, Shield } fr
 import type { CollectionResult, CollectionStatus } from '@/types/inspection';
 import { Badge } from './Badge';
 import { Card } from './Card';
+import { openExtensionOptions } from '../ext-api';
 
 interface ModuleAccordionsProps {
   modules?: Record<string, CollectionResult<unknown>>;
@@ -213,15 +214,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       </p>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (typeof chrome !== 'undefined' && chrome.tabs?.create && chrome.runtime?.getURL) {
-                            chrome.tabs.create({ url: chrome.runtime.getURL('options.html#intelligence'), active: true });
-                          } else if (typeof chrome !== 'undefined' && chrome.runtime?.openOptionsPage) {
-                            chrome.runtime.openOptionsPage();
-                          } else {
-                            window.open('options.html#intelligence', '_blank');
-                          }
-                        }}
+                        onClick={() => openExtensionOptions('#intelligence')}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer pt-0.5"
                       >
                         <span>Enable external lookups in Settings (⚙️)</span>
