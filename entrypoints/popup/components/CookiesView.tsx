@@ -243,11 +243,11 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           <h2 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 tracking-tight shrink-0">
             Cookie Manager &amp; Inspector
           </h2>
-          <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 truncate max-w-[120px]" title={domainName}>
+          <span className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-[120px]" title={domainName}>
             {domainName}
           </span>
-          <span className="text-xs font-mono text-zinc-400 dark:text-zinc-500 shrink-0">
-            (Total {summary.total} · Session {summary.sessionCount})
+          <span className="text-xs text-zinc-500 dark:text-zinc-400 shrink-0">
+            (Total <span className="tabular-nums">{summary.total}</span> · Session <span className="tabular-nums">{summary.sessionCount}</span>)
           </span>
         </div>
 
@@ -255,7 +255,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           <button
             type="button"
             onClick={() => openEditModal()}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 active:scale-[0.98] transition-colors duration-100 cursor-pointer"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hover active:scale-[0.98] transition-colors duration-100 cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add Cookie</span>
@@ -340,7 +340,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
             placeholder="Search cookies by name or value..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-8 pr-7 py-1.5 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:border-[#152E40] dark:focus:border-[#CEFF52] transition-colors"
+            className="w-full pl-8 pr-7 py-1.5 rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:outline-hidden focus:border-accent transition-colors"
           />
           {searchQuery && (
             <button
@@ -372,7 +372,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
       </div>
 
       {feedbackMessage && (
-        <div className="text-xs font-medium text-zinc-900 dark:text-[#CEFF52] bg-zinc-100 dark:bg-zinc-800/90 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
+        <div className="text-xs font-medium text-zinc-900 dark:text-accent bg-zinc-100 dark:bg-zinc-800/90 px-3 py-2 rounded-md border border-zinc-200 dark:border-zinc-700 flex items-center justify-between">
           <span>{feedbackMessage}</span>
           <button type="button" onClick={() => setFeedbackMessage(null)} className="cursor-pointer text-zinc-400 hover:text-zinc-200">
             <X className="w-3.5 h-3.5" />
@@ -396,14 +396,19 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
           <button
             type="button"
             onClick={() => openEditModal()}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
+            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hover cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Create First Cookie</span>
           </button>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div
+          tabIndex={0}
+          role="region"
+          aria-label="Domain Cookies"
+          className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 divide-y divide-zinc-100 dark:divide-zinc-800/80 overflow-hidden"
+        >
           {filteredCookies.map((cookie) => {
             const audit = auditCookie(cookie);
             const lifetime = formatCookieLifetime(cookie);
@@ -414,11 +419,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
             return (
               <div
                 key={cookieKey}
-                className={`deferred-list-item rounded-md bg-white dark:bg-zinc-900 border transition-colors duration-100 ${
-                  isExpanded
-                    ? 'border-zinc-300 dark:border-zinc-700'
-                    : 'border-zinc-200/70 dark:border-zinc-800/80 hover:border-zinc-300 dark:hover:border-zinc-700'
-                }`}
+                className="deferred-list-item transition-colors duration-100"
               >
                 <div
                   role="button"
@@ -432,42 +433,42 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     }
                   }}
                   className={`flex items-center justify-between gap-2 px-3 py-2 cursor-pointer select-none transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/40 ${
-                    isExpanded ? 'rounded-t-md border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/25' : 'rounded-md'
+                    isExpanded ? 'border-b border-zinc-100 dark:border-zinc-800/80 bg-zinc-50/60 dark:bg-zinc-800/25' : ''
                   }`}
                 >
                   <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                     <ChevronDown
                       className={`w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 transition-transform duration-200 shrink-0 ${
-                        isExpanded ? 'rotate-0 text-[#152E40] dark:text-[#CEFF52]' : '-rotate-90'
+                        isExpanded ? 'rotate-0 text-accent' : '-rotate-90'
                       }`}
                     />
 
                     <span
-                      className="font-bold text-xs text-zinc-900 dark:text-zinc-100 font-mono tracking-tight truncate max-w-[210px] shrink-0"
+                      className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 tracking-tight truncate max-w-[210px] shrink-0"
                       title={cookie.name}
                     >
                       {cookie.name}
                     </span>
 
                     {cookie.httpOnly && (
-                      <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
+                      <span className="text-2xs font-semibold px-2 py-0.5 rounded leading-none bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
                         HttpOnly
                       </span>
                     )}
 
                     {cookie.secure && (
-                      <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
+                      <span className="text-2xs font-semibold px-2 py-0.5 rounded leading-none bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 shrink-0">
                         Secure
                       </span>
                     )}
 
                     <span
-                      className={`inline-flex items-center gap-1 text-xs font-mono tabular-nums shrink-0 ${
+                      className={`inline-flex items-center gap-1 text-xs tabular-nums shrink-0 ${
                         lifetime.isExpired
                           ? 'text-rose-600 dark:text-rose-400 font-semibold'
                           : lifetime.isSession
                           ? 'text-zinc-500 dark:text-zinc-400'
-                          : 'text-emerald-600 dark:text-[#CEFF52] font-semibold'
+                          : 'text-emerald-600 dark:text-accent font-semibold'
                       }`}
                       title={lifetime.isSession ? 'Session cookie: deleted when browser closes' : `Expires: ${lifetime.fullDate}`}
                     >
@@ -511,14 +512,14 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
 
                 {isExpanded && (
                   <div className="p-4 pt-3.5 space-y-3.5">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs font-mono text-zinc-600 dark:text-zinc-400 bg-zinc-50/80 dark:bg-zinc-950/40 p-3 rounded-md border border-zinc-200/50 dark:border-zinc-800/60">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50/80 dark:bg-zinc-950/40 p-3 rounded-md border border-zinc-200/50 dark:border-zinc-800/60">
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-400 dark:text-zinc-500 w-16 shrink-0">Domain:</span>
-                        <span className="text-zinc-900 dark:text-zinc-100 font-semibold break-all">{cookie.domain}</span>
+                        <span className="text-zinc-900 dark:text-zinc-100 font-mono font-medium break-all">{cookie.domain}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-zinc-400 dark:text-zinc-500 w-16 shrink-0">Path:</span>
-                        <span className="text-zinc-900 dark:text-zinc-100 font-semibold">{cookie.path}</span>
+                        <span className="text-zinc-900 dark:text-zinc-100 font-mono font-medium">{cookie.path}</span>
                       </div>
                       <div className="flex items-center gap-2 sm:col-span-2">
                         <span className="text-zinc-400 dark:text-zinc-500 w-16 shrink-0">Lifetime:</span>
@@ -552,24 +553,24 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     </div>
 
                     {(audit.missingSecure || audit.missingHttpOnly || audit.sameSiteNoneInsecure) && (
-                      <div className="flex items-center gap-2 flex-wrap">
+                      <div className="space-y-1 text-xs">
                         {audit.missingSecure && (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                            <span>Missing Secure (Cleartext transmission risk)</span>
-                          </span>
+                            <span>Missing Secure flag (cleartext transmission risk)</span>
+                          </div>
                         )}
                         {audit.missingHttpOnly && (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20">
+                          <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
                             <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                            <span>Script-Accessible (Vulnerable to XSS extraction)</span>
-                          </span>
+                            <span>Script-accessible (vulnerable to XSS extraction)</span>
+                          </div>
                         )}
                         {audit.sameSiteNoneInsecure && (
-                          <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-md bg-rose-500/10 text-rose-700 dark:text-rose-400 border border-rose-500/20">
+                          <div className="flex items-center gap-1.5 text-rose-700 dark:text-rose-400">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
-                            <span>Insecure SameSite=None without Secure flag</span>
-                          </span>
+                            <span>SameSite=None without Secure flag</span>
+                          </div>
                         )}
                       </div>
                     )}
@@ -578,14 +579,14 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                       <div className="flex items-center justify-between text-xs">
                         <div className="flex items-center gap-2">
                           <span className="font-semibold text-zinc-700 dark:text-zinc-300">Cookie Value</span>
-                          <span className="text-xs text-zinc-400 dark:text-zinc-500 font-mono tabular-nums">
+                          <span className="text-xs text-zinc-400 dark:text-zinc-500 tabular-nums">
                             ({cookie.value.length} characters)
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleCopy(cookie.value, cookieKey)}
-                          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-[#CEFF52] transition-colors cursor-pointer"
+                          className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-accent transition-colors cursor-pointer"
                         >
                           {isCopied ? (
                             <>
@@ -614,7 +615,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                         <button
                           type="button"
                           onClick={() => openEditModal(cookie)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hover transition-colors duration-100 cursor-pointer"
                         >
                           <Edit2 className="w-3 h-3" />
                           <span>Edit Cookie</span>
@@ -674,7 +675,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                   value={editingCookie.name || ''}
                   onChange={(e) => setEditingCookie({ ...editingCookie, name: e.target.value })}
                   placeholder="e.g. session_token"
-                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-[#152E40] dark:focus:border-[#CEFF52]"
+                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-accent"
                 />
               </div>
 
@@ -687,7 +688,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                   value={editingCookie.value || ''}
                   onChange={(e) => setEditingCookie({ ...editingCookie, value: e.target.value })}
                   placeholder="Cookie value payload..."
-                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-[#152E40] dark:focus:border-[#CEFF52]"
+                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-accent"
                 />
               </div>
 
@@ -701,7 +702,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     value={editingCookie.domain || ''}
                     onChange={(e) => setEditingCookie({ ...editingCookie, domain: e.target.value })}
                     placeholder={domainName}
-                    className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden"
+                    className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-accent"
                   />
                 </div>
 
@@ -714,7 +715,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     value={editingCookie.path || '/'}
                     onChange={(e) => setEditingCookie({ ...editingCookie, path: e.target.value })}
                     placeholder="/"
-                    className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden"
+                    className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-accent"
                   />
                 </div>
               </div>
@@ -726,7 +727,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 <select
                   value={editingCookie.sameSite || 'lax'}
                   onChange={(e) => setEditingCookie({ ...editingCookie, sameSite: e.target.value as SameSiteStatus })}
-                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs focus:outline-hidden"
+                  className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-xs focus:outline-hidden focus:border-accent"
                 >
                   <option value="lax">Lax (Default)</option>
                   <option value="strict">Strict (Highest security)</option>
@@ -741,7 +742,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     type="checkbox"
                     checked={editingCookie.secure ?? false}
                     onChange={(e) => setEditingCookie({ ...editingCookie, secure: e.target.checked })}
-                    className="rounded text-[#152E40] dark:text-[#CEFF52]"
+                    className="rounded text-accent accent-accent"
                   />
                   <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Secure</span>
                 </label>
@@ -751,7 +752,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     type="checkbox"
                     checked={editingCookie.httpOnly ?? false}
                     onChange={(e) => setEditingCookie({ ...editingCookie, httpOnly: e.target.checked })}
-                    className="rounded text-[#152E40] dark:text-[#CEFF52]"
+                    className="rounded text-accent accent-accent"
                   />
                   <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">HttpOnly</span>
                 </label>
@@ -770,7 +771,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                           : editingCookie.expirationDate || Math.floor(Date.now() / 1000) + 86400 * 30,
                       });
                     }}
-                    className="rounded text-[#152E40] dark:text-[#CEFF52]"
+                    className="rounded text-accent accent-accent"
                   />
                   <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium">Session</span>
                 </label>
@@ -782,7 +783,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                     <label className="block text-xs font-semibold text-zinc-700 dark:text-zinc-300">
                       Lifetime / Expiration Date
                     </label>
-                    <span className="text-xs text-zinc-500 font-mono">
+                    <span className="text-xs text-zinc-500 tabular-nums">
                       {editingCookie.expirationDate && editingCookie.expirationDate > 0
                         ? formatCookieLifetime({ session: false, expirationDate: editingCookie.expirationDate }).label
                         : 'Select date'}
@@ -822,7 +823,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                           const epochSec = Math.floor(Date.now() / 1000) + preset.sec;
                           setEditingCookie({ ...editingCookie, expirationDate: epochSec });
                         }}
-                        className="px-2.5 py-1 rounded text-xs font-mono font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
+                        className="px-2.5 py-1 rounded text-xs font-medium bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 transition-colors cursor-pointer"
                       >
                         {preset.label}
                       </button>
@@ -841,7 +842,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
+                  className="px-4 py-2 rounded-md bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hover transition-colors duration-100 cursor-pointer"
                 >
                   Save Cookie
                 </button>
@@ -879,7 +880,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 value={importJsonText}
                 onChange={(e) => setImportJsonText(e.target.value)}
                 placeholder='[{"name": "token", "value": "xyz...", "domain": ".example.com", "path": "/"}]'
-                className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden"
+                className="w-full px-3 py-2 rounded-md bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 font-mono text-xs focus:outline-hidden focus:border-accent"
               />
 
               <div className="pt-3 flex items-center justify-end gap-2.5 border-t border-zinc-200 dark:border-zinc-800">
@@ -892,7 +893,7 @@ export const CookiesView: React.FC<CookiesViewProps> = ({ targetUrl }) => {
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 transition-colors duration-100 cursor-pointer"
+                  className="px-4 py-2 rounded-md bg-accent text-accent-fg text-xs font-bold hover:bg-accent-hover transition-colors duration-100 cursor-pointer"
                 >
                   Import Cookies
                 </button>

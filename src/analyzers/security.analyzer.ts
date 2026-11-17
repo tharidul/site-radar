@@ -103,6 +103,10 @@ export class SecurityAnalyzer implements Analyzer {
 
       const headers = secData.securityHeaders;
       const headersObservable = headers !== undefined && typeof headers === 'object';
+      const isAuthoritative =
+        secData.isAuthoritativeNetworkCapture !== false &&
+        secData.headersSource !== 'fetch' &&
+        secData.headersSource !== 'unverified';
 
       const cspHeader = headersObservable
         ? Object.entries(headers).find(([k]) => k.toLowerCase() === 'content-security-policy')?.[1]
@@ -117,7 +121,7 @@ export class SecurityAnalyzer implements Analyzer {
             .addEvidence('Content Security Policy', cspHeader || 'Declared via <meta> tag')
             .build(),
         );
-      } else if (headersObservable) {
+      } else if (headersObservable && isAuthoritative) {
         findings.push(
           new FindingBuilder('sec-missing-csp')
             .setStatus('failed')
@@ -133,7 +137,7 @@ export class SecurityAnalyzer implements Analyzer {
           new FindingBuilder('sec-missing-csp')
             .setStatus('not-available')
             .setTitle('Content Security Policy (Unobservable)')
-            .setDescription('No meta CSP tag detected in DOM; HTTP response headers require network inspection to evaluate.')
+            .setDescription('No meta CSP tag detected in DOM; HTTP response headers require authoritative network inspection to evaluate.')
             .setConfidence(0.5)
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
@@ -159,15 +163,30 @@ export class SecurityAnalyzer implements Analyzer {
               .addEvidence('Page Scheme', 'HTTP (HSTS only applies to HTTPS origins)')
               .build(),
           );
-        } else {
+        } else if (isAuthoritative) {
           findings.push(
             new FindingBuilder('sec-missing-hsts')
               .setStatus('failed')
               .setSeverity('medium')
               .setConfidence(0.9)
-              .addEvidence('Strict-Transport-Security', 'Missing from response headers')
+              .addEvidence('Strict-Transport-Security', 'Missing from authoritative response headers')
               .setExpectedBehavior('Declare Strict-Transport-Security header with max-age >= 31536000.')
               .setExplanation('HSTS ensures browsers automatically request HTTPS, protecting against SSL stripping on initial visits.')
+              .build(),
+          );
+        } else {
+          findings.push(
+            new FindingBuilder('sec-missing-hsts')
+              .setStatus('not-available')
+              .setTitle('Strict-Transport-Security (Unobservable)')
+              .setDescription(
+                'HSTS header cannot be verified because main-frame HTTP response headers were not captured via webRequest, and in-page/CORS-restricted fetch cannot observe HSTS.',
+              )
+              .setConfidence(0.4)
+              .addEvidence(
+                'Observation Context',
+                'HTTP response headers not captured via authoritative network inspection; unobservable in unprivileged context',
+              )
               .build(),
           );
         }
@@ -181,6 +200,7 @@ export class SecurityAnalyzer implements Analyzer {
                 ? 'HSTS HTTP response header is not directly accessible in passive content script mode.'
                 : 'HSTS only applies to HTTPS origins.',
             )
+            .setConfidence(0.5)
             .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
             .build(),
         );
@@ -198,13 +218,23 @@ export class SecurityAnalyzer implements Analyzer {
               .addEvidence('X-Content-Type-Options', xcto)
               .build(),
           );
-        } else {
+        } else if (isAuthoritative) {
           findings.push(
             new FindingBuilder('sec-missing-x-content-type-options')
               .setStatus('failed')
               .setSeverity('low')
               .setConfidence(0.9)
               .addEvidence('X-Content-Type-Options', xcto || 'Missing')
+              .build(),
+          );
+        } else {
+          findings.push(
+            new FindingBuilder('sec-missing-x-content-type-options')
+              .setStatus('not-available')
+              .setTitle('MIME-Sniffing Protection (Unobservable)')
+              .setDescription('X-Content-Type-Options header is not directly accessible without authoritative network inspection.')
+              .setConfidence(0.5)
+              .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
               .build(),
           );
         }
@@ -232,13 +262,23 @@ export class SecurityAnalyzer implements Analyzer {
               .addEvidence('Clickjacking Protection', xfo ? `X-Frame-Options: ${xfo}` : 'CSP frame-ancestors declared')
               .build(),
           );
-        } else {
+        } else if (isAuthoritative) {
           findings.push(
             new FindingBuilder('sec-missing-x-frame-options')
               .setStatus('failed')
               .setSeverity('medium')
               .setConfidence(0.85)
               .addEvidence('Frame Protection', 'Neither X-Frame-Options nor CSP frame-ancestors observed')
+              .build(),
+          );
+        } else {
+          findings.push(
+            new FindingBuilder('sec-missing-x-frame-options')
+              .setStatus('not-available')
+              .setTitle('Clickjacking Protection (Unobservable)')
+              .setDescription('Neither X-Frame-Options header nor CSP frame-ancestors could be observed without authoritative network inspection.')
+              .setConfidence(0.5)
+              .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
               .build(),
           );
         }
@@ -279,7 +319,7 @@ export class SecurityAnalyzer implements Analyzer {
               .build(),
           );
         }
-      } else if (headersObservable) {
+      } else if (headersObservable && isAuthoritative) {
         findings.push(
           new FindingBuilder('sec-missing-referrer-policy')
             .setStatus('failed')
@@ -293,7 +333,8 @@ export class SecurityAnalyzer implements Analyzer {
           new FindingBuilder('sec-missing-referrer-policy')
             .setStatus('not-available')
             .setTitle('Referrer Policy (Unobservable)')
-            .setDescription('No meta referrer tag detected in DOM; HTTP response header requires network inspection.')
+            .setDescription('No meta referrer tag detected in DOM; HTTP response header requires authoritative network inspection.')
+            .setConfidence(0.5)
             .addEvidence('Observation Context', 'HTTP response headers and meta referrer tag not directly accessible')
             .build(),
         );
@@ -311,13 +352,23 @@ export class SecurityAnalyzer implements Analyzer {
               .addEvidence('Permissions-Policy', permPol)
               .build(),
           );
-        } else {
+        } else if (isAuthoritative) {
           findings.push(
             new FindingBuilder('sec-missing-permissions-policy')
               .setStatus('info')
               .setSeverity('low')
               .setConfidence(0.8)
               .addEvidence('Permissions-Policy', 'None declared')
+              .build(),
+          );
+        } else {
+          findings.push(
+            new FindingBuilder('sec-missing-permissions-policy')
+              .setStatus('not-available')
+              .setTitle('Permissions Policy (Unobservable)')
+              .setDescription('Permissions-Policy header is not directly accessible without authoritative network inspection.')
+              .setConfidence(0.5)
+              .addEvidence('Observation Context', 'HTTP response headers not directly accessible in content script context')
               .build(),
           );
         }

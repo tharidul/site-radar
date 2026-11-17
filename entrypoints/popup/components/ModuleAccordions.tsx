@@ -73,7 +73,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
   };
 
   return (
-    <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+    <div className="p-4 space-y-3 bg-app-bg text-app-fg select-none">
       <div className="flex items-center justify-between">
         <div>
           <span className="text-sm font-bold text-zinc-900 dark:text-zinc-100 block">
@@ -92,7 +92,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
               setExpandedKeys(new Set(MODULE_DEFINITIONS.map((m) => m.key)));
             }
           }}
-          className="text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer"
+          className="text-xs font-semibold text-accent hover:underline cursor-pointer"
         >
           {expandedKeys.size === MODULE_DEFINITIONS.length ? 'Collapse All' : 'Expand All'}
         </button>
@@ -120,7 +120,7 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
               >
                 <div className="flex items-center gap-2 min-w-0">
                   {isExpanded ? (
-                    <ChevronDown className="w-4 h-4 text-orange-500 shrink-0 transition-colors duration-100" />
+                    <ChevronDown className="w-4 h-4 text-accent shrink-0 transition-colors duration-100" />
                   ) : (
                     <ChevronRight className="w-4 h-4 text-zinc-400 shrink-0 transition-colors duration-100" />
                   )}
@@ -130,19 +130,9 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                 </div>
 
                 <div className="shrink-0 ml-2">
-                  {status === 'completed' ? (
-                    <span
-                      title="Module collected"
-                      className="inline-flex items-center gap-1 text-2xs font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/30 px-2 py-0.5 rounded-md select-none"
-                    >
-                      <Check className="w-3 h-3 stroke-[2.5]" />
-                      <span>Ready</span>
-                    </span>
-                  ) : (
-                    <Badge variant="collection" collectionStatus={status}>
-                      {status}
-                    </Badge>
-                  )}
+                  <Badge variant="collection" collectionStatus={status}>
+                    {status === 'completed' ? 'Ready' : status}
+                  </Badge>
                 </div>
               </button>
 
@@ -204,8 +194,8 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {sources.includes('ConsentManager') && (
-                    <div className="rounded-lg bg-orange-500/10 dark:bg-orange-500/15 border border-orange-500/30 p-2.5 space-y-1.5 text-xs text-zinc-800 dark:text-zinc-200">
-                      <div className="flex items-center gap-1.5 font-semibold text-orange-600 dark:text-orange-400">
+                    <div className="rounded-lg bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/30 p-2.5 space-y-1.5 text-xs text-zinc-800 dark:text-zinc-200">
+                      <div className="flex items-center gap-1.5 font-semibold text-amber-700 dark:text-amber-400">
                         <Shield className="w-3.5 h-3.5 shrink-0" />
                         <span>Privacy Protection (Zero-Telemetry Guardrail)</span>
                       </div>
@@ -215,18 +205,18 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                       <button
                         type="button"
                         onClick={() => openExtensionOptions('#intelligence')}
-                        className="inline-flex items-center gap-1 text-xs font-semibold text-orange-600 dark:text-orange-400 hover:underline cursor-pointer pt-0.5"
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-accent hover:underline cursor-pointer pt-0.5"
                       >
-                        <span>Enable external lookups in Settings (⚙️)</span>
+                        <span>Enable external lookups in Settings</span>
                         <span>→</span>
                       </button>
                     </div>
                   )}
 
                   {limitations.length > 0 && (
-                    <div className="border-l-2 border-orange-500 pl-3 py-0.5 space-y-1">
+                    <div className="rounded-md bg-zinc-100/80 dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700/60 p-2.5 space-y-1">
                       <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
-                        <AlertCircle className="w-3.5 h-3.5 text-orange-500 shrink-0" />
+                        <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                         <span>Operational Limitations</span>
                       </div>
                       <ul className="list-disc pl-4 space-y-0.5 text-zinc-600 dark:text-zinc-400 text-xs">
@@ -238,8 +228,8 @@ export const ModuleAccordions: React.FC<ModuleAccordionsProps> = ({ modules = {}
                   )}
 
                   {errors.length > 0 && (
-                    <div className="border-l-2 border-rose-500 pl-3 py-0.5 space-y-1">
-                      <div className="font-semibold flex items-center gap-1.5 text-zinc-900 dark:text-zinc-100 text-xs">
+                    <div className="rounded-md bg-zinc-100/80 dark:bg-zinc-800/80 border border-rose-500/30 p-2.5 space-y-1">
+                      <div className="font-semibold flex items-center gap-1.5 text-rose-600 dark:text-rose-400 text-xs">
                         <ShieldAlert className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                         <span>Execution Errors</span>
                       </div>

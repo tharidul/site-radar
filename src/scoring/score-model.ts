@@ -4,6 +4,7 @@ import type { CategoryScore } from '../types/inspection';
 export interface DetailedCategoryScore extends CategoryScore {
   coveragePercent: number;
   hasCriticalFailure: boolean;
+  criticalCapTriggered?: boolean;
   scoringFormula: string;
   unavailable: number;
   notApplicableCount?: number;

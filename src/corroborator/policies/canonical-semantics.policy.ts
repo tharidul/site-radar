@@ -118,6 +118,47 @@ export class CanonicalSemanticsPolicy implements CorroborationPolicy {
     }
 
     if (!declaredCanonical) {
+      const targetUrl = normalizeUrl(context.target.url);
+      if (targetUrl) {
+        const isCleanRoot =
+          (targetUrl.pathname === '/' || targetUrl.pathname === '') &&
+          Array.from(targetUrl.searchParams.keys()).length === 0;
+
+        if (isCleanRoot) {
+          const previousState: RealityState = finding.realityState ?? 'TRUE_DEFECT';
+          const nextState: RealityState = 'ARCHITECTURAL_PATTERN';
+          const reason =
+            'Root origin without query parameters is inherently self-canonical; explicit link rel="canonical" is optional for search engines';
+
+          return {
+            ...finding,
+            realityState: nextState,
+            realityMultiplier: 0.0,
+            status: 'passed',
+            explanation: reason,
+            evidence: [
+              ...finding.evidence,
+              {
+                label: 'Self-Canonical Root',
+                value: reason,
+                source: 'canonical-semantics-policy',
+                observedAt: Date.now(),
+              },
+            ],
+            corroborationTraces: [
+              ...(finding.corroborationTraces ?? []),
+              {
+                policyId: this.policyId,
+                previousState,
+                nextState,
+                multiplierApplied: 0.0,
+                reason,
+              },
+            ],
+          };
+        }
+      }
+
       return finding;
     }
 

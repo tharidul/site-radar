@@ -1,0 +1,633 @@
+[
+  {
+    "name": "Hacker News",
+    "url": "https://news.ycombinator.com",
+    "hostname": "news.ycombinator.com",
+    "archetype": "Lightweight Community Forum",
+    "durationMs": 4445,
+    "overallScore": 86,
+    "scores": {
+      "security": 100,
+      "performance": 100,
+      "seo": 85,
+      "accessibility": 39,
+      "bestPractices": 94
+    },
+    "realityStates": {
+      "trueDefects": 45,
+      "architecturalPatterns": 1,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 48,
+      "passed": 26,
+      "warning": 5,
+      "failed": 8
+    },
+    "technologies": [],
+    "topIssues": [
+      {
+        "title": "axe: Form elements must have labels",
+        "category": "accessibility",
+        "severity": "critical",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Images must have alternative text",
+        "category": "accessibility",
+        "severity": "critical",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Elements must meet minimum color contrast ratio thresholds",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Links must have discernible text",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Image Accessible Name Alternatives",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "Wikipedia",
+    "url": "https://en.wikipedia.org/wiki/Main_Page",
+    "hostname": "en.wikipedia.org",
+    "archetype": "Massive Content / Open Encyclopedia",
+    "durationMs": 6688,
+    "overallScore": 96,
+    "scores": {
+      "security": 100,
+      "performance": 95,
+      "seo": 93,
+      "accessibility": 99,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 36,
+      "architecturalPatterns": 4,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 42,
+      "passed": 29,
+      "warning": 4,
+      "failed": 1
+    },
+    "technologies": [],
+    "topIssues": [
+      {
+        "title": "Agentic Form Labels & Autocomplete",
+        "category": "aeo",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: ARIA role should be appropriate for the element",
+        "category": "accessibility",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "DOM Tree Complexity and Size",
+        "category": "performance",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Meta Description Present",
+        "category": "seo",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Agent Context Window DOM Complexity",
+        "category": "aeo",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "GitHub",
+    "url": "https://github.com",
+    "hostname": "github.com",
+    "archetype": "Developer Platform & Cloud SaaS",
+    "durationMs": 5855,
+    "overallScore": 98,
+    "scores": {
+      "security": 100,
+      "performance": 95,
+      "seo": 100,
+      "accessibility": 100,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 39,
+      "architecturalPatterns": 2,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 43,
+      "passed": 35,
+      "warning": 3,
+      "failed": 0
+    },
+    "technologies": [
+      {
+        "name": "React",
+        "category": "JavaScript Framework"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "Agentic Form Labels & Autocomplete",
+        "category": "aeo",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "DOM Tree Complexity and Size",
+        "category": "performance",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Agent Context Window DOM Complexity",
+        "category": "aeo",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "Stripe",
+    "url": "https://stripe.com",
+    "hostname": "stripe.com",
+    "archetype": "Fintech & Payment Infrastructure",
+    "durationMs": 8253,
+    "overallScore": 98,
+    "scores": {
+      "security": 100,
+      "performance": 95,
+      "seo": 100,
+      "accessibility": 96,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 42,
+      "architecturalPatterns": 2,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 46,
+      "passed": 36,
+      "warning": 2,
+      "failed": 3
+    },
+    "technologies": [
+      {
+        "name": "React",
+        "category": "JavaScript Framework"
+      },
+      {
+        "name": "Next.js",
+        "category": "Web Framework"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "axe: Elements must have their visible text as part of their accessible name",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Elements must meet minimum color contrast ratio thresholds",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Headings should not be empty",
+        "category": "accessibility",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "DOM Tree Complexity and Size",
+        "category": "performance",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Agent Context Window DOM Complexity",
+        "category": "aeo",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "Vercel",
+    "url": "https://vercel.com",
+    "hostname": "vercel.com",
+    "archetype": "Next.js Edge Jamstack Showcase",
+    "durationMs": 4270,
+    "overallScore": 93,
+    "scores": {
+      "security": 100,
+      "performance": 93,
+      "seo": 100,
+      "accessibility": 67,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 43,
+      "architecturalPatterns": 0,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 45,
+      "passed": 32,
+      "warning": 1,
+      "failed": 3
+    },
+    "technologies": [
+      {
+        "name": "React",
+        "category": "JavaScript Framework"
+      },
+      {
+        "name": "Next.js",
+        "category": "Web Framework"
+      },
+      {
+        "name": "Tailwind CSS",
+        "category": "CSS Framework"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "axe: Links must have discernible text",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Viewport Disables User Zooming",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Zooming and scaling must not be disabled",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Render-Blocking Scripts Detected",
+        "category": "performance",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "MDN Web Docs",
+    "url": "https://developer.mozilla.org/en-US/",
+    "hostname": "developer.mozilla.org",
+    "archetype": "Technical Documentation & Standards",
+    "durationMs": 3421,
+    "overallScore": 96,
+    "scores": {
+      "security": 100,
+      "performance": 100,
+      "seo": 100,
+      "accessibility": 75,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 42,
+      "architecturalPatterns": 0,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 44,
+      "passed": 29,
+      "warning": 1,
+      "failed": 3
+    },
+    "technologies": [],
+    "topIssues": [
+      {
+        "title": "axe: All page content should be contained by landmarks",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Document should have one main landmark",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Semantic Landmark Regions",
+        "category": "accessibility",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "BBC News",
+    "url": "https://www.bbc.com",
+    "hostname": "www.bbc.com",
+    "archetype": "Global Editorial News & Media",
+    "durationMs": 6406,
+    "overallScore": 90,
+    "scores": {
+      "security": 89,
+      "performance": 88,
+      "seo": 94,
+      "accessibility": 87,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 42,
+      "architecturalPatterns": 2,
+      "observabilityLimits": 2,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 47,
+      "passed": 30,
+      "warning": 5,
+      "failed": 4
+    },
+    "technologies": [
+      {
+        "name": "React",
+        "category": "JavaScript Framework"
+      },
+      {
+        "name": "Next.js",
+        "category": "Web Framework"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "axe: Elements must have their visible text as part of their accessible name",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Missing Content Security Policy",
+        "category": "security",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Landmarks should have a unique role or role/label/title (i.e. accessible name) combination",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Page should contain a level-one heading",
+        "category": "accessibility",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Render-Blocking Scripts Detected",
+        "category": "performance",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "Python.org",
+    "url": "https://www.python.org",
+    "hostname": "www.python.org",
+    "archetype": "Open Source Community Portal",
+    "durationMs": 3207,
+    "overallScore": 91,
+    "scores": {
+      "security": 87,
+      "performance": 93,
+      "seo": 100,
+      "accessibility": 81,
+      "bestPractices": 100
+    },
+    "realityStates": {
+      "trueDefects": 45,
+      "architecturalPatterns": 3,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 50,
+      "passed": 33,
+      "warning": 2,
+      "failed": 9
+    },
+    "technologies": [
+      {
+        "name": "jQuery",
+        "category": "JavaScript Library"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "axe: Certain ARIA roles must be contained by particular parents",
+        "category": "accessibility",
+        "severity": "critical",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Certain ARIA roles must contain particular children",
+        "category": "accessibility",
+        "severity": "critical",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: <li> elements must be contained in a <ul> or <ol>",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: <ul> and <ol> must only directly contain <li>, <script> or <template> elements",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Elements must meet minimum color contrast ratio thresholds",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "AliExpress",
+    "url": "https://www.aliexpress.com",
+    "hostname": "www.aliexpress.com",
+    "archetype": "Enterprise E-Commerce Storefront",
+    "durationMs": 4368,
+    "overallScore": 74,
+    "scores": {
+      "security": 71,
+      "performance": 82,
+      "seo": 92,
+      "accessibility": 22,
+      "bestPractices": 94
+    },
+    "realityStates": {
+      "trueDefects": 42,
+      "architecturalPatterns": 3,
+      "observabilityLimits": 1,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 47,
+      "passed": 21,
+      "warning": 5,
+      "failed": 13
+    },
+    "technologies": [],
+    "topIssues": [
+      {
+        "title": "axe: Images must have alternative text",
+        "category": "accessibility",
+        "severity": "critical",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: <html> element must have a lang attribute",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "axe: Elements must meet minimum color contrast ratio thresholds",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Image Accessible Name Alternatives",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Viewport Disables User Zooming",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  },
+  {
+    "name": "Cloudflare",
+    "url": "https://www.cloudflare.com",
+    "hostname": "www.cloudflare.com",
+    "archetype": "Web Security & Edge Infrastructure",
+    "durationMs": 7843,
+    "overallScore": 94,
+    "scores": {
+      "security": 100,
+      "performance": 88,
+      "seo": 100,
+      "accessibility": 89,
+      "bestPractices": 97
+    },
+    "realityStates": {
+      "trueDefects": 41,
+      "architecturalPatterns": 2,
+      "observabilityLimits": 2,
+      "syntheticNoise": 1
+    },
+    "summary": {
+      "totalFindings": 46,
+      "passed": 34,
+      "warning": 4,
+      "failed": 2
+    },
+    "technologies": [
+      {
+        "name": "Astro",
+        "category": "Web Framework",
+        "version": "6.3.7"
+      },
+      {
+        "name": "Tailwind CSS",
+        "category": "CSS Framework"
+      },
+      {
+        "name": "Cloudflare",
+        "category": "CDN & Security"
+      }
+    ],
+    "topIssues": [
+      {
+        "title": "axe: Elements must meet minimum color contrast ratio thresholds",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Image Accessible Name Alternatives",
+        "category": "accessibility",
+        "severity": "high",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Render-Blocking Scripts Detected",
+        "category": "performance",
+        "severity": "medium",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "DOM Tree Complexity and Size",
+        "category": "performance",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      },
+      {
+        "title": "Software Version Disclosed in Meta Generator",
+        "category": "best-practices",
+        "severity": "low",
+        "realityState": "TRUE_DEFECT"
+      }
+    ]
+  }
+]

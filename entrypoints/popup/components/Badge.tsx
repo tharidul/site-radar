@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { Severity, FindingStatus, CollectionStatus } from '@/types/inspection';
 
@@ -8,6 +7,80 @@ export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
   status?: FindingStatus;
   collectionStatus?: CollectionStatus;
   size?: 'xs' | 'sm';
+  children?: React.ReactNode;
+}
+
+export const BADGE_BASE_CLASSES =
+  'inline-flex items-center justify-center gap-1 text-2xs font-bold px-2 py-0.5 rounded leading-none select-none shadow-2xs shrink-0';
+
+export function getSeverityLabel(severity?: Severity): string {
+  if (!severity) return 'Info';
+  switch (severity) {
+    case 'critical':
+      return 'Critical';
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    case 'low':
+      return 'Low';
+    case 'info':
+      return 'Info';
+    default:
+      return String(severity);
+  }
+}
+
+export function getSeverityBadgeClasses(severity?: Severity): string {
+  switch (severity) {
+    case 'critical':
+    case 'high':
+      return 'bg-rose-600 text-white font-bold shadow-2xs';
+    case 'medium':
+      return 'bg-amber-600 text-white font-bold shadow-2xs';
+    case 'low':
+      return 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+    case 'info':
+      return 'bg-sky-600 text-white font-bold shadow-2xs';
+    default:
+      return 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+  }
+}
+
+export function getStatusLabel(status?: FindingStatus): string {
+  if (!status) return 'N/A';
+  switch (status) {
+    case 'passed':
+      return 'Passed';
+    case 'failed':
+      return 'Failed';
+    case 'warning':
+      return 'Warning';
+    case 'info':
+      return 'Info';
+    case 'not-applicable':
+    case 'not-available':
+      return 'N/A';
+    default:
+      return String(status);
+  }
+}
+
+export function getStatusBadgeClasses(status?: FindingStatus): string {
+  switch (status) {
+    case 'passed':
+      return 'bg-emerald-600 text-white font-bold shadow-2xs';
+    case 'failed':
+      return 'bg-rose-600 text-white font-bold shadow-2xs';
+    case 'warning':
+      return 'bg-amber-600 text-white font-bold shadow-2xs';
+    case 'info':
+      return 'bg-sky-600 text-white font-bold shadow-2xs';
+    case 'not-applicable':
+    case 'not-available':
+    default:
+      return 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+  }
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -20,78 +93,58 @@ export const Badge: React.FC<BadgeProps> = ({
   className = '',
   ...props
 }) => {
-  let colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium';
-  let animationClass = '';
+  let colorClasses = 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+  let defaultLabel: React.ReactNode = children;
 
   if (variant === 'status' && status) {
-    switch (status) {
-      case 'passed':
-        colorClasses = 'bg-emerald-500/15 text-emerald-800 dark:text-emerald-300 border border-emerald-500/30 font-bold';
-        break;
-      case 'failed':
-        colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-bold';
-        break;
-      case 'warning':
-        colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-bold';
-        break;
-      case 'info':
-        colorClasses = 'bg-sky-500/15 text-sky-800 dark:text-sky-300 border border-sky-500/30 font-semibold';
-        break;
-      case 'not-applicable':
-      case 'not-available':
-      default:
-        colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
-        break;
+    colorClasses = getStatusBadgeClasses(status);
+    if (!defaultLabel) {
+      defaultLabel = getStatusLabel(status);
     }
   } else if (variant === 'collection' && collectionStatus) {
     switch (collectionStatus) {
       case 'completed':
-        colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 border border-zinc-300 dark:border-zinc-700 font-semibold';
+        colorClasses = 'bg-emerald-600 text-white font-bold shadow-2xs';
+        defaultLabel = defaultLabel || 'Ready';
         break;
       case 'partial':
-        colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-semibold';
+        colorClasses = 'bg-amber-600 text-white font-bold shadow-2xs';
+        defaultLabel = defaultLabel || 'Partial';
         break;
       case 'blocked':
       case 'failed':
-        colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-semibold';
+        colorClasses = 'bg-rose-600 text-white font-bold shadow-2xs';
+        defaultLabel = defaultLabel || 'Failed';
+        break;
+      case 'skipped':
+        colorClasses = 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+        defaultLabel = defaultLabel || 'Skipped';
         break;
       case 'unsupported':
-      case 'skipped':
       default:
-        colorClasses = 'bg-zinc-100/80 dark:bg-zinc-800/50 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-800 font-medium';
+        colorClasses = 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+        defaultLabel = defaultLabel || 'Unsupported';
         break;
     }
   } else if (variant === 'severity' && severity) {
     if (status === 'passed' || status === 'not-applicable' || status === 'not-available') {
-      colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
+      colorClasses = 'bg-zinc-600 dark:bg-zinc-700 text-white font-bold shadow-2xs';
+      if (!defaultLabel) defaultLabel = getStatusLabel(status);
     } else {
-      switch (severity) {
-        case 'critical':
-          colorClasses = 'bg-rose-500/15 text-rose-800 dark:text-rose-300 border border-rose-500/30 font-bold';
-          break;
-        case 'high':
-        case 'medium':
-          colorClasses = 'bg-orange-500/15 text-orange-800 dark:text-orange-300 border border-orange-500/30 font-bold';
-          break;
-        case 'low':
-          colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-300 border border-zinc-200 dark:border-zinc-700 font-medium';
-          break;
-        case 'info':
-        default:
-          colorClasses = 'bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 font-medium';
-          break;
-      }
+      colorClasses = getSeverityBadgeClasses(severity);
+      if (!defaultLabel) defaultLabel = getSeverityLabel(severity);
     }
   }
 
-  const sizeClasses = size === 'xs' ? 'text-2xs px-1.5 py-0.5 rounded-md' : 'text-xs px-2 py-0.5 rounded-md';
+  // Consistent unified badge size across the entire application
+  const sizeClasses = 'text-2xs px-2 py-0.5 rounded leading-none';
 
   return (
     <span
       {...props}
-      className={`inline-flex items-center uppercase tracking-wider shrink-0 select-none ${sizeClasses} ${colorClasses} ${animationClass} ${className}`}
+      className={`inline-flex items-center justify-center gap-1 shrink-0 select-none ${sizeClasses} ${colorClasses} ${className}`}
     >
-      {children}
+      {defaultLabel}
     </span>
   );
 };

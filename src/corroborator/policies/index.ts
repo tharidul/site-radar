@@ -8,6 +8,10 @@ import {
   assetMutabilityPolicy,
 } from './asset-mutability.policy';
 import {
+  UniversalScopePolicy,
+  universalScopePolicy,
+} from './universal-scope.policy';
+import {
   SurfaceCapabilityPolicy,
   surfaceCapabilityPolicy,
 } from './surface-capability.policy';
@@ -25,6 +29,8 @@ export {
   canonicalSemanticsPolicy,
   AssetMutabilityPolicy,
   assetMutabilityPolicy,
+  UniversalScopePolicy,
+  universalScopePolicy,
   SurfaceCapabilityPolicy,
   surfaceCapabilityPolicy,
   CwvRealityGatePolicy,
@@ -36,6 +42,7 @@ export {
 export const ALL_CORROBORATION_POLICIES: CorroborationPolicy[] = [
   observabilityBarrierPolicy,
   assetMutabilityPolicy,
+  universalScopePolicy,
   canonicalSemanticsPolicy,
   surfaceCapabilityPolicy,
   cwvRealityGatePolicy,

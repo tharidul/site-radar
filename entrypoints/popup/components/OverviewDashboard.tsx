@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   AlertTriangle,
+  MinusCircle,
   Info,
   ArrowRight,
   Cpu,
@@ -18,6 +19,7 @@ import { Button } from './Button';
 import { PageVitalsCard } from './PageVitalsCard';
 import { OptimizationMatrixCard } from './OptimizationMatrixCard';
 import { ExportDropdown } from './ExportDropdown';
+import { TechIcon } from './TechIcon';
 import type { DashboardTab } from './TabBar';
 import { getScoreColor } from '@/utils/colors';
 import { isLocalDevelopmentHost } from '@/security/private-network.guard';
@@ -132,8 +134,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         new Set(
           findings
             .filter((f) => f.status === 'failed')
-            .map((f) => (f.category === 'performance' ? 'speed' : f.category || 'quality'))
-        )
+            .map((f) => (f.category === 'performance' ? 'speed' : f.category || 'quality')),
+        ),
       );
       const catText = failedCategories.length > 0 ? failedCategories.slice(0, 2).join(' and ') : 'checks';
       return `${failedCount} failed check${failedCount === 1 ? '' : 's'} in ${catText} require attention.`;
@@ -191,8 +193,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   );
 
   return (
-    <div className="min-h-full flex flex-col bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
-      <div className="flex-1 p-4 space-y-3.5">
+    <div className="min-h-full flex flex-col bg-app-bg dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+      <div className="flex-1 p-4 space-y-6">
         {isLocalDev && (
           <div className="flex items-center gap-2 rounded-md bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
             <span className="font-semibold shrink-0">🛠️ Localhost Dev Mode:</span>
@@ -237,7 +239,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                 <h2 className="text-sm min-[400px]:text-base sm:text-lg font-bold text-zinc-900 dark:text-white tracking-tight truncate">
                   Overall Health
                 </h2>
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-2xs min-[400px]:text-xs font-bold border shrink-0 ${overallColor.badgeBg} ${overallColor.badgeBorder} ${overallColor.badgeText}`}>
+                <span className={`inline-flex items-center justify-center px-2 py-0.5 rounded text-2xs font-bold leading-none shrink-0 shadow-2xs ${overallColor.badgeBg} ${overallColor.badgeText}`}>
                   Grade {grade}
                 </span>
               </div>
@@ -248,8 +250,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           </div>
 
           <div className="border-l border-zinc-200/80 dark:border-zinc-800 pl-2.5 min-[400px]:pl-4 sm:pl-5 shrink-0 space-y-1 sm:space-y-1.5 min-w-[105px] min-[400px]:min-w-[125px] sm:min-w-[145px]">
-            <div className="text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider mb-1 sm:mb-2 whitespace-nowrap">
-              {totalRules} CHECKS RUN
+            <div className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 mb-1 sm:mb-2 whitespace-nowrap">
+              {totalRules} checks evaluated
             </div>
 
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
@@ -265,7 +267,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-700 dark:text-zinc-300">
                 <XCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-rose-500 shrink-0" />
-                <span>Failed</span>
+                <span>Critical</span>
               </span>
               <span className="font-bold text-rose-600 dark:text-rose-400 tabular-nums">
                 {failedCount}
@@ -284,8 +286,8 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
 
             <div className="flex items-center justify-between text-xs py-0.5 gap-2">
               <span className="flex items-center gap-1.5 min-[400px]:gap-2 text-zinc-500 dark:text-zinc-400">
-                <Info className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
-                <span>Info / N/A</span>
+                <MinusCircle className="w-3 h-3 min-[400px]:w-3.5 min-[400px]:h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
+                <span>N/A</span>
               </span>
               <span className="font-semibold text-zinc-500 dark:text-zinc-400 tabular-nums">
                 {infoStatusCount + naCount}
@@ -354,34 +356,38 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
       />
 
       {techData.length > 0 && (
-        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-[#CEFF52]" />
+        <section aria-labelledby="detected-tech-heading" className="space-y-2">
+          <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
+            <span
+              id="detected-tech-heading"
+              className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5"
+            >
+              <Cpu className="w-3.5 h-3.5 text-accent" />
               <span>Detected Technologies &amp; Frameworks</span>
             </span>
-            <span className="text-xs text-zinc-600 dark:text-zinc-400 font-medium tabular-nums">
+            <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
               {techData.length} identified
             </span>
           </div>
           <div
-            className={`grid gap-1.5 ${
+            className={`grid gap-x-4 gap-y-1 ${
               techData.length === 1 ? 'grid-cols-1' : 'grid-cols-1 min-[440px]:grid-cols-2'
             }`}
           >
             {techData.map((tech, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between gap-2 px-2.5 py-1.5 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors duration-100"
+                className="flex items-center justify-between gap-2 px-2 py-1.5 rounded-md hover:bg-zinc-100/70 dark:hover:bg-zinc-800/50 transition-colors duration-150 cursor-default"
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
-                <div className="flex items-center gap-1.5 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <TechIcon name={tech.name} className="w-3.5 h-3.5 shrink-0" />
                   <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 truncate">
                     {tech.name}
                   </span>
                   {tech.version && (
-                    <span className="shrink-0 text-2xs font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300 tabular-nums">
-                      v{tech.version}
+                    <span className="shrink-0 text-2xs text-zinc-500 dark:text-zinc-400 tabular-nums">
+                      {tech.version}
                     </span>
                   )}
                 </div>
@@ -391,13 +397,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </div>
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       <PageVitalsCard inspection={inspection} liveMetrics={liveMetrics} />
     </div>
 
-    <div className="sticky bottom-0 z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950">
+    <div className="sticky bottom-0 z-30 flex items-center justify-between px-4 py-2.5 border-t border-zinc-200/80 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-xs">
       <ExportDropdown inspection={inspection} direction="up" align="left" />
 
       <Button
@@ -407,7 +413,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
         onClick={() => onNavigateToIssues()}
         title="Open complete Findings &amp; Issues list"
         rightIcon={<ArrowRight className="w-3.5 h-3.5 text-current" />}
-        className="font-bold text-[#152E40] dark:text-[#CEFF52]"
+        className="font-bold text-accent"
       >
         View Details
       </Button>

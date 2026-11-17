@@ -1,20 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import {
-  Shield,
-  FileText,
   Check,
   ExternalLink,
   RotateCcw,
   Sun,
   Moon,
   Copy,
-  Terminal,
-  Cpu,
-  Layers,
   ArrowRight,
-  Database,
-  Radio,
-  Sliders,
 } from 'lucide-react';
 import { MESSAGE_CHANNELS } from '@/types/messaging';
 import { messageBus } from '@/messaging/bus';
@@ -477,12 +469,6 @@ export function OptionsApp() {
                   </p>
                 </>
               )}
-              <div className="meta-bar">
-                <span><strong>Version:</strong> 0.2.0</span>
-                <span><strong>Mode:</strong> Local-first</span>
-                <span><strong>Engine:</strong> TypeScript + WXT</span>
-                <span><strong>Protocol:</strong> MCP 2025-03</span>
-              </div>
             </div>
 
             <button
@@ -683,7 +669,7 @@ export function OptionsApp() {
                       >
                         {copiedSnippet === 'claude' ? (
                           <>
-                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent)' }} />
                             <span>Copied</span>
                           </>
                         ) : (
@@ -714,7 +700,7 @@ export function OptionsApp() {
                         >
                           {copiedSnippet === 'cursor' ? (
                             <>
-                              <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                              <Check style={{ width: '13px', height: '13px', color: 'var(--accent)' }} />
                               <span>Copied</span>
                             </>
                           ) : (
@@ -744,7 +730,7 @@ export function OptionsApp() {
                       >
                         {copiedSnippet === 'cli' ? (
                           <>
-                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent-text)' }} />
+                            <Check style={{ width: '13px', height: '13px', color: 'var(--accent)' }} />
                             <span>Copied</span>
                           </>
                         ) : (
@@ -821,7 +807,7 @@ export function OptionsApp() {
                     className="btn-secondary"
                     style={{ fontSize: 'var(--font-size-xs)' }}
                   >
-                    {globalConsent ? 'Disable All' : 'Enable All'}
+                    {globalConsent ? 'Disable all' : 'Enable all'}
                   </button>
                 </div>
 
@@ -857,7 +843,7 @@ export function OptionsApp() {
                                   style={{
                                     background: 'transparent',
                                     border: 'none',
-                                    color: 'var(--text-dim)',
+                                    color: 'var(--text-muted)',
                                     fontSize: 'var(--font-size-2xs)',
                                     padding: 0,
                                     marginTop: '4px',
@@ -865,10 +851,10 @@ export function OptionsApp() {
                                     textDecoration: 'underline',
                                   }}
                                 >
-                                  {isExpanded ? 'Hide Details' : 'View Network Disclosure'}
+                                  {isExpanded ? 'Hide details' : 'View network disclosure'}
                                 </button>
                               </td>
-                              <td style={{ fontSize: 'var(--font-size-xs)', fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace", color: 'var(--text-dim)' }}>
+                              <td style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-muted)' }}>
                                 {provider.endpoint}
                               </td>
                               <td style={{ verticalAlign: 'middle' }}>
@@ -886,7 +872,7 @@ export function OptionsApp() {
                               <tr>
                                 <td colSpan={3} style={{ background: 'var(--surface-hover)', padding: '12px 16px', fontSize: 'var(--font-size-xs)' }}>
                                   <p style={{ margin: 0, color: 'var(--text-muted)' }}>
-                                    <strong>Technical Transparency:</strong> When enabled, SiteRadar transmits only the target hostname to <code>{provider.endpoint}</code> to retrieve public DNS, routing, or CT logs. No personal data, session tokens, or browser cookies are included.
+                                    <strong>Technical transparency:</strong> When enabled, SiteRadar transmits only the target hostname to {provider.endpoint} to retrieve public DNS, routing, or CT logs. No personal data, session tokens, or browser cookies are included.
                                   </p>
                                 </td>
                               </tr>
@@ -904,10 +890,9 @@ export function OptionsApp() {
                       type="button"
                       onClick={handleRevokeAllConsent}
                       className="btn-secondary"
-                      style={{ color: '#f87171' }}
                     >
                       <RotateCcw style={{ width: '13px', height: '13px' }} />
-                      <span>Revoke All External Permissions</span>
+                      <span>Revoke all external permissions</span>
                     </button>
                   </div>
                 )}
@@ -937,9 +922,8 @@ export function OptionsApp() {
                       <tr>
                         <td>
                           <strong>Maximum Pages</strong>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Upper bound of pages crawled per domain.</div>
                         </td>
-                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>5 – 200 pages</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>5 – 200 pages</td>
                         <td>
                           <input
                             type="number"
@@ -948,15 +932,15 @@ export function OptionsApp() {
                             value={crawlConfig.maxPages}
                             onChange={(e) => handleUpdateCrawlLimit('maxPages', parseInt(e.target.value, 10))}
                             className="num-input"
+                            aria-label="Maximum pages"
                           />
                         </td>
                       </tr>
                       <tr>
                         <td>
                           <strong>Maximum Crawl Depth</strong>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Maximum link depth from seed origin.</div>
                         </td>
-                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>1 – 5 levels</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>1 – 5 levels</td>
                         <td>
                           <input
                             type="number"
@@ -965,15 +949,15 @@ export function OptionsApp() {
                             value={crawlConfig.maxDepth}
                             onChange={(e) => handleUpdateCrawlLimit('maxDepth', parseInt(e.target.value, 10))}
                             className="num-input"
+                            aria-label="Maximum crawl depth"
                           />
                         </td>
                       </tr>
                       <tr>
                         <td>
                           <strong>Max Concurrency</strong>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Concurrent background fetch connections.</div>
                         </td>
-                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>1 – 4 workers</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>1 – 4 workers</td>
                         <td>
                           <input
                             type="number"
@@ -982,15 +966,15 @@ export function OptionsApp() {
                             value={crawlConfig.concurrency}
                             onChange={(e) => handleUpdateCrawlLimit('concurrency', parseInt(e.target.value, 10))}
                             className="num-input"
+                            aria-label="Max concurrency"
                           />
                         </td>
                       </tr>
                       <tr>
                         <td>
                           <strong>Page Timeout</strong>
-                          <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--text-dim)' }}>Seconds before aborting unresponsive requests.</div>
                         </td>
-                        <td style={{ color: 'var(--text-dim)', fontSize: 'var(--font-size-xs)' }}>5 – 60 seconds</td>
+                        <td style={{ color: 'var(--text-muted)', fontSize: 'var(--font-size-xs)' }}>5 – 60 seconds</td>
                         <td>
                           <input
                             type="number"
@@ -999,6 +983,7 @@ export function OptionsApp() {
                             value={crawlConfig.timeoutSeconds}
                             onChange={(e) => handleUpdateCrawlLimit('timeoutSeconds', parseInt(e.target.value, 10))}
                             className="num-input"
+                            aria-label="Page timeout in seconds"
                           />
                         </td>
                       </tr>
@@ -1007,15 +992,15 @@ export function OptionsApp() {
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginTop: '14px' }}>
-                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--accent-text)' }}>
+                  <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--accent)' }}>
                     {crawlFeedback && <span>{crawlFeedback}</span>}
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <button type="button" onClick={handleResetCrawlLimits} className="btn-secondary">
-                      Reset Defaults
+                      Reset defaults
                     </button>
                     <button type="button" onClick={handleSaveCrawlLimits} className="btn-primary">
-                      Save Boundaries
+                      Save boundaries
                     </button>
                   </div>
                 </div>

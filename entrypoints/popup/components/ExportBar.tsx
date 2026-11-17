@@ -34,7 +34,7 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
   };
 
   return (
-    <div className="border-b border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 p-4 space-y-2 select-none">
+    <div className="border-b border-zinc-200/80 dark:border-zinc-800 bg-app-bg text-app-fg p-4 space-y-2 select-none">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200">
           Export Report
@@ -54,9 +54,9 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           title="Copy sanitized JSON audit report directly to clipboard"
           leftIcon={
             isCopiedJson ? (
-              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <Check className="w-4 h-4 text-accent" />
             ) : (
-              <Copy className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <Copy className="w-4 h-4 text-accent" />
             )
           }
         >
@@ -72,9 +72,9 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           title="Export sanitized, schema-compliant JSON report"
           leftIcon={
             downloadedType === 'json' ? (
-              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <Check className="w-4 h-4 text-accent" />
             ) : (
-              <FileCode className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <FileCode className="w-4 h-4 text-accent" />
             )
           }
         >
@@ -90,9 +90,9 @@ export const ExportBar: React.FC<ExportBarProps> = ({ inspection }) => {
           title="Export self-contained standalone HTML report with zero external CDN calls"
           leftIcon={
             downloadedType === 'html' ? (
-              <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <Check className="w-4 h-4 text-accent" />
             ) : (
-              <FileText className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+              <FileText className="w-4 h-4 text-accent" />
             )
           }
         >

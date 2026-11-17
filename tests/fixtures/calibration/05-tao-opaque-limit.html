@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cross-Origin Telemetry & TAO Opaque Observability Limit Testbed</title>
+  <meta name="description" content="Reference page with cross-origin assets demonstrating absent Timing-Allow-Origin (TAO) headers, opaque responses, and browser platform visibility boundaries.">
+  <link rel="canonical" href="https://example.com/observability-limit">
+
+  <!-- Cross-origin stylesheets without Timing-Allow-Origin headers -->
+  <link rel="stylesheet" href="https://external-theme.example.com/styles.css">
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #fafafa;
+      color: #171717;
+    }
+    main {
+      max-width: 800px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 2rem;
+      border: 1px solid #e5e5e5;
+      border-radius: 8px;
+    }
+    .callout {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 1rem;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav><a href="https://example.com/observability-limit">Home</a> <a href="https://example.com/privacy-policy">Privacy</a></nav>
+  </header>
+  <main>
+    <h1>Timing-Allow-Origin (TAO) & Opaque Resource Boundary</h1>
+    <p>This fixture embeds cross-origin assets where third-party servers omit the <code>Timing-Allow-Origin</code> response header. Browser engines restrict wire transfer sizes and sub-millisecond network phases for these resources to 0 to prevent length-based side-channel probing.</p>
+
+    <div class="callout">
+      <strong>Observability Invariant:</strong>
+      Telemetry gaps resulting from absent TAO headers or cross-origin isolation boundaries must be classified as <code>OBSERVABILITY_LIMIT</code>, lowering the Telemetry Coverage Index (TCI) without penalizing site quality category scores.
+    </div>
+
+    <section aria-labelledby="opaque-media">
+      <h2 id="opaque-media">Cross-Origin Opaque Assets</h2>
+      <!-- Cross-origin image without TAO header (browser returns opaque 0-byte transfer size in Resource Timing) -->
+      <img src="https://cdn.third-party-partner.com/images/opaque-hero.webp" alt="Demonstration cross-origin hero banner" width="400" height="200" />
+    </section>
+
+    <section aria-labelledby="opaque-scripts">
+      <h2 id="opaque-scripts">External Analytics Tracking</h2>
+      <!-- Cross-origin tracker script without TAO -->
+      <script src="https://analytics-tracker.external-service.org/telemetry.js"></script>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2026 SiteRadar Calibration Suite. <a href="https://example.com/privacy-policy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

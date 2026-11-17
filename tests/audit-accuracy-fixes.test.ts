@@ -4,6 +4,7 @@ import { MockBrowserAdapter } from '../src/browser/adapters/mock.adapter';
 import { canonicalUrlsMatch } from '../src/utils/canonical';
 import { SeoAnalyzer } from '../src/analyzers/seo.analyzer';
 import { AccessibilityAnalyzer } from '../src/analyzers/accessibility.analyzer';
+import { AeoAnalyzer } from '../src/analyzers/aeo.analyzer';
 import { FormsCollector } from '../src/collectors/page/forms.collector';
 import { InspectionOrchestrator } from '../src/core/orchestrator/inspection-orchestrator';
 
@@ -111,7 +112,7 @@ describe('Audit accuracy & Chrome detection fixes', () => {
   });
 
   it('reports accurate DOM bloat cause when only element count exceeds 2000', () => {
-    const analyzer = new AccessibilityAnalyzer();
+    const analyzer = new AeoAnalyzer();
     const findings = analyzer.analyze({
       target: {
         url: 'https://github.com/',

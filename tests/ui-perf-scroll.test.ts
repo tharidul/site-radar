@@ -430,10 +430,8 @@ describe('UI Scroll Performance & Polling Hardening', () => {
 
       // Single unified font: no font-mono anywhere in PageVitalsCard
       expect(container.querySelector('.font-mono')).toBeNull();
-      // Larger, non-bold metric values
-      expect(container.querySelector('.font-bold')).toBeNull();
-      expect(container.querySelector('.font-extrabold')).toBeNull();
-      expect(container.querySelector('.text-2xl.font-normal')).not.toBeNull();
+      // Bold metric values for clear visual hierarchy
+      expect(container.querySelector('.text-2xl.font-bold')).not.toBeNull();
       // No bottom gauge bars
       expect(container.querySelector('.h-1.w-full')).toBeNull();
       // Fused grid container uses dividers instead of 4 separate gap-2.5 cards

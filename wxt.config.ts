@@ -34,6 +34,7 @@ export default defineConfig({
       'cookies',
       'contextMenus',
       'alarms',
+      'webRequest',
     ],
     options_ui: {
       page: 'options.html',

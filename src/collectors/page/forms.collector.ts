@@ -1,6 +1,85 @@
-
 import type { FormsData } from '../../types/inspection';
+import { isAuthOrCheckoutOrigin } from '../../security/url-normalizer';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
+
+function isElementVisible(el: Element, win?: Window | null): boolean {
+  if (!el) return false;
+
+  let curr: Element | null = el;
+  while (curr && curr !== curr.ownerDocument?.documentElement) {
+    // 1. Native HTML5 hidden attribute or aria-hidden="true"
+    if (curr.hasAttribute('hidden') || curr.getAttribute('aria-hidden') === 'true') {
+      return false;
+    }
+
+    // 2. Closed dialog element
+    if (curr.tagName.toLowerCase() === 'dialog' && !curr.hasAttribute('open')) {
+      return false;
+    }
+
+    // 3. Common modal/drawer classes indicating closed/hidden state
+    const classAttr = curr.getAttribute('class');
+    if (classAttr) {
+      const cls = classAttr.toLowerCase();
+      if (
+        cls.includes('modal-hidden') ||
+        cls.includes('is-hidden') ||
+        cls.includes('drawer-closed') ||
+        cls.includes('popup-hidden') ||
+        cls.includes('dialog-hidden')
+      ) {
+        return false;
+      }
+    }
+
+    // 4. Inline CSS styling
+    const htmlCurr = curr as HTMLElement;
+    if (htmlCurr.style) {
+      const d = htmlCurr.style.display?.toLowerCase();
+      const v = htmlCurr.style.visibility?.toLowerCase();
+      const o = htmlCurr.style.opacity;
+      if (d === 'none' || v === 'hidden' || o === '0') {
+        return false;
+      }
+    }
+
+    // 5. Computed styling if window is present
+    if (win && typeof win.getComputedStyle === 'function') {
+      try {
+        const style = win.getComputedStyle(curr);
+        if (style) {
+          if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
+            return false;
+          }
+        }
+      } catch {
+        // Ignore computed style errors in non-standard DOMs
+      }
+    }
+
+    // 6. Real browser offsetParent check
+    if (typeof (curr as HTMLElement).offsetParent !== 'undefined') {
+      const htmlEl = curr as HTMLElement;
+      if (htmlEl.offsetParent === null && curr.tagName.toLowerCase() !== 'body') {
+        let isFixed = false;
+        if (htmlEl.style?.position === 'fixed') {
+          isFixed = true;
+        } else if (win && typeof win.getComputedStyle === 'function') {
+          try {
+            isFixed = win.getComputedStyle(curr)?.position === 'fixed';
+          } catch {}
+        }
+        if (!isFixed) {
+          return false;
+        }
+      }
+    }
+
+    curr = curr.parentElement;
+  }
+
+  return true;
+}
 
 export class FormsCollector implements PageCollector<FormsData> {
   readonly id = 'forms';
@@ -10,23 +89,53 @@ export class FormsCollector implements PageCollector<FormsData> {
     const doc = context.document;
     const pageUrl = context.url || (doc.location?.href !== 'about:blank' ? doc.location?.href : '') || '';
     let isPageHttps = false;
+    let pageHostname = '';
     try {
       const parsed = new URL(pageUrl || 'http://localhost');
       isPageHttps = parsed.protocol === 'https:';
+      pageHostname = parsed.hostname;
     } catch {
       isPageHttps = false;
+      pageHostname = '';
     }
 
     const formElements = doc.querySelectorAll('form');
     const formCount = formElements.length;
     let containsUnencryptedSubmissions = false;
     const forms: FormsData['forms'] = [];
+    const isolatedCheckoutOrigins = new Set<string>();
+
+    let hasVisiblePasswordField = false;
+    let hasHiddenPasswordField = false;
+    let hasVisiblePostForm = false;
+    let hasHiddenPostForm = false;
+    let dormantModalFormsCount = 0;
 
     formElements.forEach((form) => {
+      const isFormVisible = isElementVisible(form, context.window);
+      const isModal = Boolean(
+        form.closest('dialog, [role="dialog"], .modal, .modal-dialog, [aria-modal="true"], .popup, .drawer') ||
+        form.matches('dialog, [role="dialog"], .modal, [aria-modal="true"]')
+      );
+
+      if (!isFormVisible || isModal) {
+        if (!isFormVisible) {
+          dormantModalFormsCount++;
+        }
+      }
+
       const rawAction = form.getAttribute('action') || '';
       const method = (form.getAttribute('method') || 'GET').toUpperCase();
       let resolvedAction = rawAction;
       let isSecureAction = true;
+
+      if (method === 'POST') {
+        if (isFormVisible) {
+          hasVisiblePostForm = true;
+        } else {
+          hasHiddenPostForm = true;
+        }
+      }
 
       if (rawAction) {
         try {
@@ -35,6 +144,9 @@ export class FormsCollector implements PageCollector<FormsData> {
           resolved.password = '';
           resolvedAction = resolved.toString();
           isSecureAction = resolved.protocol === 'https:';
+          if (pageHostname && isAuthOrCheckoutOrigin(resolved.origin, pageHostname)) {
+            isolatedCheckoutOrigins.add(resolved.hostname);
+          }
         } catch {
           resolvedAction = rawAction;
           isSecureAction = isPageHttps;
@@ -61,6 +173,12 @@ export class FormsCollector implements PageCollector<FormsData> {
 
         if (type === 'password') {
           hasPasswordField = true;
+          const isInputVisible = isFormVisible && isElementVisible(input, context.window);
+          if (isInputVisible) {
+            hasVisiblePasswordField = true;
+          } else {
+            hasHiddenPasswordField = true;
+          }
         }
 
         const name = input.getAttribute('name') || '';
@@ -86,11 +204,26 @@ export class FormsCollector implements PageCollector<FormsData> {
           isSecureAction,
           hasCsrfToken,
           fields,
+          isVisible: isFormVisible,
         });
       }
     });
 
-    const hasPasswordForms = forms.some((f) => f.hasPasswordField);
+    // Also check standalone password inputs outside forms
+    const standalonePasswordInputs = doc.querySelectorAll('input[type="password"]');
+    standalonePasswordInputs.forEach((pwInput) => {
+      if (pwInput.closest('form')) {
+        return;
+      }
+      const isVisible = isElementVisible(pwInput, context.window);
+      if (isVisible) {
+        hasVisiblePasswordField = true;
+      } else {
+        hasHiddenPasswordField = true;
+      }
+    });
+
+    const hasPasswordForms = forms.some((f) => f.hasPasswordField) || hasVisiblePasswordField || hasHiddenPasswordField;
 
     const allInputElements = doc.querySelectorAll('input, textarea, select');
     let totalInputCount = 0;
@@ -103,7 +236,7 @@ export class FormsCollector implements PageCollector<FormsData> {
       if (type === 'hidden' || type === 'submit' || type === 'button' || type === 'reset' || type === 'image') {
         return;
       }
-      if (el.hasAttribute('hidden') || el.getAttribute('aria-hidden') === 'true') {
+      if (!isElementVisible(el, context.window)) {
         return;
       }
       const elName = el.getAttribute('name') || '';
@@ -111,16 +244,6 @@ export class FormsCollector implements PageCollector<FormsData> {
       if (/^(?:g-recaptcha-response|h-captcha-response|cf-turnstile-response)/i.test(elName) ||
           /^(?:g-recaptcha-response|h-captcha-response|cf-turnstile-response)/i.test(elId)) {
         return;
-      }
-      if (context.window && typeof context.window.getComputedStyle === 'function') {
-        try {
-          const style = context.window.getComputedStyle(el);
-          if (style && (style.display === 'none' || style.visibility === 'hidden')) {
-            return;
-          }
-        } catch {
-          // Ignore computed style errors in non-standard DOMs
-        }
       }
 
       totalInputCount++;
@@ -173,10 +296,16 @@ export class FormsCollector implements PageCollector<FormsData> {
       forms,
       containsUnencryptedSubmissions,
       hasPasswordForms,
+      hasVisiblePasswordField,
+      hasHiddenPasswordField,
+      hasVisiblePostForm,
+      hasHiddenPostForm,
+      dormantModalFormsCount,
       totalInputCount,
       unlabeledInputCount,
       autocompleteInputCount,
       unlabeledInputSamples,
+      isolatedCheckoutOrigins: Array.from(isolatedCheckoutOrigins),
     };
 
     return createCollectionResult<FormsData>({

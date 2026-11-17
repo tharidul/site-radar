@@ -106,7 +106,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
     ruleId: 'sec-missing-hsts',
     category: 'security',
     title: 'Missing HSTS Header',
-    description: 'The Strict-Transport-Security header is not configured or could not be verified from page context.',
+    description: 'The Strict-Transport-Security (HSTS) header is not configured on HTTPS responses.',
     defaultSeverity: 'medium',
     weight: 8,
     confidence: 0.9,
@@ -514,7 +514,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'aeo-faq-schema': {
     ruleId: 'aeo-faq-schema',
-    category: 'seo',
+    category: 'aeo',
     title: 'AEO Q&A and FAQ Schema Markup',
     description: 'Evaluates Schema.org FAQPage, QAPage, or HowTo structured data for LLM direct citation.',
     defaultSeverity: 'low',
@@ -528,7 +528,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'aeo-llms-txt': {
     ruleId: 'aeo-llms-txt',
-    category: 'seo',
+    category: 'aeo',
     title: 'LLMs.txt Context Standard',
     description: 'Checks for /llms.txt file or linked markdown documentation standard for AI crawlers.',
     defaultSeverity: 'info',
@@ -542,7 +542,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'aeo-ai-crawlers': {
     ruleId: 'aeo-ai-crawlers',
-    category: 'seo',
+    category: 'aeo',
     title: 'AI Model & Search Crawler Permissions',
     description: 'Audits robots directives for restrictions blocking AI crawlers (noai, GPTBot, Google-Extended, CCBot).',
     defaultSeverity: 'low',
@@ -556,7 +556,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'aeo-question-headings': {
     ruleId: 'aeo-question-headings',
-    category: 'seo',
+    category: 'aeo',
     title: 'Conversational Question Headings',
     description: 'Evaluates whether page headings use natural question formats suitable for LLM answer extraction.',
     defaultSeverity: 'low',
@@ -655,7 +655,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'ago-form-labels': {
     ruleId: 'ago-form-labels',
-    category: 'accessibility',
+    category: 'aeo',
     title: 'Agentic Form Labels & Autocomplete',
     description: 'Evaluates form field label associations and autocomplete attributes for autonomous AI agents and assistive tools.',
     defaultSeverity: 'medium',
@@ -672,7 +672,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'ago-interactive-elements': {
     ruleId: 'ago-interactive-elements',
-    category: 'accessibility',
+    category: 'aeo',
     title: 'Semantic Action Targets (Buttons vs Clickable DIVs)',
     description: 'Detects non-semantic clickable elements (<div> or <span> click listeners) lacking proper button roles vs native <button> tags.',
     defaultSeverity: 'medium',
@@ -686,7 +686,7 @@ export const RULE_DEFINITIONS: Record<string, RuleDefinition> = {
   },
   'ago-dom-token-bloat': {
     ruleId: 'ago-dom-token-bloat',
-    category: 'accessibility',
+    category: 'aeo',
     title: 'Agent Context Window DOM Complexity',
     description: 'Audits excessive DOM nesting depth and tree bloat that exceed AI agent vision and context window token limits.',
     defaultSeverity: 'low',

@@ -37,18 +37,13 @@ export class AsnLookupClient {
       }
     }
 
-    const timeoutCtrl = new AbortController();
-    const timer = setTimeout(() => timeoutCtrl.abort(), this.timeoutMs);
-
     try {
       const url = `https://ipapi.co/${encodeURIComponent(cleanIp)}/json/`;
       const response = await fetch(url, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: timeoutCtrl.signal,
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
-
-      clearTimeout(timer);
 
       if (!response.ok) {
         throw new Error(`ASN provider responded with HTTP status ${response.status}`);
@@ -85,12 +80,12 @@ export class AsnLookupClient {
         provider: 'ipapi.co',
       };
     } catch (err: any) {
-      clearTimeout(timer);
+      const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
       return {
         ip: cleanIp,
         queriedAt: Date.now(),
         provider: 'ipapi.co',
-        error: err?.message || 'IP/ASN lookup failed',
+        error: isTimeout ? 'Request timed out' : (err?.message || 'IP/ASN lookup failed'),
       };
     }
   }

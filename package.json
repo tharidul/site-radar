@@ -22,6 +22,9 @@
     "compile": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
+    "benchmark": "tsx scripts/test-10-websites.ts",
+    "benchmark:fast": "tsx scripts/test-10-websites.ts --fast",
+    "calibrate": "tsx scripts/calibrate-engine.ts",
     "mcp": "tsx src/mcp/index.ts",
     "postinstall": "wxt prepare"
   },

@@ -65,29 +65,6 @@ function formatTiming(rawMs?: number, fallback?: string): string | undefined {
   return undefined;
 }
 
-function getSpeedRating(metric: 'ttfb' | 'fcp' | 'lcp' | 'load', ms?: number): { label: string } {
-  if (ms === undefined || ms === null || isNaN(ms) || ms < 0) {
-    return { label: '—' };
-  }
-  switch (metric) {
-    case 'ttfb':
-      if (ms <= 800) return { label: 'Fast' };
-      if (ms <= 1800) return { label: 'Moderate' };
-      return { label: 'Slow' };
-    case 'fcp':
-      if (ms <= 1800) return { label: 'Good' };
-      if (ms <= 3000) return { label: 'Moderate' };
-      return { label: 'Slow' };
-    case 'lcp':
-      if (ms <= 2500) return { label: 'Good' };
-      if (ms <= 4000) return { label: 'Needs Work' };
-      return { label: 'Poor' };
-    case 'load':
-      if (ms <= 2500) return { label: 'Fast' };
-      if (ms <= 5000) return { label: 'Normal' };
-      return { label: 'Slow' };
-  }
-}
 
 interface ScrollLayoutBadgeInfo {
   type: Exclude<LayoutScrollType, 'finite'>;
@@ -177,11 +154,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
   const fullLoad = formatTiming(fullLoadRaw);
   const domLoad = formatTiming(domLoadRaw);
 
-  const ttfbRating = getSpeedRating('ttfb', navTiming?.ttfbMs);
-  const fcpRating = getSpeedRating('fcp', paintTiming?.fcpMs);
-  const lcpRating = getSpeedRating('lcp', webVitals?.lcpMs);
-  const loadRating = getSpeedRating('load', fullLoadRaw ?? domLoadRaw);
-
   const resModule = inspection.modules?.resources?.data as any;
   const totalRequests =
     perfData?.resourceCount ??
@@ -245,7 +217,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
     scrolledData && (lazyWire > 0 || lazyReqs > 0 || lazyDecoded > 0 || scrolledData.isInfiniteScroll)
   );
 
-  const isLive = Boolean(liveMetrics && liveMetrics.resourceCount > 0);
   const effectiveScrolledReqs = liveMetrics?.resourceCount
     ? Math.max(liveMetrics.resourceCount, scrolledData?.resourceCount || totalRequests)
     : scrolledData?.resourceCount || totalRequests;
@@ -268,6 +239,15 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
   const totalWire = hasDelta ? effectiveWire : initialWire;
   const totalDecoded = hasDelta ? effectiveDecoded : initialDecoded;
 
+  const scrollDeltaWire = Math.max(0, (totalWire || 0) - (initialWire || 0));
+  const scrollDeltaReqs = Math.max(0, effectiveScrolledReqs - totalRequests);
+  const hasScrollSplit = Boolean(hasDelta && scrollDeltaWire > 0);
+
+  const donutRadius = 41;
+  const donutCircumference = 2 * Math.PI * donutRadius;
+  const initialWireRatio = totalWire && totalWire > 0 ? Math.min(1, Math.max(0, (initialWire || 0) / totalWire)) : 1;
+  const initialDashOffset = donutCircumference * (1 - initialWireRatio);
+
   const displayCacheCount = Math.max(cacheHitCount ?? 0, scrolledData?.cacheHitCount ?? 0);
   const displayCacheBytes = Math.max(cacheHitBytes ?? 0, scrolledData?.cacheHitBytes ?? 0);
   const displayOpaqueCount = Math.max(opaqueResourceCount ?? 0, scrolledData?.opaqueResourceCount ?? 0);
@@ -283,7 +263,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
       label: 'TTFB',
       name: 'Time to First Byte',
       value: ttfb || '—',
-      rating: ttfbRating,
       icon: Timer,
       target: '≤ 800ms',
     },
@@ -292,7 +271,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
       label: 'FCP',
       name: 'First Contentful Paint',
       value: fcp || '—',
-      rating: fcpRating,
       icon: Zap,
       target: '≤ 1.8s',
     },
@@ -301,7 +279,6 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
       label: 'LCP',
       name: 'Largest Contentful Paint',
       value: lcp || '—',
-      rating: lcpRating,
       icon: ImageIcon,
       target: '≤ 2.5s',
     },
@@ -310,47 +287,30 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
       label: 'Load',
       name: 'Window Load Event',
       value: fullLoad || domLoad || 'Complete',
-      rating: loadRating,
       icon: CheckCircle2,
       target: '≤ 2.5s',
     },
   ];
 
   return (
-    <div className="rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-4 space-y-3.5 shadow-xs">
+    <section
+      aria-labelledby="page-vitals-heading"
+      className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-3.5 min-[400px]:p-4 shadow-xs space-y-3"
+    >
       {/* Header with Title */}
-      <div className="flex items-center justify-between pb-3 border-b border-zinc-200/70 dark:border-zinc-800">
-        <div className="flex items-center gap-2">
-          <div className="p-1 rounded bg-[#152E40]/10 dark:bg-[#CEFF52]/10 text-[#152E40] dark:text-[#CEFF52]">
-            <Activity className="w-4 h-4" />
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 tracking-tight leading-tight">
-              Page Loading Times &amp; Data Usage
-            </h3>
-            <p className="text-2xs text-zinc-500 dark:text-zinc-400">
-              Core vitals, network transfer, and payload telemetry
-            </p>
-          </div>
-        </div>
+      <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <h3
+          id="page-vitals-heading"
+          className="text-xs font-bold text-zinc-900 dark:text-zinc-100"
+        >
+          Page Loading Times &amp; Data Usage
+        </h3>
       </div>
 
       {/* 4 Performance Metrics: Fused strip with dividers, no nested cards or bars */}
-      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 rounded-md bg-zinc-50/70 dark:bg-zinc-950/50 border border-zinc-200/60 dark:border-zinc-800/80">
+      <div className="grid grid-cols-2 min-[440px]:grid-cols-4 rounded-md bg-zinc-50/70 dark:bg-zinc-900/50 border border-zinc-200/60 dark:border-zinc-800/80">
         {timingMetrics.map((m, idx) => {
           const Icon = m.icon;
-          const isGood = ['Fast', 'Good'].includes(m.rating.label);
-          const isWarn = ['Moderate', 'Normal', 'Needs Work'].includes(m.rating.label);
-          const isBad = ['Slow', 'Poor'].includes(m.rating.label);
-
-          const ratingPillClass = isGood
-            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-800 dark:text-zinc-100'
-            : isWarn
-            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-amber-700 dark:text-[#fbbf24]'
-            : isBad
-            ? 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-rose-700 dark:text-[#fb7185]'
-            : 'bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-500 dark:text-zinc-400';
-
           const dividerClass = [
             idx % 2 === 1 ? 'border-l border-zinc-200/60 dark:border-zinc-800/80' : '',
             idx >= 2 ? 'border-t min-[440px]:border-t-0 border-zinc-200/60 dark:border-zinc-800/80' : '',
@@ -363,24 +323,17 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
             <div
               key={m.key}
               title={`${m.name} (Target: ${m.target})`}
-              className={`px-3.5 py-3 flex flex-col justify-between gap-2.5 min-w-0 ${dividerClass}`}
+              className={`px-3 py-2.5 flex flex-col justify-between gap-2 min-w-0 ${dividerClass}`}
             >
-              {/* Row 1: Icon + Label (left) & Rating Badge (right) */}
-              <div className="flex items-center justify-between gap-1.5">
-                <div className="flex items-center gap-1.5 min-w-0">
-                  <Icon className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
-                  <span className="text-xs font-medium text-zinc-700 dark:text-zinc-200 uppercase tracking-wider whitespace-nowrap">
-                    {m.label}
-                  </span>
-                </div>
-                <span className={`text-2xs font-medium px-1.5 py-0.2 rounded shrink-0 ${ratingPillClass}`}>
-                  {m.rating.label}
+              <div className="flex items-center gap-1.5 min-w-0">
+                <Icon className="w-3.5 h-3.5 text-accent shrink-0" />
+                <span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200 whitespace-nowrap">
+                  {m.label}
                 </span>
               </div>
 
-              {/* Row 2: Metric Value (left) & Target threshold (right) */}
               <div className="flex items-baseline justify-between gap-1.5">
-                <div className="text-2xl font-normal text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight leading-none">
+                <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight leading-none">
                   {m.value}
                 </div>
                 <span className="text-2xs text-zinc-400 dark:text-zinc-500 tabular-nums shrink-0 whitespace-nowrap">
@@ -392,143 +345,154 @@ export const PageVitalsCard: React.FC<PageVitalsCardProps> = ({ inspection, live
         })}
       </div>
 
-      {/* Simple, Unified Data Usage Section (Single Fused Container) */}
-      <div className="p-3.5 rounded-md bg-zinc-50/70 dark:bg-zinc-950/50 border border-zinc-200/60 dark:border-zinc-800/80 space-y-3">
-        {/* Header */}
-        <div className="flex items-center justify-between pb-2.5 border-b border-zinc-200/50 dark:border-zinc-800/60">
-          <div className="flex items-center gap-2">
-            <HardDrive className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
-            <span className="text-xs font-medium text-zinc-900 dark:text-zinc-100">Data Usage</span>
-          </div>
-
-          {isLive && (
-            <span className="text-2xs font-medium text-emerald-600 dark:text-[#CEFF52] uppercase tracking-wider">
-              Live
-            </span>
-          )}
+      {/* Data Usage Section: Clean, unboxed layout divided by spacing */}
+      <div className="pt-1 space-y-2">
+        <div className="flex items-center gap-1.5 text-2xs font-semibold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
+          <HardDrive className="w-3 h-3 text-accent" />
+          <span>Data Usage</span>
         </div>
 
-        {/* Content: Initial vs Full Page (fused with divider) or Single Viewport */}
-        {hasDelta ? (
-          <div className="grid grid-cols-2 divide-x divide-zinc-200/60 dark:divide-zinc-800/80">
-            {/* Initial Load */}
-            <div className="pr-3.5 space-y-1.5 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Initial Load
-                </span>
-                <span className="text-2xs font-normal text-zinc-600 dark:text-zinc-300 tabular-nums">
-                  {totalRequests} {totalRequests === 1 ? 'Request' : 'Requests'}
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-normal text-zinc-900 dark:text-zinc-100 tabular-nums tracking-tight leading-none">
-                  {formatBytes(initialWire)}
-                </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  transferred
-                </span>
-              </div>
-              {initialDecoded && initialDecoded > 0 && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
-                  {formatBytes(initialDecoded)} extracted
-                </div>
+        {/* Donut Chart: Transfer distribution & single full page memory footprint */}
+        <div className="flex items-center gap-5 sm:gap-6 py-2">
+          {/* Donut Chart with Centered Total (Generous, un-squeezed proportions) */}
+          <div className="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 flex items-center justify-center">
+            <svg
+              className="w-full h-full -rotate-90 transform"
+              viewBox="0 0 100 100"
+              role="img"
+              aria-label={`Data usage donut chart: ${formatBytes(totalWire)} total wire transferred`}
+            >
+              {/* Background circle / On-scroll slice */}
+              <circle
+                cx="50"
+                cy="50"
+                r={donutRadius}
+                fill="transparent"
+                stroke={hasScrollSplit ? '#0284c7' : '#10b981'}
+                strokeWidth="6.5"
+                className={!totalWire || totalWire === 0 ? 'text-zinc-200 dark:text-zinc-800' : ''}
+              />
+              {/* Initial load slice */}
+              {hasScrollSplit && (
+                <circle
+                  cx="50"
+                  cy="50"
+                  r={donutRadius}
+                  fill="transparent"
+                  stroke="#10b981"
+                  strokeWidth="6.5"
+                  strokeDasharray={donutCircumference}
+                  strokeDashoffset={initialDashOffset}
+                  strokeLinecap="butt"
+                  className="transition-[stroke-dashoffset] duration-300 ease-out"
+                />
               )}
-            </div>
+            </svg>
 
-            {/* Full Page */}
-            <div className="pl-3.5 space-y-1.5 min-w-0">
-              <div className="flex items-center justify-between gap-1">
-                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Full Page
-                </span>
-                <span className="text-2xs font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums">
-                  {effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'}
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight leading-none">
-                  {formatBytes(effectiveWire)}
-                </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  transferred
-                </span>
-              </div>
-              {effectiveDecoded && effectiveDecoded > 0 && (
-                <div className="text-xs text-zinc-500 dark:text-zinc-400 tabular-nums">
-                  {formatBytes(effectiveDecoded)} extracted
-                </div>
-              )}
+            {/* Centered Total Callout with generous padding and clearance */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+              <span className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 tabular-nums leading-tight tracking-tight">
+                {formatBytes(totalWire)}
+              </span>
+              <span className="text-2xs text-zinc-400 dark:text-zinc-500 mt-1 leading-none font-medium">
+                transferred
+              </span>
             </div>
           </div>
-        ) : (
-          <div className="flex items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                  Total Transfer
-                </span>
-                <span className="text-2xs font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums">
-                  ({effectiveScrolledReqs} {effectiveScrolledReqs === 1 ? 'Request' : 'Requests'})
-                </span>
-              </div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="text-2xl font-normal text-zinc-900 dark:text-[#CEFF52] tabular-nums tracking-tight leading-none">
-                  {formatBytes(effectiveWire)}
-                </span>
-                <span className="text-2xs text-zinc-500 dark:text-zinc-400">
-                  transferred
-                </span>
-              </div>
-            </div>
 
-            {effectiveDecoded && effectiveDecoded > 0 && (
-              <div className="text-right space-y-1">
-                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 uppercase tracking-wider block">
-                  Extracted in Memory
-                </span>
-                <div className="text-base font-normal text-zinc-800 dark:text-zinc-200 tabular-nums">
-                  {formatBytes(effectiveDecoded)}
+          {/* Legend and Single Full Page Memory Footprint */}
+          <div className="flex-1 min-w-0 space-y-2.5">
+            {hasScrollSplit ? (
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs gap-2">
+                  <span className="flex items-center gap-2 min-w-0 text-zinc-700 dark:text-zinc-300">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                    <span className="font-medium truncate">Initial load</span>
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums shrink-0">
+                    {formatBytes(initialWire)}{' '}
+                    <span className="text-2xs font-normal text-zinc-400 dark:text-zinc-500">
+                      ({totalRequests} reqs)
+                    </span>
+                  </span>
                 </div>
+
+                <div className="flex items-center justify-between text-xs gap-2">
+                  <span className="flex items-center gap-2 min-w-0 text-zinc-700 dark:text-zinc-300">
+                    <span className="w-2.5 h-2.5 rounded-full bg-sky-500 shrink-0" />
+                    <span className="font-medium truncate">On scroll</span>
+                  </span>
+                  <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums shrink-0">
+                    {formatBytes(scrollDeltaWire)}{' '}
+                    <span className="text-2xs font-normal text-zinc-400 dark:text-zinc-500">
+                      ({scrollDeltaReqs} reqs)
+                    </span>
+                  </span>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between text-xs gap-2">
+                <span className="flex items-center gap-2 min-w-0 text-zinc-700 dark:text-zinc-300">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                  <span className="font-medium truncate">Total transfer</span>
+                </span>
+                <span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 tabular-nums shrink-0">
+                  {formatBytes(totalWire)}{' '}
+                  <span className="text-2xs font-normal text-zinc-400 dark:text-zinc-500">
+                    ({effectiveScrolledReqs} reqs)
+                  </span>
+                </span>
+              </div>
+            )}
+
+            {/* Single Full Page Memory Extraction Footprint */}
+            {totalDecoded && totalDecoded > 0 && (
+              <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 flex items-center justify-between text-xs gap-2">
+                <span className="text-2xs font-medium text-zinc-500 dark:text-zinc-400 truncate">
+                  Unpacked in RAM {compressionSavingsPct > 0 ? `(${compressionSavingsPct}% compressed)` : ''}
+                </span>
+                <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 tabular-nums shrink-0">
+                  {formatBytes(totalDecoded)}
+                </span>
               </div>
             )}
           </div>
-        )}
+        </div>
 
         {/* Network Efficiency & Layout Chips */}
         {(displayCacheCount > 0 || displayOpaqueCount > 0 || Boolean(scrollLayoutBadge)) && (
-          <div className="pt-2 border-t border-zinc-200/50 dark:border-zinc-800/60 flex items-center gap-2 flex-wrap">
+          <div className="pt-2 flex items-center gap-2 flex-wrap">
             {displayCacheCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md tabular-nums"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded tabular-nums"
                 title="Assets served directly from browser cache without network transfer."
               >
-                <Layers className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
+                <Layers className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
                 {`${formatBytes(displayCacheBytes)} cached (${displayCacheCount} reqs)`}
               </span>
             )}
             {displayOpaqueCount > 0 && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md tabular-nums"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded tabular-nums"
                 title="Browser security (Timing-Allow-Origin) restricts measuring wire transfer sizes for cross-origin resources lacking TAO headers."
               >
-                <Globe className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
+                <Globe className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
                 {`${displayOpaqueCount} cross-origin`}
               </span>
             )}
             {scrollLayoutBadge && (
               <span
-                className="inline-flex items-center gap-1.5 text-2xs text-zinc-700 dark:text-zinc-200 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-2 py-0.5 rounded-md"
+                className="inline-flex items-center gap-1.5 text-2xs text-zinc-600 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800/60 px-2 py-0.5 rounded"
                 title={scrollLayoutBadge.tooltip}
                 data-scroll-layout={scrollLayoutBadge.type}
               >
-                <scrollLayoutBadge.Icon className="w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 shrink-0" />
+                <scrollLayoutBadge.Icon className="w-3.5 h-3.5 text-zinc-400 dark:text-zinc-500 shrink-0" />
                 {scrollLayoutBadge.label}
               </span>
             )}
           </div>
         )}
       </div>
-    </div>
+    </section>
   );
 };

@@ -1,7 +1,7 @@
 
 import React, { useMemo } from 'react';
 import type { CategoryScore, AuditFinding, Severity } from '@/types/inspection';
-import { AlertCircle, AlertTriangle, Info, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, AlertTriangle, Info, CheckCircle2, XCircle } from 'lucide-react';
 
 const EMPTY_SCORES: Record<string, CategoryScore> = {};
 
@@ -20,20 +20,20 @@ export const Scorecard: React.FC<ScorecardProps> = ({
 }) => {
   const counts = useMemo(() => {
     let critical = 0;
-    let high = 0;
-    let medium = 0;
-    let low = 0;
-    let info = 0;
+    let warnings = 0;
+    let passed = 0;
 
     for (const f of findings) {
-      if (f.severity === 'critical') critical++;
-      else if (f.severity === 'high') high++;
-      else if (f.severity === 'medium') medium++;
-      else if (f.severity === 'low') low++;
-      else if (f.severity === 'info') info++;
+      if (f.status === 'passed') {
+        passed++;
+      } else if (f.status === 'failed' || f.status === 'error' || f.severity === 'critical') {
+        critical++;
+      } else if (f.status === 'warning' || f.status === 'info') {
+        warnings++;
+      }
     }
 
-    return { critical, high, medium, low, info };
+    return { critical, warnings, passed };
   }, [findings]);
 
   const categories = Object.keys(scores).length > 0
@@ -41,7 +41,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
     : ['security', 'performance', 'seo', 'accessibility', 'best-practices'];
 
   return (
-    <div className="border-b border-zinc-200 dark:border-zinc-800 bg-[#f8f8fa] dark:bg-zinc-950 p-4 space-y-3 text-zinc-900 dark:text-zinc-100">
+    <div className="border-b border-zinc-200/80 dark:border-zinc-800 bg-app-bg p-4 space-y-3 text-app-fg">
       <div className="flex items-center justify-between">
         <span className="text-xs font-bold text-zinc-900 dark:text-zinc-200">
           Audit Scorecard
@@ -51,75 +51,70 @@ export const Scorecard: React.FC<ScorecardProps> = ({
         </span>
       </div>
 
-      <div className="grid grid-cols-5 gap-1.5">
+      <div className="grid grid-cols-3 gap-2">
         <button
           type="button"
-          onClick={() => onFilterSeverity(activeSeverityFilter === 'critical' ? 'all' : 'critical')}
-          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
-            activeSeverityFilter === 'critical'
+          onClick={() =>
+            onFilterSeverity(
+              activeSeverityFilter === 'critical' || activeSeverityFilter === 'high'
+                ? 'all'
+                : 'critical',
+            )
+          }
+          className={`rounded-lg border p-2.5 text-center transition-colors duration-150 cursor-pointer ${
+            activeSeverityFilter === 'critical' || activeSeverityFilter === 'high'
               ? 'border-rose-600 bg-rose-50 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300'
               : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
           }`}
-          title="Filter by Critical findings"
+          title="Filter by Critical"
         >
-          <div className="text-lg font-bold tabular-nums text-rose-600 dark:text-rose-400">{counts.critical}</div>
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <XCircle className="w-3.5 h-3.5 text-rose-500" />
+            <div className="text-lg font-bold tabular-nums text-rose-600 dark:text-rose-400">
+              {counts.critical}
+            </div>
+          </div>
           <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">Critical</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onFilterSeverity(activeSeverityFilter === 'high' ? 'all' : 'high')}
-          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
-            activeSeverityFilter === 'high'
-              ? 'border-orange-600 bg-orange-50 dark:bg-orange-950/80 text-orange-700 dark:text-orange-300'
+          onClick={() =>
+            onFilterSeverity(
+              activeSeverityFilter === 'medium' || activeSeverityFilter === 'low'
+                ? 'all'
+                : 'medium',
+            )
+          }
+          className={`rounded-lg border p-2.5 text-center transition-colors duration-150 cursor-pointer ${
+            activeSeverityFilter === 'medium' || activeSeverityFilter === 'low'
+              ? 'border-amber-500 bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300'
               : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
           }`}
-          title="Filter by High findings"
+          title="Filter by Warnings"
         >
-          <div className="text-lg font-bold tabular-nums text-orange-600 dark:text-orange-400">{counts.high}</div>
-          <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">High</div>
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
+            <div className="text-lg font-bold tabular-nums text-amber-600 dark:text-amber-400">
+              {counts.warnings}
+            </div>
+          </div>
+          <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">Warnings</div>
         </button>
 
         <button
           type="button"
-          onClick={() => onFilterSeverity(activeSeverityFilter === 'medium' ? 'all' : 'medium')}
-          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
-            activeSeverityFilter === 'medium'
-              ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/60 text-orange-700 dark:text-orange-300'
-              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
-          }`}
-          title="Filter by Medium findings"
+          onClick={() => onFilterSeverity('all')}
+          className="rounded-lg border p-2.5 text-center transition-colors duration-150 border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs cursor-pointer"
+          title="Total passed checks"
         >
-          <div className="text-lg font-bold tabular-nums text-orange-600 dark:text-orange-400">{counts.medium}</div>
-          <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">Medium</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onFilterSeverity(activeSeverityFilter === 'low' ? 'all' : 'low')}
-          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
-            activeSeverityFilter === 'low'
-              ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200'
-              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
-          }`}
-          title="Filter by Low findings"
-        >
-          <div className="text-lg font-bold tabular-nums text-zinc-800 dark:text-zinc-300">{counts.low}</div>
-          <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">Low</div>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onFilterSeverity(activeSeverityFilter === 'info' ? 'all' : 'info')}
-          className={`rounded-lg border p-2 text-center transition-colors duration-150 cursor-pointer ${
-            activeSeverityFilter === 'info'
-              ? 'border-zinc-400 dark:border-zinc-600 bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-200'
-              : 'border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-zinc-300 dark:hover:border-zinc-700 shadow-xs'
-          }`}
-          title="Filter by Info findings"
-        >
-          <div className="text-lg font-bold tabular-nums text-zinc-600 dark:text-zinc-400">{counts.info}</div>
-          <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400">Info</div>
+          <div className="flex items-center justify-center gap-1.5 mb-0.5">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+            <div className="text-lg font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+              {counts.passed}
+            </div>
+          </div>
+          <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-400">Passed</div>
         </button>
       </div>
 
@@ -137,11 +132,11 @@ export const Scorecard: React.FC<ScorecardProps> = ({
               barColor = 'bg-zinc-800 dark:bg-zinc-100';
               textColor = 'text-zinc-900 dark:text-zinc-100';
             } else if (rawScore >= 70) {
-              barColor = 'bg-orange-500 dark:bg-orange-400';
-              textColor = 'text-orange-600 dark:text-orange-400';
+              barColor = 'bg-amber-500 dark:bg-amber-400';
+              textColor = 'text-amber-600 dark:text-amber-400';
             } else if (rawScore >= 50) {
-              barColor = 'bg-orange-600 dark:bg-orange-500';
-              textColor = 'text-orange-700 dark:text-orange-400';
+              barColor = 'bg-amber-600 dark:bg-amber-500';
+              textColor = 'text-amber-700 dark:text-amber-400';
             } else {
               barColor = 'bg-rose-600 dark:bg-rose-500';
               textColor = 'text-rose-700 dark:text-rose-400';
@@ -172,7 +167,7 @@ export const Scorecard: React.FC<ScorecardProps> = ({
               <div className="flex items-center justify-between text-xs text-zinc-600 dark:text-zinc-400">
                 <span>
                   {scoreObj
-                    ? `${scoreObj.passed ?? 0} pass · ${scoreObj.failed ?? 0} fail`
+                    ? `${scoreObj.passed ?? 0} passed · ${scoreObj.failed ?? 0} critical`
                     : 'Not evaluated'}
                 </span>
                 {hasCrit && (

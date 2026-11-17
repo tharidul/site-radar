@@ -14,6 +14,25 @@ export type RealityState =
 
 export type BlastTier = 'decorative' | 'content' | 'interactive' | 'critical_flow';
 
+export type FindingTargetScope =
+  | 'images'
+  | 'interactive'
+  | 'forms'
+  | 'text_nodes'
+  | 'landmarks'
+  | 'dom_elements'
+  | 'page';
+
+export interface ScopeResolution {
+  scope: FindingTargetScope;
+  denominator: number;
+  affected: number;
+  density: number;
+  blastTier: BlastTier;
+  blastWeight: number;
+  violationPressure: number;
+}
+
 export interface CorroborationTrace {
   policyId: string;
   previousState: RealityState;

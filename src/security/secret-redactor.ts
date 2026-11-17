@@ -137,6 +137,13 @@ export function redactSecretsFromString(text: string): string {
 }
 
 export function isSensitiveKey(key: string): boolean {
+  // Metadata flags and counts are structural telemetry, not sensitive credential payloads
+  if (
+    /^(?:has|is|total|unlabeled|dormant)[A-Z]/.test(key) ||
+    /(?:Count|Exists|Detected|Field|Fields|Forms|Present|Samples|Allowed|Valid|Origins)$/i.test(key)
+  ) {
+    return false;
+  }
   const normalized = key.toLowerCase().replace(/[-_]/g, '');
   return SENSITIVE_KEY_PATTERNS.some((p) => p.test(normalized));
 }
@@ -207,7 +214,9 @@ export function redactSecrets<T>(data: T, activeStack = new Set<object>()): T {
       if (key === '__proto__' || key === 'constructor' || key === 'prototype') {
         continue;
       }
-      if (isSensitiveKey(key)) {
+      if (typeof value === 'boolean' || typeof value === 'number') {
+        result[key] = value;
+      } else if (isSensitiveKey(key)) {
         result[key] = '[REDACTED]';
       } else {
         result[key] = redactSecrets(value, activeStack);

@@ -1,0 +1,337 @@
+{
+  "generatedAt": "2026-11-17T08:46:55.941Z",
+  "mode": "fixtures",
+  "engineVersion": "0.2.0",
+  "summary": {
+    "totalCases": 6,
+    "passedCases": 6,
+    "casesWithDiscrepancies": 0,
+    "precision": 1,
+    "recall": 1,
+    "f1Score": 1,
+    "realityClassificationAccuracy": 1,
+    "blastRadiusStability": 1,
+    "totalDiscrepancies": 0,
+    "criticalDiscrepancies": 0
+  },
+  "metrics": {
+    "precisionPercent": "100.0%",
+    "recallPercent": "100.0%",
+    "f1ScorePercent": "100.0%",
+    "realityAccuracyPercent": "100.0%",
+    "blastRadiusStabilityPercent": "100.0%"
+  },
+  "discrepancies": [],
+  "caseComparisons": [
+    {
+      "caseId": "01-clean-baseline",
+      "caseName": "Clean Compliant Baseline",
+      "caseNumber": 1,
+      "archetype": "Perfect Reference Page",
+      "primaryRealityState": "PASS",
+      "expectedScores": {
+        "overall": {
+          "min": 100,
+          "max": 100,
+          "exact": 100
+        },
+        "security": {
+          "min": 100,
+          "max": 100
+        },
+        "performance": {
+          "min": 100,
+          "max": 100
+        },
+        "accessibility": {
+          "min": 100,
+          "max": 100
+        },
+        "seo": {
+          "min": 100,
+          "max": 100
+        },
+        "bestPractices": {
+          "min": 100,
+          "max": 100
+        },
+        "telemetryCoverageIndex": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "actualOverallScore": 100,
+      "actualScores": {
+        "security": 100,
+        "performance": 100,
+        "accessibility": 100,
+        "seo": 100,
+        "bestPractices": 100
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 0
+      },
+      "discrepancies": [],
+      "matchedFindings": 7,
+      "totalExpectedFindings": 7,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 31,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    },
+    {
+      "caseId": "02-critical-checkout-fail",
+      "caseName": "Critical Checkout Failure",
+      "caseNumber": 2,
+      "archetype": "E-Commerce Checkout Simulation",
+      "primaryRealityState": "TRUE_DEFECT",
+      "expectedScores": {
+        "overall": {
+          "min": 70,
+          "max": 80
+        },
+        "security": {
+          "min": 0,
+          "max": 49
+        },
+        "accessibility": {
+          "min": 0,
+          "max": 70
+        }
+      },
+      "actualOverallScore": 77,
+      "actualScores": {
+        "security": 49,
+        "performance": 100,
+        "accessibility": 47,
+        "seo": 100,
+        "bestPractices": 87
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 6,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 3,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 0
+      },
+      "discrepancies": [],
+      "matchedFindings": 3,
+      "totalExpectedFindings": 3,
+      "truePositives": 3,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 28,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    },
+    {
+      "caseId": "03-decorative-alt-fail",
+      "caseName": "Decorative Alt Low Blast Failure",
+      "caseNumber": 3,
+      "archetype": "Massive Product Grid",
+      "primaryRealityState": "TRUE_DEFECT",
+      "expectedScores": {
+        "overall": {
+          "min": 98,
+          "max": 100
+        },
+        "accessibility": {
+          "min": 97,
+          "max": 100
+        }
+      },
+      "actualOverallScore": 100,
+      "actualScores": {
+        "security": 100,
+        "performance": 100,
+        "accessibility": 97,
+        "seo": 100,
+        "bestPractices": 100
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 1,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 1,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 0
+      },
+      "discrepancies": [],
+      "matchedFindings": 1,
+      "totalExpectedFindings": 1,
+      "truePositives": 1,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 29,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    },
+    {
+      "caseId": "04-architectural-pattern",
+      "caseName": "Architectural Pattern Corroboration",
+      "caseNumber": 4,
+      "archetype": "Fintech & Marketing Integration",
+      "primaryRealityState": "ARCHITECTURAL_PATTERN",
+      "expectedScores": {
+        "overall": {
+          "min": 100,
+          "max": 100,
+          "exact": 100
+        },
+        "security": {
+          "min": 100,
+          "max": 100
+        },
+        "seo": {
+          "min": 100,
+          "max": 100
+        }
+      },
+      "actualOverallScore": 100,
+      "actualScores": {
+        "security": 100,
+        "performance": 100,
+        "accessibility": 100,
+        "seo": 100,
+        "bestPractices": 100
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 4,
+        "OBSERVABILITY_LIMIT": 1,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 2,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 0
+      },
+      "discrepancies": [],
+      "matchedFindings": 2,
+      "totalExpectedFindings": 2,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 31,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    },
+    {
+      "caseId": "05-tao-opaque-limit",
+      "caseName": "Timing-Allow-Origin & Opaque Limit",
+      "caseNumber": 5,
+      "archetype": "Cross-Origin Third-Party Mashup",
+      "primaryRealityState": "OBSERVABILITY_LIMIT",
+      "expectedScores": {
+        "overall": {
+          "min": 100,
+          "max": 100
+        },
+        "performance": {
+          "min": 100,
+          "max": 100
+        },
+        "telemetryCoverageIndex": {
+          "min": 50,
+          "max": 90
+        }
+      },
+      "actualOverallScore": 100,
+      "actualScores": {
+        "security": 100,
+        "performance": 100,
+        "accessibility": 100,
+        "seo": 100,
+        "bestPractices": 100
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 2,
+        "OBSERVABILITY_LIMIT": 1,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 1,
+        "SYNTHETIC_NOISE": 0
+      },
+      "discrepancies": [],
+      "matchedFindings": 1,
+      "totalExpectedFindings": 1,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 33,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    },
+    {
+      "caseId": "06-fast-synthetic-css",
+      "caseName": "Fast Synthetic Render-Blocking CSS",
+      "caseNumber": 6,
+      "archetype": "Modern Server-Rendered Layout",
+      "primaryRealityState": "SYNTHETIC_NOISE",
+      "expectedScores": {
+        "overall": {
+          "min": 98,
+          "max": 100
+        },
+        "performance": {
+          "min": 98,
+          "max": 100
+        }
+      },
+      "actualOverallScore": 100,
+      "actualScores": {
+        "security": 100,
+        "performance": 100,
+        "accessibility": 100,
+        "seo": 100,
+        "bestPractices": 100
+      },
+      "realityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 3
+      },
+      "expectedRealityCounts": {
+        "TRUE_DEFECT": 0,
+        "ARCHITECTURAL_PATTERN": 0,
+        "OBSERVABILITY_LIMIT": 0,
+        "SYNTHETIC_NOISE": 1
+      },
+      "discrepancies": [],
+      "matchedFindings": 1,
+      "totalExpectedFindings": 1,
+      "truePositives": 1,
+      "falsePositives": 0,
+      "falseNegatives": 0,
+      "trueNegatives": 29,
+      "blastRadiusStable": true,
+      "status": "PASS"
+    }
+  ]
+}

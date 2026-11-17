@@ -35,7 +35,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
   };
 
   return (
-    <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+    <div className="p-4 space-y-3.5 bg-app-bg text-app-fg select-none">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
@@ -51,7 +51,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-              <Globe className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
+              <Globe className="w-3.5 h-3.5 text-accent" />
               <span>Target URL:</span>
             </span>
             <div className="font-medium text-zinc-800 dark:text-zinc-200 truncate mt-0.5">
@@ -61,7 +61,7 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
 
           <div>
             <span className="text-zinc-500 dark:text-zinc-400 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
+              <Clock className="w-3.5 h-3.5 text-accent" />
               <span>Audit Time:</span>
             </span>
             <div className="text-zinc-800 dark:text-zinc-200 mt-0.5">
@@ -105,9 +105,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
             title="Copy sanitized JSON audit report directly to clipboard"
             leftIcon={
               isCopiedJson ? (
-                <Check className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+                <Check className="w-4 h-4 text-accent" />
               ) : (
-                <Copy className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+                <Copy className="w-4 h-4 text-accent" />
               )
             }
           >
@@ -122,9 +122,9 @@ export const ReportView: React.FC<ReportViewProps> = ({ inspection }) => {
             className="w-full py-2.5"
             leftIcon={
               downloadedType === 'json' ? (
-                <Check className="w-4 h-4 text-[#152E40]" />
+                <Check className="w-4 h-4 text-accent-fg" />
               ) : (
-                <FileCode className="w-4 h-4 text-[#152E40]" />
+                <FileCode className="w-4 h-4 text-accent-fg" />
               )
             }
           >

@@ -5,6 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SiteRadar – Security &amp; Audit Engine</title>
     <meta name="manifest.open_at_install" content="false" />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        const theme = localStorage.getItem('app_theme');
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add(theme);
+          const meta = document.querySelector('meta[name="color-scheme"]');
+          if (meta) meta.content = theme;
+        }
+      } catch (e) {}
+    </script>
   </head>
   <body class="sidepanel-page">
     <div id="root"></div>

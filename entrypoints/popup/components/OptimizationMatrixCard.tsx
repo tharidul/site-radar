@@ -111,38 +111,35 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
     ];
   }, [findings, scores]);
 
-  const averageScore = useMemo(() => {
-    return Math.round(rows.reduce((acc, r) => acc + r.score, 0) / rows.length);
-  }, [rows]);
-
   return (
-    <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-xs">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
-            AI &amp; Search Optimization (The O&apos;s)
-          </span>
-          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 tabular-nums">
-            {averageScore}% index
-          </span>
-        </div>
+    <section
+      aria-labelledby="optimization-matrix-heading"
+      className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 p-3.5 min-[400px]:p-4 shadow-xs space-y-2.5"
+    >
+      <div className="flex items-center justify-between pb-1.5 border-b border-zinc-200/60 dark:border-zinc-800/60">
+        <h3
+          id="optimization-matrix-heading"
+          className="text-xs font-bold text-zinc-900 dark:text-zinc-100"
+        >
+          Search &amp; AI Optimization
+        </h3>
 
         <button
           type="button"
           onClick={() => onNavigateToIssues({ category: 'seo' })}
-          className="text-xs font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
+          className="text-xs font-semibold text-accent hover:underline cursor-pointer"
         >
           View all findings →
         </button>
       </div>
 
-      <div className="space-y-1.5">
+      <div className="divide-y divide-zinc-200/50 dark:divide-zinc-800/50">
         {rows.map((row) => (
           <button
             key={row.key}
             type="button"
             onClick={() => onNavigateToIssues({ category: row.key })}
-            className="w-full flex items-center justify-between gap-3 px-2.5 py-2 rounded bg-zinc-50 dark:bg-zinc-800/40 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all duration-150 ease-out text-left cursor-pointer group active:scale-[0.99]"
+            className="w-full flex items-center justify-between gap-3 px-1.5 py-2 hover:bg-zinc-100/60 dark:hover:bg-zinc-800/40 transition-colors duration-100 text-left cursor-pointer group rounded"
             title={`View ${row.name} findings (${row.score}%)`}
           >
             <div className="flex items-baseline gap-2 min-w-[125px] shrink-0">
@@ -173,11 +170,11 @@ export const OptimizationMatrixCard: React.FC<OptimizationMatrixCardProps> = ({
               <span className="font-bold text-xs text-zinc-900 dark:text-zinc-100 tabular-nums w-8 text-right">
                 {row.score}%
               </span>
-              <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight className="w-3.5 h-3.5 text-zinc-400 group-hover:text-accent group-hover:translate-x-0.5 transition-transform" />
             </div>
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 };

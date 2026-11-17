@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { Settings, RotateCcw, AlertTriangle, Globe, Sun, Moon, X, PanelRightOpen, Terminal } from 'lucide-react';
 import { Button } from './Button';
@@ -73,7 +72,7 @@ export const Header: React.FC<HeaderProps> = ({
   );
   const showFavicon = Boolean(safeFaviconSrc && failedSrc !== safeFaviconSrc);
   return (
-    <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200 dark:border-zinc-800 shrink-0">
+    <header className="relative bg-white dark:bg-zinc-950 px-4 pt-3 pb-3 select-none overflow-hidden border-b border-zinc-200/80 dark:border-zinc-800 shrink-0">
       <div className="relative z-10 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <img
@@ -85,9 +84,6 @@ export const Header: React.FC<HeaderProps> = ({
             <h1 className="text-base font-bold tracking-tight text-zinc-900 dark:text-white leading-tight">
               SiteRadar
             </h1>
-            <span className="text-xs text-zinc-500 dark:text-zinc-400 block font-normal">
-              Security &amp; Audit Engine
-            </span>
           </div>
         </div>
 
@@ -100,7 +96,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onClearResults}
               title="Reset inspection"
               aria-label="Reset inspection"
-              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white group"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-accent group"
             >
               <RotateCcw className="w-4 h-4 text-zinc-600 dark:text-zinc-300 group-hover:rotate-[-45deg] transition-transform duration-200" />
             </Button>
@@ -114,12 +110,12 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onToggleTheme}
               title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
               aria-label="Toggle theme"
-              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-accent"
             >
               {theme === 'light' ? (
                 <Moon className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
               ) : (
-                <Sun className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />
+                <Sun className="w-4 h-4 text-accent" />
               )}
             </Button>
           )}
@@ -132,7 +128,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenSidePanel}
               title="Dock to Side Panel (keeps extension open while browsing)"
               aria-label="Open Side Panel"
-              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-accent"
             >
               <PanelRightOpen className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
             </Button>
@@ -145,7 +141,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOptionsClick}
             title="Options &amp; Settings"
             aria-label="Settings"
-            className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+            className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-accent"
           >
             <Settings className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
           </Button>
@@ -158,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onClose}
               title="Close popup"
               aria-label="Close"
-              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-white"
+              className="border-zinc-200 dark:border-zinc-700/60 bg-zinc-100 dark:bg-zinc-800/80 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 hover:text-accent"
             >
               <X className="w-4 h-4 text-zinc-600 dark:text-zinc-300" />
             </Button>
@@ -166,7 +162,7 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-lg bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
+      <div className="relative z-10 mt-2.5 flex items-center justify-between rounded-lg bg-zinc-50 dark:bg-zinc-900 border border-zinc-200/90 dark:border-zinc-800 px-3 py-1.5 text-xs shadow-xs">
         <div className="flex items-center gap-2 min-w-0 pr-2">
           {showFavicon ? (
             <img
@@ -190,10 +186,10 @@ export const Header: React.FC<HeaderProps> = ({
         {tabHostname && isLocalDevelopmentHost(tabHostname) && (
           <div className="shrink-0 mr-1.5">
             <span
-              className="flex items-center gap-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 border border-emerald-200 dark:border-emerald-800 rounded px-1.5 py-0.5"
+              className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400"
               title="Local development environment (W3C Secure Context rules active)"
             >
-              <Terminal className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+              <Terminal className="w-3.5 h-3.5" />
               <span>Dev Host</span>
             </span>
           </div>
@@ -202,10 +198,10 @@ export const Header: React.FC<HeaderProps> = ({
         {!schemeValid && (
           <div className="shrink-0">
             <span
-              className="flex items-center gap-1.5 text-xs font-semibold text-rose-700 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/80 border border-rose-200 dark:border-rose-900 rounded-md px-2 py-0.5"
+              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-bold leading-none bg-rose-600 text-white shadow-2xs"
               title={schemeReason || 'Unsupported browser scheme'}
             >
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400" />
+              <AlertTriangle className="w-3 h-3 text-white" />
               <span>Restricted</span>
             </span>
           </div>

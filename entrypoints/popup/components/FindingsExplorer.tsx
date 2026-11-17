@@ -9,6 +9,10 @@ import {
   Check,
   Minus,
   AlertTriangle,
+  AlertOctagon,
+  AlertCircle,
+  XCircle,
+  MinusCircle,
   Shield,
   Zap,
   UserCheck,
@@ -23,6 +27,7 @@ import type { AuditFinding, Severity, FindingStatus, CategoryScore } from '@/typ
 import { FindingDetailInspector } from './FindingDetailInspector';
 import { CustomSelect } from './CustomSelect';
 import { Card } from './Card';
+import { Badge } from './Badge';
 import { sortFindingsByPriority } from '../../../src/analyzers';
 import { copyFindingJson } from '../../../src/export/download';
 
@@ -48,62 +53,60 @@ const CATEGORY_ICONS: Record<string, React.ComponentType<{ className?: string }>
   'best-practices': Layers,
 };
 
-const STATUS_OPTIONS = [
-  { value: 'all', label: 'All Statuses' },
-  { value: 'failed', label: 'Failed' },
-  { value: 'warning', label: 'Warning' },
-  { value: 'info', label: 'Info' },
-  { value: 'not-available', label: 'Not Available' },
+export type FindingBucket = 'critical' | 'warning' | 'passed' | 'not-available';
+
+export function getFindingBucket(finding: AuditFinding): FindingBucket {
+  if (finding.status === 'passed') return 'passed';
+  if (finding.status === 'not-available' || finding.status === 'not-applicable') return 'not-available';
+  if (finding.status === 'failed' || finding.status === 'error' || finding.severity === 'critical') return 'critical';
+  return 'warning';
+}
+
+export type FindingFilterType = 'all' | 'issues' | 'critical' | 'warnings' | 'passed';
+
+const STATUS_FILTER_OPTIONS = [
+  { value: 'all', label: 'All Checks' },
+  { value: 'issues', label: 'All Issues' },
+  { value: 'critical', label: 'Critical' },
+  { value: 'warnings', label: 'Warnings' },
   { value: 'passed', label: 'Passed' },
 ];
 
 function renderFindingStatusIcon(finding: AuditFinding) {
-  const { status, severity } = finding;
+  const bucket = getFindingBucket(finding);
 
-  if (status === 'passed') {
+  if (bucket === 'passed') {
     return (
       <span
         data-status="passed"
         title="Check passed"
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#10b981] text-white shrink-0 select-none"
+        className="inline-flex items-center justify-center shrink-0 select-none text-emerald-600 dark:text-emerald-400"
       >
-        <Check className="w-3 h-3 stroke-[3] text-white" />
+        <CheckCircle2 className="w-4 h-4" />
       </span>
     );
   }
 
-  if (status === 'failed') {
+  if (bucket === 'critical') {
     return (
       <span
         data-status="failed"
-        title={`Failed${severity ? ` • ${severity.toUpperCase()}` : ''}`}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#ef4444] text-white shrink-0 select-none"
+        title="Critical"
+        className="inline-flex items-center justify-center shrink-0 select-none text-rose-500 dark:text-rose-400"
       >
-        <X className="w-3 h-3 stroke-[3] text-white" />
+        <XCircle className="w-4 h-4" />
       </span>
     );
   }
 
-  if (status === 'warning') {
+  if (bucket === 'warning') {
     return (
       <span
         data-status="warning"
-        title={`Warning${severity ? ` • ${severity.toUpperCase()}` : ''}`}
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#f59e0b] text-white shrink-0 select-none"
+        title="Warning"
+        className="inline-flex items-center justify-center shrink-0 select-none text-amber-500 dark:text-amber-400"
       >
-        <AlertTriangle className="w-3 h-3 stroke-[2.5] text-white" />
-      </span>
-    );
-  }
-
-  if (status === 'info') {
-    return (
-      <span
-        data-status="info"
-        title="Info"
-        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-[#0ea5e9] text-white shrink-0 select-none"
-      >
-        <Info className="w-3 h-3 stroke-[2.5] text-white" />
+        <AlertTriangle className="w-4 h-4" />
       </span>
     );
   }
@@ -111,10 +114,10 @@ function renderFindingStatusIcon(finding: AuditFinding) {
   return (
     <span
       data-status="not-available"
-      title={status === 'not-available' ? 'Not Available' : 'Not Applicable'}
-      className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-zinc-400 dark:bg-zinc-600 text-white shrink-0 select-none"
+      title={finding.status === 'not-available' ? 'Not Available' : 'Not Applicable'}
+      className="inline-flex items-center justify-center shrink-0 select-none text-zinc-400 dark:text-zinc-500"
     >
-      <Minus className="w-2.5 h-2.5 stroke-[3] text-white" />
+      <MinusCircle className="w-4 h-4" />
     </span>
   );
 }
@@ -132,7 +135,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const deferredQuery = useDeferredValue(searchQuery);
-  const [statusFilter, setStatusFilter] = useState<FindingStatus | 'all'>('all');
+  const [bucketFilter, setBucketFilter] = useState<FindingFilterType>('all');
   const [selectedFindingId, setSelectedFindingId] = useState<string | null>(
     initialSelectedFindingId || null,
   );
@@ -179,8 +182,16 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     const q = deferredQuery.toLowerCase().trim();
 
     const matches = findings.filter((f) => {
-      if (activeSeverityFilter !== 'all' && f.severity !== activeSeverityFilter) {
-        return false;
+      if (activeSeverityFilter !== 'all') {
+        if (activeSeverityFilter === 'critical' || activeSeverityFilter === 'high') {
+          if (getFindingBucket(f) !== 'critical') return false;
+        } else if (
+          activeSeverityFilter === 'medium' ||
+          activeSeverityFilter === 'low' ||
+          activeSeverityFilter === 'info'
+        ) {
+          if (getFindingBucket(f) !== 'warning') return false;
+        }
       }
 
       if (activeCategoryFilter !== 'all') {
@@ -198,8 +209,17 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         }
       }
 
-      if (statusFilter !== 'all' && f.status !== statusFilter) {
-        return false;
+      if (bucketFilter !== 'all') {
+        const bucket = getFindingBucket(f);
+        if (bucketFilter === 'issues') {
+          if (bucket !== 'critical' && bucket !== 'warning') return false;
+        } else if (bucketFilter === 'critical') {
+          if (bucket !== 'critical') return false;
+        } else if (bucketFilter === 'warnings') {
+          if (bucket !== 'warning') return false;
+        } else if (bucketFilter === 'passed') {
+          if (bucket !== 'passed') return false;
+        }
       }
 
       if (q) {
@@ -216,23 +236,27 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
     });
 
     return sortFindingsByPriority(matches);
-  }, [findings, activeSeverityFilter, activeCategoryFilter, statusFilter, deferredQuery]);
+  }, [findings, activeSeverityFilter, activeCategoryFilter, bucketFilter, deferredQuery]);
 
   const actualIssuesInFiltered = useMemo(
-    () => filteredFindings.filter((f) => f.status === 'failed' || f.status === 'warning'),
+    () =>
+      filteredFindings.filter((f) => {
+        const b = getFindingBucket(f);
+        return b === 'critical' || b === 'warning';
+      }),
     [filteredFindings],
   );
 
   const hasActiveFilters =
     activeSeverityFilter !== 'all' ||
     activeCategoryFilter !== 'all' ||
-    statusFilter !== 'all' ||
+    bucketFilter !== 'all' ||
     Boolean(searchQuery.trim());
 
   const resetFilters = () => {
     setSearchQuery('');
     if (onSelectCategoryFilter) onSelectCategoryFilter('all');
-    setStatusFilter('all');
+    setBucketFilter('all');
     onSelectSeverityFilter('all');
   };
 
@@ -341,12 +365,12 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
       (selectedFinding.category && CATEGORY_ICONS[selectedFinding.category.toLowerCase()]) || Layers;
 
     return (
-      <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in-0 duration-150">
+      <div className="p-4 space-y-3.5 bg-app-bg text-zinc-900 dark:text-zinc-100 select-none animate-in fade-in-0 duration-150">
         <div className="flex items-center justify-between gap-2">
           <button
             type="button"
             onClick={() => setSelectedFindingId(null)}
-            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-zinc-700 dark:text-zinc-200 hover:border-zinc-300 dark:hover:border-zinc-700 hover:text-zinc-900 dark:hover:text-[#CEFF52] transition-colors shadow-2xs cursor-pointer"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100 transition-colors cursor-pointer py-1"
             title="Return to issues list (Escape)"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
@@ -355,32 +379,19 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
           <div className="flex items-center gap-1.5 flex-wrap shrink-0">
             {selectedFinding.category && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-bold uppercase tracking-wider bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-2xs font-medium capitalize bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                 <FindingCategoryIcon className="w-3 h-3" />
                 <span>{selectedFinding.category}</span>
               </span>
             )}
 
-            {selectedFinding.status !== 'passed' &&
-              selectedFinding.status !== 'not-available' &&
-              selectedFinding.status !== 'not-applicable' &&
-              selectedFinding.severity && (
-                <span
-                  className={`inline-flex items-center px-2 py-0.5 rounded text-2xs font-bold font-mono uppercase tracking-wider ${
-                    selectedFinding.severity === 'critical'
-                      ? 'bg-rose-500/15 text-[#dc2626] dark:text-[#f87171] border border-rose-500/30'
-                      : selectedFinding.severity === 'high'
-                      ? 'bg-orange-500/15 text-[#ea580c] dark:text-[#fb923c] border border-orange-500/30'
-                      : selectedFinding.severity === 'medium'
-                      ? 'bg-amber-500/15 text-[#d97706] dark:text-[#fbbf24] border border-amber-500/30'
-                      : selectedFinding.severity === 'info'
-                      ? 'bg-sky-500/15 text-[#0284c7] dark:text-[#38bdf8] border border-sky-500/30'
-                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
-                  }`}
-                >
-                  {selectedFinding.severity}
-                </span>
-              )}
+            {selectedFinding.status === 'passed' ? (
+              <Badge variant="status" status="passed" />
+            ) : selectedFinding.status === 'not-available' || selectedFinding.status === 'not-applicable' ? (
+              <Badge variant="status" status="not-available" />
+            ) : (
+              <Badge variant="severity" severity={selectedFinding.severity} />
+            )}
           </div>
         </div>
 
@@ -392,17 +403,12 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               </div>
               <div className="min-w-0 flex-1">
                 <h2 className="text-sm sm:text-base font-bold text-zinc-900 dark:text-zinc-100 leading-snug">
-                  {selectedFinding.title}
+                  {selectedFinding.title.replace(/^axe:\s*/i, '')}
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className="text-2xs font-mono font-medium text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80">
-                    rule: {selectedFinding.ruleId}
+                  <span className="text-2xs font-mono text-zinc-500 dark:text-zinc-400 px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800/80">
+                    {selectedFinding.ruleId}
                   </span>
-                  {selectedFinding.source && (
-                    <span className="text-2xs text-zinc-500 dark:text-zinc-400">
-                      source: {selectedFinding.source}
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -422,7 +428,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
   }
 
   return (
-    <div className="p-4 space-y-3 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+    <div className="p-4 space-y-3 bg-app-bg text-zinc-900 dark:text-zinc-100 select-none">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-zinc-400" />
@@ -431,7 +437,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search issues, rules..."
-            className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-[#CEFF52] focus:outline-none transition-colors shadow-2xs"
+            className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 pl-8 pr-7 py-1.5 text-xs text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400 focus:border-accent focus:outline-none transition-colors shadow-2xs"
           />
           {searchQuery.length > 0 ? (
             <button
@@ -454,10 +460,15 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         />
 
         <CustomSelect
-          value={statusFilter}
-          options={STATUS_OPTIONS}
-          onChange={(val) => setStatusFilter(val as any)}
-          className="min-w-[105px]"
+          value={bucketFilter}
+          options={STATUS_FILTER_OPTIONS}
+          onChange={(val) => {
+            setBucketFilter(val as FindingFilterType);
+            if (activeSeverityFilter !== 'all') {
+              onSelectSeverityFilter('all');
+            }
+          }}
+          className="min-w-[110px]"
         />
       </div>
 
@@ -465,12 +476,12 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
         <div className="rounded-md bg-white dark:bg-zinc-900 border border-zinc-200/80 dark:border-zinc-800/80 p-3 space-y-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="p-1.5 rounded-md bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+              <div className="p-1.5 rounded-md bg-accent/15 text-accent">
                 <CategoryIcon className="w-4 h-4" />
               </div>
               <div>
-                <h3 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-wider">
-                  {activeCategoryFilter.toUpperCase()} Audit
+                <h3 className="text-xs font-semibold text-zinc-900 dark:text-zinc-100 capitalize">
+                  {activeCategoryFilter} Audit
                 </h3>
                 <p className="text-xs text-zinc-500 dark:text-zinc-400">
                   <span className="tabular-nums">{currentCategoryScore.totalChecks}</span> checks evaluated · <span className="tabular-nums">{currentCategoryScore.coveragePercent ?? 100}</span>% coverage
@@ -488,28 +499,28 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
 
           <div className="flex items-center gap-3 flex-wrap text-xs">
             {currentCategoryScore.failed > 0 && (
-              <span className="inline-flex items-center gap-1 text-rose-700 dark:text-rose-300 font-medium">
-                <X className="w-3 h-3" />
-                <span><span className="tabular-nums">{currentCategoryScore.failed}</span> Failed</span>
+              <span className="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 font-medium">
+                <XCircle className="w-3.5 h-3.5" />
+                <span><span className="tabular-nums">{currentCategoryScore.failed}</span> Critical</span>
               </span>
             )}
 
             {currentCategoryScore.warnings > 0 && (
-              <span className="inline-flex items-center gap-1 text-orange-700 dark:text-orange-300 font-medium">
-                <AlertTriangle className="w-3 h-3" />
+              <span className="inline-flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                <AlertTriangle className="w-3.5 h-3.5" />
                 <span><span className="tabular-nums">{currentCategoryScore.warnings}</span> Warnings</span>
               </span>
             )}
 
-            <span className="inline-flex items-center gap-1 text-emerald-700 dark:text-emerald-300 font-medium">
-              <CheckCircle2 className="w-3 h-3" />
+            <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+              <CheckCircle2 className="w-3.5 h-3.5" />
               <span><span className="tabular-nums">{currentCategoryScore.passed}</span> Passed</span>
             </span>
 
             {(currentCategoryScore.unavailable ?? 0) > 0 && (
-              <span className="inline-flex items-center gap-1 text-zinc-600 dark:text-zinc-400 font-medium">
-                <HelpCircle className="w-3 h-3" />
-                <span><span className="tabular-nums">{currentCategoryScore.unavailable}</span> Unobservable</span>
+              <span className="inline-flex items-center gap-1 text-zinc-500 dark:text-zinc-400 font-medium">
+                <MinusCircle className="w-3.5 h-3.5" />
+                <span><span className="tabular-nums">{currentCategoryScore.unavailable}</span> N/A</span>
               </span>
             )}
           </div>
@@ -537,7 +548,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
           <button
             type="button"
             onClick={resetFilters}
-            className="text-xs font-semibold text-[#152E40] dark:text-[#CEFF52] hover:underline cursor-pointer"
+            className="text-xs font-semibold text-accent hover:underline cursor-pointer"
           >
             Clear Filters
           </button>
@@ -552,7 +563,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
               <button
                 type="button"
                 onClick={resetFilters}
-                className="text-xs text-[#152E40] dark:text-[#CEFF52] font-semibold underline cursor-pointer"
+                className="text-xs text-accent font-semibold underline cursor-pointer"
               >
                 Reset all filters
               </button>
@@ -565,8 +576,8 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
             return (
               <React.Fragment key={finding.id}>
                 {isFirstNonIssue && (
-                  <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 text-2xs font-bold text-zinc-500 dark:text-zinc-400 uppercase tracking-wider">
-                    Passed &amp; Unobservable Checks ({filteredFindings.length - idx})
+                  <div className="px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800/80 text-2xs font-medium text-zinc-500 dark:text-zinc-400">
+                    Passed Checks ({filteredFindings.length - idx})
                   </div>
                 )}
                 <div className="deferred-list-item transition-colors duration-100">
@@ -581,29 +592,16 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                       <div className="flex items-center gap-2 min-w-0">
                         {renderFindingStatusIcon(finding)}
 
-                        {finding.status !== 'passed' &&
-                          finding.status !== 'not-available' &&
-                          finding.status !== 'not-applicable' &&
-                          finding.severity && (
-                            <span
-                              className={`text-2xs font-bold font-mono uppercase tracking-wider shrink-0 ${
-                                finding.severity === 'critical'
-                                  ? 'text-[#dc2626] dark:text-[#f87171]'
-                                  : finding.severity === 'high'
-                                  ? 'text-[#ea580c] dark:text-[#fb923c]'
-                                  : finding.severity === 'medium'
-                                  ? 'text-[#d97706] dark:text-[#fbbf24]'
-                                  : finding.severity === 'info'
-                                  ? 'text-[#0284c7] dark:text-[#38bdf8]'
-                                  : 'text-zinc-500 dark:text-zinc-400'
-                              }`}
-                            >
-                              {finding.severity}
-                            </span>
-                          )}
+                        {finding.status === 'passed' ? (
+                          <Badge variant="status" status="passed" />
+                        ) : finding.status === 'not-available' || finding.status === 'not-applicable' ? (
+                          <Badge variant="status" status="not-available" />
+                        ) : (
+                          <Badge variant="severity" severity={finding.severity} />
+                        )}
 
                         <h4 className="text-xs sm:text-sm font-semibold text-zinc-900 dark:text-zinc-100 truncate">
-                          {finding.title}
+                          {finding.title.replace(/^axe:\s*/i, '')}
                         </h4>
                       </div>
 
@@ -615,8 +613,8 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                           aria-label={`Copy JSON for issue ${finding.ruleId}`}
                           className={`p-1 rounded-md transition-colors duration-100 cursor-pointer ${
                             copiedFindingId === finding.id
-                              ? 'text-emerald-600 dark:text-[#CEFF52] bg-emerald-500/15 dark:bg-[#CEFF52]/15'
-                              : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-[#CEFF52] hover:bg-zinc-100 dark:hover:bg-zinc-800'
+                              ? 'text-emerald-600 dark:text-accent bg-emerald-500/15 dark:bg-accent/15'
+                              : 'text-zinc-400 hover:text-zinc-800 dark:hover:text-accent hover:bg-zinc-100 dark:hover:bg-zinc-800'
                           }`}
                         >
                           {copiedFindingId === finding.id ? (
@@ -626,7 +624,7 @@ export const FindingsExplorer: React.FC<FindingsExplorerProps> = ({
                           )}
                         </button>
 
-                        <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-[#CEFF52] shrink-0 transition-colors duration-100" />
+                        <ChevronRight className="w-4 h-4 text-zinc-400 group-hover:text-zinc-700 dark:group-hover:text-accent shrink-0 transition-colors duration-100" />
                       </div>
                     </div>
 

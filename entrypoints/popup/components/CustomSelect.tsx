@@ -66,7 +66,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         onClick={() => setIsOpen((prev) => !prev)}
         aria-haspopup="listbox"
         aria-expanded={isOpen}
-        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-[#CEFF52] focus:outline-none transition-all duration-150 ease-out active:scale-[0.97] shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer ${
+        className={`h-8 rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 px-2.5 py-1 text-xs text-zinc-800 dark:text-zinc-300 hover:text-zinc-900 dark:hover:text-zinc-100 hover:border-zinc-300 dark:hover:border-zinc-700 focus:border-accent focus:outline-none transition-all duration-150 ease-out active:scale-[0.97] shadow-2xs flex items-center justify-between gap-1.5 cursor-pointer ${
           fullWidth ? 'w-full' : 'min-w-[110px]'
         } ${className}`}
       >
@@ -75,7 +75,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
         </span>
         <ChevronDown
           className={`w-3.5 h-3.5 text-zinc-500 dark:text-zinc-400 transition-transform duration-200 ease-out shrink-0 ${
-            isOpen ? 'rotate-180 text-[#CEFF52]' : ''
+            isOpen ? 'rotate-180 text-accent' : ''
           }`}
         />
       </button>
@@ -100,7 +100,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                 }}
                 className={`flex items-center justify-between gap-2 px-2.5 py-1.5 rounded cursor-pointer transition-all duration-150 ease-out active:scale-[0.98] ${
                   isSelected
-                    ? 'bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52] font-semibold'
+                    ? 'bg-accent/15 text-accent font-semibold'
                     : 'text-zinc-800 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-zinc-100'
                 }`}
               >
@@ -109,7 +109,7 @@ export const CustomSelect: React.FC<CustomSelectProps> = ({
                   <span className="truncate">{option.label}</span>
                 </div>
                 {isSelected && (
-                  <Check className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52] shrink-0" />
+                  <Check className="w-3.5 h-3.5 text-accent shrink-0" />
                 )}
               </div>
             );

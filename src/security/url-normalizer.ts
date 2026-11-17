@@ -31,7 +31,7 @@ export function normalizeUrl(rawUrl: string, options?: UrlNormalizationOptions):
   try {
     url = new URL(trimmed);
   } catch (err: any) {
-    throw new Error(`Failed to parse URL: ${err.message}`);
+    throw new Error(`Failed to parse URL: ${err.message}`, { cause: err });
   }
 
   if (url.protocol !== 'http:' && url.protocol !== 'https:') {
@@ -110,3 +110,71 @@ export function isAllowedCrawlUrl(candidateUrl: string, baseOriginUrl: string): 
     return false;
   }
 }
+
+export const AUTH_CHECKOUT_SUBDOMAIN_REGEX =
+  /^(?:login|signin|auth|passport|sso|identity|account|accounts|my|member|portal|gateway|checkout|pay|payment|payments|cashier|trade|buy|order|orders|shoppingcart|cart|secure)\./i;
+
+export const THIRD_PARTY_GATEWAY_REGEX =
+  /(?:accounts\.google\.com|appleid\.apple\.com|checkout\.stripe\.com|pay\.stripe\.com|(?:^|\.)paypal\.com|checkout\.shopify\.com|pay\.shopify\.com|payments\.amazon\.com|pay\.google\.com|klarna\.com|adyen\.com|(?:^|\.)auth0\.com|(?:^|\.)okta\.com|(?:^|\.)clerk\.accounts\.dev)/i;
+
+const MULTI_PART_TLDS = new Set([
+  'co.uk', 'org.uk', 'gov.uk', 'ac.uk',
+  'com.au', 'net.au', 'org.au', 'edu.au',
+  'co.nz', 'net.nz', 'org.nz',
+  'co.jp', 'ne.jp',
+  'com.br', 'com.mx', 'com.ar',
+  'co.in', 'net.in', 'org.in', 'gen.in',
+  'com.sg', 'edu.sg',
+  'com.tr', 'com.tw', 'com.hk',
+  'co.za', 'com.my',
+]);
+
+export function getRegistrableDomain(hostname: string): string {
+  if (!hostname) return '';
+  const cleanHost = hostname.toLowerCase().trim().replace(/:\d+$/, '');
+  const parts = cleanHost.split('.');
+  if (parts.length <= 2) return cleanHost;
+
+  const lastTwo = parts.slice(-2).join('.');
+  if (MULTI_PART_TLDS.has(lastTwo)) {
+    return parts.slice(-3).join('.');
+  }
+  return parts.slice(-2).join('.');
+}
+
+export function isAuthOrCheckoutOrigin(candidateHostOrUrl: string, targetHostOrBaseDomain: string): boolean {
+  if (!candidateHostOrUrl) return false;
+  try {
+    let host = '';
+    if (candidateHostOrUrl.startsWith('http://') || candidateHostOrUrl.startsWith('https://') || candidateHostOrUrl.startsWith('//')) {
+      const u = new URL(candidateHostOrUrl, 'https://localhost');
+      host = u.hostname.toLowerCase();
+    } else if (!candidateHostOrUrl.includes('/') && candidateHostOrUrl.includes('.')) {
+      host = candidateHostOrUrl.toLowerCase().replace(/:\d+$/, '');
+    } else {
+      const u = new URL(candidateHostOrUrl, 'https://localhost');
+      host = u.hostname.toLowerCase();
+    }
+
+    if (!host || host === 'localhost') return false;
+
+    if (THIRD_PARTY_GATEWAY_REGEX.test(host)) {
+      return true;
+    }
+
+    const baseDomain = targetHostOrBaseDomain.includes('.')
+      ? getRegistrableDomain(targetHostOrBaseDomain)
+      : targetHostOrBaseDomain;
+
+    if (baseDomain && (host === baseDomain || host.endsWith(`.${baseDomain}`))) {
+      if (AUTH_CHECKOUT_SUBDOMAIN_REGEX.test(host)) {
+        return true;
+      }
+    }
+
+    return false;
+  } catch {
+    return false;
+  }
+}
+

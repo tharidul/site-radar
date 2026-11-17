@@ -9,7 +9,7 @@ import {
   ALL_CORROBORATION_POLICIES,
 } from '../src/corroborator/policies';
 import { calculateCategoryScore, calculateInspectionScores } from '../src/scoring/score-engine';
-import type { AuditFinding, WebsiteTarget } from '../src/types/inspection';
+import type { AuditFinding, Evidence, WebsiteTarget } from '../src/types/inspection';
 import type { CorroborationContext } from '../src/corroborator/types';
 
 function createMockTarget(overrides: Partial<WebsiteTarget> = {}): WebsiteTarget {
@@ -23,17 +23,28 @@ function createMockTarget(overrides: Partial<WebsiteTarget> = {}): WebsiteTarget
   };
 }
 
-function createMockFinding(overrides: Partial<AuditFinding> & { id: string; ruleId: string }): AuditFinding {
+function createMockFinding(
+  overrides: Omit<Partial<AuditFinding>, 'evidence'> & {
+    id: string;
+    ruleId: string;
+    evidence?: Array<Partial<Evidence> & { label: string; value: unknown }>;
+  },
+): AuditFinding {
+  const normEvidence: Evidence[] = (overrides.evidence || []).map((e) => ({
+    source: 'TestCollector',
+    observedAt: Date.now(),
+    ...e,
+  }));
   return {
     category: 'security',
     title: overrides.ruleId,
     description: 'Test finding description',
     severity: 'medium',
     status: 'failed',
-    evidence: [],
     source: 'TestCollector',
     references: [],
     ...overrides,
+    evidence: normEvidence,
   };
 }
 
@@ -70,14 +81,14 @@ describe('CorroborationEngine & Policies', () => {
 
       const results = corroborator.corroborate([finding], context);
       expect(results).toHaveLength(1);
-      const corroborated = results[0];
+      const corroborated = results[0]!;
 
       expect(corroborated.realityState).toBe('ARCHITECTURAL_PATTERN');
       expect(corroborated.realityMultiplier).toBe(0.0);
       expect(corroborated.status).toBe('passed');
       expect(corroborated.corroborationTraces).toHaveLength(1);
-      expect(corroborated.corroborationTraces?.[0].policyId).toBe('canonical-semantics-policy');
-      expect(corroborated.corroborationTraces?.[0].nextState).toBe('ARCHITECTURAL_PATTERN');
+      expect(corroborated.corroborationTraces?.[0]?.policyId).toBe('canonical-semantics-policy');
+      expect(corroborated.corroborationTraces?.[0]?.nextState).toBe('ARCHITECTURAL_PATTERN');
     });
 
     it('does not reclassify when canonical URL points to completely different domain or path without query consolidation', () => {
@@ -105,9 +116,9 @@ describe('CorroborationEngine & Policies', () => {
       });
 
       const results = corroborator.corroborate([finding], { target, modules: {} });
-      expect(results[0].realityState).toBe('TRUE_DEFECT');
-      expect(results[0].status).toBe('failed');
-      expect(results[0].realityMultiplier).toBe(1.0);
+      expect(results[0]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[0]!.status).toBe('failed');
+      expect(results[0]!.realityMultiplier).toBe(1.0);
     });
   });
 
@@ -163,10 +174,10 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const results = corroborator.corroborate([finding], context);
-      expect(results[0].realityState).toBe('ARCHITECTURAL_PATTERN');
-      expect(results[0].realityMultiplier).toBe(0.0);
-      expect(results[0].status).toBe('passed');
-      expect(results[0].corroborationTraces?.[0].policyId).toBe('asset-mutability-policy');
+      expect(results[0]!.realityState).toBe('ARCHITECTURAL_PATTERN');
+      expect(results[0]!.realityMultiplier).toBe(0.0);
+      expect(results[0]!.status).toBe('passed');
+      expect(results[0]!.corroborationTraces?.[0]?.policyId).toBe('asset-mutability-policy');
     });
 
     it('keeps TRUE_DEFECT when external immutable CDN libraries like cdnjs or unpkg miss SRI', () => {
@@ -210,9 +221,9 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const results = corroborator.corroborate([finding], context);
-      expect(results[0].realityState).toBe('TRUE_DEFECT');
-      expect(results[0].realityMultiplier).toBe(1.0);
-      expect(results[0].status).toBe('failed');
+      expect(results[0]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[0]!.realityMultiplier).toBe(1.0);
+      expect(results[0]!.status).toBe('failed');
     });
   });
 
@@ -244,6 +255,19 @@ describe('CorroborationEngine & Policies', () => {
       const context: CorroborationContext = {
         target,
         modules: {
+          links: {
+            module: 'links',
+            status: 'completed',
+            collectedAt: Date.now(),
+            data: {
+              isolatedCheckoutOrigins: ['checkout.example.com'],
+              externalLinks: [{ url: 'https://checkout.example.com/pay' }],
+            },
+            coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+            limitations: [],
+            errors: [],
+            sources: ['DOM:a'],
+          },
           forms: {
             module: 'forms',
             status: 'completed',
@@ -275,13 +299,13 @@ describe('CorroborationEngine & Policies', () => {
 
       const results = corroborator.corroborate([cspFinding, xfoFinding], context);
 
-      expect(results[0].realityState).toBe('ARCHITECTURAL_PATTERN');
-      expect(results[0].realityMultiplier).toBe(0.1);
-      expect(results[0].corroborationTraces?.[0].policyId).toBe('surface-capability-policy');
+      expect(results[0]!.realityState).toBe('ARCHITECTURAL_PATTERN');
+      expect(results[0]!.realityMultiplier).toBe(0.1);
+      expect(results[0]!.corroborationTraces?.[0]?.policyId).toBe('surface-capability-policy');
 
-      expect(results[1].realityState).toBe('ARCHITECTURAL_PATTERN');
-      expect(results[1].realityMultiplier).toBe(0.1);
-      expect(results[1].corroborationTraces?.[0].policyId).toBe('surface-capability-policy');
+      expect(results[1]!.realityState).toBe('ARCHITECTURAL_PATTERN');
+      expect(results[1]!.realityMultiplier).toBe(0.1);
+      expect(results[1]!.corroborationTraces?.[0]?.policyId).toBe('surface-capability-policy');
     });
 
     it('keeps TRUE_DEFECT with 1.0 multiplier when password or payment inputs are present', () => {
@@ -315,8 +339,75 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const results = corroborator.corroborate([cspFinding], context);
-      expect(results[0].realityState).toBe('TRUE_DEFECT');
-      expect(results[0].realityMultiplier).toBe(1.0);
+      expect(results[0]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[0]!.realityMultiplier).toBe(1.0);
+    });
+
+    it('keeps TRUE_DEFECT for single-origin websites (e.g. pcbuilders.lk) without isolated subdomains', () => {
+      const corroborator = new CorroborationEngine([surfaceCapabilityPolicy]);
+      const target = createMockTarget({
+        url: 'https://pcbuilders.lk/',
+        origin: 'https://pcbuilders.lk',
+        hostname: 'pcbuilders.lk',
+      });
+
+      const findings = [
+        createMockFinding({ id: 'f-csp', ruleId: 'sec-missing-csp' }),
+        createMockFinding({ id: 'f-xfo', ruleId: 'sec-missing-x-frame-options' }),
+        createMockFinding({ id: 'f-hsts', ruleId: 'sec-missing-hsts' }),
+        createMockFinding({ id: 'f-xcto', ruleId: 'sec-missing-x-content-type-options' }),
+        createMockFinding({ id: 'f-ref', ruleId: 'sec-missing-referrer-policy' }),
+      ];
+
+      const context: CorroborationContext = {
+        target,
+        modules: {
+          forms: {
+            module: 'forms',
+            status: 'completed',
+            collectedAt: Date.now(),
+            data: {
+              formCount: 1,
+              forms: [{ action: '/search', method: 'GET', hasPasswordField: false }],
+              hasVisiblePasswordField: false,
+              hasPaymentIframe: false,
+              hasVisiblePostForm: false,
+            },
+            coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+            limitations: [],
+            errors: [],
+            sources: ['DOM:form'],
+          },
+          links: {
+            module: 'links',
+            status: 'completed',
+            collectedAt: Date.now(),
+            data: {
+              totalLinks: 45,
+              externalLinks: [{ url: 'https://facebook.com/pcbuilders' }],
+              isolatedCheckoutOrigins: [],
+            },
+            coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+            limitations: [],
+            errors: [],
+            sources: ['DOM:a'],
+          },
+        },
+      };
+
+      const results = corroborator.corroborate(findings, context);
+      // CSP, XFO, HSTS, XCTO remain TRUE_DEFECT with 1.0 multiplier
+      expect(results[0]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[0]!.realityMultiplier).toBe(1.0);
+      expect(results[1]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[1]!.realityMultiplier).toBe(1.0);
+      expect(results[2]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[2]!.realityMultiplier).toBe(1.0);
+      expect(results[3]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[3]!.realityMultiplier).toBe(1.0);
+      // Referrer-policy is browser default -> SYNTHETIC_NOISE
+      expect(results[4]!.realityState).toBe('SYNTHETIC_NOISE');
+      expect(results[4]!.realityMultiplier).toBe(0.05);
     });
   });
 
@@ -353,9 +444,9 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const results = corroborator.corroborate([finding], context);
-      expect(results[0].realityState).toBe('SYNTHETIC_NOISE');
-      expect(results[0].realityMultiplier).toBe(0.05);
-      expect(results[0].corroborationTraces?.[0].policyId).toBe('cwv-reality-gate-policy');
+      expect(results[0]!.realityState).toBe('SYNTHETIC_NOISE');
+      expect(results[0]!.realityMultiplier).toBe(0.05);
+      expect(results[0]!.corroborationTraces?.[0]?.policyId).toBe('cwv-reality-gate-policy');
     });
 
     it('keeps TRUE_DEFECT when CWV metrics are poor (e.g. FCP > 1000ms or LCP > 2500ms)', () => {
@@ -390,8 +481,8 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const results = corroborator.corroborate([finding], context);
-      expect(results[0].realityState).toBe('TRUE_DEFECT');
-      expect(results[0].realityMultiplier).toBe(1.0);
+      expect(results[0]!.realityState).toBe('TRUE_DEFECT');
+      expect(results[0]!.realityMultiplier).toBe(1.0);
     });
   });
 
@@ -427,13 +518,13 @@ describe('CorroborationEngine & Policies', () => {
         modules: {},
       });
 
-      expect(results[0].realityState).toBe('OBSERVABILITY_LIMIT');
-      expect(results[0].realityMultiplier).toBe(0.0);
-      expect(results[0].corroborationTraces?.[0].policyId).toBe('observability-barrier-policy');
+      expect(results[0]!.realityState).toBe('OBSERVABILITY_LIMIT');
+      expect(results[0]!.realityMultiplier).toBe(0.0);
+      expect(results[0]!.corroborationTraces?.[0]?.policyId).toBe('observability-barrier-policy');
 
-      expect(results[1].realityState).toBe('OBSERVABILITY_LIMIT');
-      expect(results[1].realityMultiplier).toBe(0.0);
-      expect(results[1].corroborationTraces?.[0].policyId).toBe('observability-barrier-policy');
+      expect(results[1]!.realityState).toBe('OBSERVABILITY_LIMIT');
+      expect(results[1]!.realityMultiplier).toBe(0.0);
+      expect(results[1]!.corroborationTraces?.[0]?.policyId).toBe('observability-barrier-policy');
     });
   });
 
@@ -445,7 +536,7 @@ describe('CorroborationEngine & Policies', () => {
 
       // Verify ascending priority order
       for (let i = 1; i < policies.length; i++) {
-        expect(policies[i].priority).toBeGreaterThanOrEqual(policies[i - 1].priority);
+        expect(policies[i]!.priority).toBeGreaterThanOrEqual(policies[i - 1]!.priority);
       }
     });
 
@@ -480,6 +571,19 @@ describe('CorroborationEngine & Policies', () => {
       const context: CorroborationContext = {
         target,
         modules: {
+          links: {
+            module: 'links',
+            status: 'completed',
+            collectedAt: Date.now(),
+            data: {
+              isolatedCheckoutOrigins: ['auth.example.com'],
+              externalLinks: [{ url: 'https://auth.example.com/login' }],
+            },
+            coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
+            limitations: [],
+            errors: [],
+            sources: ['DOM:a'],
+          },
           forms: {
             module: 'forms',
             status: 'completed',
@@ -504,14 +608,14 @@ describe('CorroborationEngine & Policies', () => {
       };
 
       const corroborated = corroborator.corroborate(findings, context);
-      expect(corroborated[0].realityState).toBe('ARCHITECTURAL_PATTERN');
-      expect(corroborated[0].status).toBe('passed');
+      expect(corroborated[0]!.realityState).toBe('ARCHITECTURAL_PATTERN');
+      expect(corroborated[0]!.status).toBe('passed');
 
-      expect(corroborated[1].realityState).toBe('ARCHITECTURAL_PATTERN');
-      expect(corroborated[1].realityMultiplier).toBe(0.1);
+      expect(corroborated[1]!.realityState).toBe('ARCHITECTURAL_PATTERN');
+      expect(corroborated[1]!.realityMultiplier).toBe(0.1);
 
-      expect(corroborated[2].realityState).toBe('SYNTHETIC_NOISE');
-      expect(corroborated[2].realityMultiplier).toBe(0.05);
+      expect(corroborated[2]!.realityState).toBe('SYNTHETIC_NOISE');
+      expect(corroborated[2]!.realityMultiplier).toBe(0.05);
     });
   });
 

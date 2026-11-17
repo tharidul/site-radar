@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Architectural Pattern Calibration - Dynamic Integrations</title>
+  <meta name="description" content="Reference page validating architectural pattern corroboration: dynamic third-party scripts (Stripe v3, Google Tag Manager) and canonical query param stripping.">
+  <meta name="robots" content="index, follow">
+
+  <!-- ARCHITECTURAL PATTERN 1: Canonical tag consolidating campaign/tracking parameters to master route -->
+  <link rel="canonical" href="https://example.com/checkout">
+
+  <!-- ARCHITECTURAL PATTERN 2: Dynamic third-party vendor scripts where SRI is architecturally infeasible -->
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="https://www.googletagmanager.com/gtm.js?id=GTM-CALIB123"></script>
+
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #f8fafc;
+      color: #0f172a;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 2rem;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      border-radius: 4px;
+      background: #e0f2fe;
+      color: #0369a1;
+      margin-bottom: 1rem;
+    }
+    button {
+      background: #0284c7;
+      color: #ffffff;
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      font-weight: 500;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <nav><a href="https://example.com/checkout">Checkout Home</a> <a href="https://example.com/privacy-policy">Privacy</a></nav>
+  </header>
+  <main>
+    <div class="badge">Corroborated Architectural Patterns</div>
+    <h1>Payment & Analytics Integration</h1>
+    <p>This fixture loads legitimate dynamic vendor libraries (Stripe.js v3 and Google Tag Manager) and declares an authoritative canonical URL stripping campaign parameters.</p>
+    
+    <section>
+      <h2>Payment Element Container</h2>
+      <div id="stripe-card-element"></div>
+      <p>Card fields are securely mounted via Stripe iframe.</p>
+      <button type="button" aria-label="Submit Order">Complete Purchase</button>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2026 SiteRadar Calibration Suite. <a href="https://example.com/privacy-policy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

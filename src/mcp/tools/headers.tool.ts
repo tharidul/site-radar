@@ -40,7 +40,7 @@ export async function handleAuditHeaders(args: z.infer<typeof AuditHeadersSchema
       headersMap[key.toLowerCase()] = val;
     });
   } catch (err: any) {
-    throw new Error(`Failed to fetch HTTP headers for ${url}: ${err.message}`);
+    throw new Error(`Failed to fetch HTTP headers for ${url}: ${err.message}`, { cause: err });
   }
 
   const processed = HeadersService.processHeaders(headersMap, statusCode, statusText, url);

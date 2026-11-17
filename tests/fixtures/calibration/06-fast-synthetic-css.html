@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fast Paint Synthetic CSS - Core Web Vitals Gated Noise Testbed</title>
+  <meta name="description" content="Reference page with a synchronous render-blocking stylesheet whose performance penalty is gated by confirmed fast real-world Core Web Vitals (FCP 620ms, LCP 1450ms).">
+  <link rel="canonical" href="https://example.com/fast-synthetic-css">
+
+  <!-- SYNTHETIC NOISE TRIGGER: Synchronous render-blocking stylesheet in head -->
+  <link rel="stylesheet" href="https://example.com/assets/synchronous-core-theme.css">
+
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 2rem;
+      background: #fdfdfd;
+      color: #111827;
+      line-height: 1.6;
+    }
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      background: #ffffff;
+      padding: 2rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+    .metric-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #ecfdf5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+  </style>
+
+  <!-- Simulated Core Web Vitals timestamps confirming fast rendering (<1000ms FCP, <2500ms LCP) -->
+  <script>
+    window.__SIMULATED_PERF__ = {
+      fcpMs: 620,
+      lcpMs: 1450,
+      clsScore: 0.01,
+      ttfbMs: 120
+    };
+  </script>
+</head>
+<body>
+  <header>
+    <nav><a href="https://example.com/fast-synthetic-css">Home</a> <a href="https://example.com/privacy-policy">Privacy</a></nav>
+  </header>
+  <main>
+    <div class="metric-badge">
+      <span>CWV Fast Reality Gate: FCP 620ms | LCP 1,450ms</span>
+    </div>
+    <h1>Synthetic Noise Downgrade Calibration</h1>
+    <p>This fixture includes a synchronous render-blocking stylesheet in the document head. Under naive static analysis rules, render-blocking resources trigger a warning deduction. However, empirical paint timing confirms first contentful paint occurs at 620ms and largest contentful paint at 1,450ms.</p>
+    
+    <section>
+      <h2>Corroboration Behavior</h2>
+      <p>The <code>CwvRealityGatePolicy</code> evaluates live paint timings against the static render-blocking warning. Because rendering is objectively fast (FCP &lt; 1,000ms and LCP &lt; 2,500ms), the rule violation is reclassified as <code>SYNTHETIC_NOISE</code> with a 0.05 reality multiplier, preventing false-positive score degradation.</p>
+      <button type="button" aria-label="Acknowledge Performance Calibration">Confirm Metric Gate</button>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; 2026 SiteRadar Calibration Suite. <a href="https://example.com/privacy-policy">Privacy Policy</a></p>
+  </footer>
+</body>
+</html>

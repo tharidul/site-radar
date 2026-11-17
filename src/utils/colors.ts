@@ -23,9 +23,9 @@ export function getScoreColor(score: number): ScoreColorDefinition {
     return {
       stroke: '#10b981', // Emerald green
       textColor: 'text-emerald-600 dark:text-emerald-400',
-      badgeBg: 'bg-emerald-500/10 dark:bg-emerald-950/40',
-      badgeBorder: 'border-emerald-500/30 dark:border-emerald-700/60',
-      badgeText: 'text-emerald-700 dark:text-emerald-300',
+      badgeBg: 'bg-emerald-600',
+      badgeBorder: 'border-transparent',
+      badgeText: 'text-white font-bold shadow-2xs',
       grade: 'A',
       label: 'Optimal',
     };
@@ -35,9 +35,9 @@ export function getScoreColor(score: number): ScoreColorDefinition {
     return {
       stroke: '#0284c7', // Sky blue
       textColor: 'text-sky-600 dark:text-sky-400',
-      badgeBg: 'bg-sky-500/10 dark:bg-sky-950/40',
-      badgeBorder: 'border-sky-500/30 dark:border-sky-700/60',
-      badgeText: 'text-sky-700 dark:text-sky-300',
+      badgeBg: 'bg-sky-600',
+      badgeBorder: 'border-transparent',
+      badgeText: 'text-white font-bold shadow-2xs',
       grade: 'B',
       label: 'Good',
     };
@@ -47,9 +47,9 @@ export function getScoreColor(score: number): ScoreColorDefinition {
     return {
       stroke: '#f59e0b', // Amber
       textColor: 'text-amber-600 dark:text-amber-400',
-      badgeBg: 'bg-amber-500/10 dark:bg-amber-950/40',
-      badgeBorder: 'border-amber-500/30 dark:border-amber-700/60',
-      badgeText: 'text-amber-700 dark:text-amber-300',
+      badgeBg: 'bg-amber-600',
+      badgeBorder: 'border-transparent',
+      badgeText: 'text-white font-bold shadow-2xs',
       grade: 'C',
       label: 'Fair',
     };
@@ -59,9 +59,9 @@ export function getScoreColor(score: number): ScoreColorDefinition {
     return {
       stroke: '#f97316', // Orange
       textColor: 'text-orange-600 dark:text-orange-400',
-      badgeBg: 'bg-orange-500/10 dark:bg-orange-950/40',
-      badgeBorder: 'border-orange-500/30 dark:border-orange-700/60',
-      badgeText: 'text-orange-700 dark:text-orange-300',
+      badgeBg: 'bg-orange-600',
+      badgeBorder: 'border-transparent',
+      badgeText: 'text-white font-bold shadow-2xs',
       grade: 'D',
       label: 'Poor',
     };
@@ -70,9 +70,9 @@ export function getScoreColor(score: number): ScoreColorDefinition {
   return {
     stroke: '#ef4444', // Rose Red
     textColor: 'text-rose-600 dark:text-rose-400',
-    badgeBg: 'bg-rose-500/10 dark:bg-rose-950/40',
-    badgeBorder: 'border-rose-500/30 dark:border-rose-700/60',
-    badgeText: 'text-rose-700 dark:text-rose-300',
+    badgeBg: 'bg-rose-600',
+    badgeBorder: 'border-transparent',
+    badgeText: 'text-white font-bold shadow-2xs',
     grade: 'F',
     label: 'Critical',
   };

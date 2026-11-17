@@ -412,10 +412,10 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
   const activeLabel = activeVisual.label;
 
   return (
-    <div className="w-full min-h-full flex flex-col items-center justify-center px-6 py-6 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+    <div className="w-full min-h-full flex flex-col items-center justify-center px-6 py-6 bg-app-bg text-app-fg select-none">
       {targetHost && (
         <div className="mb-4 flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-400 max-w-full">
-          <Globe className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52] shrink-0" aria-hidden="true" />
+          <Globe className="w-3.5 h-3.5 text-accent shrink-0" aria-hidden="true" />
           <span className="truncate">{targetHost}</span>
         </div>
       )}
@@ -454,7 +454,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
             strokeLinecap="round"
             strokeDasharray={RING_CIRCUMFERENCE}
             strokeDashoffset={dashOffset}
-            className="siteradar-progress-arc text-[#059669] dark:text-[#CEFF52] transition-[stroke-dashoffset] duration-300 ease-out"
+            className="siteradar-progress-arc text-accent transition-[stroke-dashoffset] duration-300 ease-out"
           />
         </svg>
 
@@ -473,7 +473,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeDasharray="96 414"
-            className="text-[#152E40]/25 dark:text-[#CEFF52]/40"
+            className="text-accent/30"
           />
         </svg>
 
@@ -484,7 +484,7 @@ export const LiveProgressBar: React.FC<LiveProgressBarProps> = ({
             className="siteradar-step-enter flex items-center justify-center"
           >
             <ActiveIcon
-              className="w-5 h-5 text-[#152E40] dark:text-[#CEFF52] shrink-0"
+              className="w-5 h-5 text-accent shrink-0"
               strokeWidth={2}
               aria-hidden="true"
             />

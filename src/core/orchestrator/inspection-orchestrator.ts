@@ -34,7 +34,7 @@ import {
   CtLogsClient,
   TlsEvaluator,
 } from '../../intelligence';
-import { HeadersService, BadgeService } from '../../services';
+import { HeadersService, BadgeService, networkCaptureService, type CapturedTabHeaders } from '../../services';
 
 export type ScanLifecycleState = 'idle' | 'running' | 'completed' | 'cancelled' | 'failed';
 
@@ -56,6 +56,7 @@ export interface InspectionOptions {
   externalConsent?: Record<string, boolean>;
   skipIntelligence?: boolean;
   refreshPage?: boolean;
+  networkHeaders?: CapturedTabHeaders;
 }
 
 export interface OrchestratorOptions {
@@ -573,6 +574,17 @@ export class InspectionOrchestrator {
             }
           }
 
+          if (planItem.id === 'securitySignals') {
+            const captured = options?.networkHeaders ?? networkCaptureService.getCapturedHeaders(tabId);
+            if (captured && captured.headers && Object.keys(captured.headers).length > 0) {
+              moduleOptions = {
+                securityHeaders: captured.headers,
+                isAuthoritativeNetworkCapture: true,
+                headersSource: 'webRequest',
+              };
+            }
+          }
+
           try {
             const response = await this.bus.sendToTab(
               tabId,
@@ -696,78 +708,95 @@ export class InspectionOrchestrator {
       }
 
       try {
-        if (
-          !signal.aborted &&
-          this.adapter.browserType !== 'mock' &&
-          typeof fetch === 'function' &&
-          inspection.target.url.startsWith('http')
-        ) {
-          const timeoutSignal = AbortSignal.timeout(10000);
-          const fetchSignal =
-            typeof AbortSignal.any === 'function'
-              ? AbortSignal.any([signal, timeoutSignal])
-              : timeoutSignal;
-          let resp = await fetch(inspection.target.url, {
-            method: 'HEAD',
-            credentials: 'omit',
-            cache: 'no-cache',
-            signal: fetchSignal,
-          });
+        if (!signal.aborted && inspection.target.url.startsWith('http')) {
+          const captured = options?.networkHeaders ?? networkCaptureService.getCapturedHeaders(tabId);
           let headerMethod: 'HEAD' | 'GET' = 'HEAD';
           const headersMap: Record<string, string> = {};
-          resp.headers.forEach((val, key) => {
-            headersMap[key.toLowerCase()] = val;
-          });
+          let respStatus = 200;
+          let respStatusText = 'OK';
+          let isAuthoritative = false;
+          let headerSource = 'HttpHeadResponse';
 
-          const hasCoreSecurityHeaders =
-            'strict-transport-security' in headersMap ||
-            'content-security-policy' in headersMap ||
-            'x-frame-options' in headersMap ||
-            'x-content-type-options' in headersMap;
+          if (captured && Object.keys(captured.headers).length > 0) {
+            Object.assign(headersMap, captured.headers);
+            respStatus = captured.statusCode || 200;
+            respStatusText = captured.statusLine || 'OK';
+            headerMethod = 'GET';
+            isAuthoritative = true;
+            headerSource = 'webRequest.onHeadersReceived';
+          } else if (this.adapter.browserType !== 'mock' && typeof fetch === 'function') {
+            const timeoutSignal = AbortSignal.timeout(10000);
+            const fetchSignal =
+              typeof AbortSignal.any === 'function'
+                ? AbortSignal.any([signal, timeoutSignal])
+                : timeoutSignal;
+            let resp = await fetch(inspection.target.url, {
+              method: 'HEAD',
+              credentials: 'omit',
+              cache: 'no-cache',
+              signal: fetchSignal,
+            });
+            headerMethod = 'HEAD';
+            resp.headers.forEach((val, key) => {
+              headersMap[key.toLowerCase()] = val;
+            });
+            respStatus = resp.status;
+            respStatusText = resp.statusText;
+            headerSource = 'HttpHeadResponse';
 
-          // Some CDN/WAF edges return stripped headers or 403/405 for HEAD; retry with GET when needed
-          if (resp.status >= 400 || !hasCoreSecurityHeaders) {
-            try {
-              const getResp = await fetch(inspection.target.url, {
-                method: 'GET',
-                credentials: 'omit',
-                cache: 'no-cache',
-                signal: fetchSignal,
-              });
+            const hasCoreSecurityHeaders =
+              'strict-transport-security' in headersMap ||
+              'content-security-policy' in headersMap ||
+              'x-frame-options' in headersMap ||
+              'x-content-type-options' in headersMap;
+
+            // Some CDN/WAF edges return stripped headers or 403/405 for HEAD; retry with GET when needed
+            if (resp.status >= 400 || !hasCoreSecurityHeaders) {
               try {
-                await getResp.body?.cancel();
+                const getResp = await fetch(inspection.target.url, {
+                  method: 'GET',
+                  credentials: 'omit',
+                  cache: 'no-cache',
+                  signal: fetchSignal,
+                });
+                try {
+                  await getResp.body?.cancel();
+                } catch {
+                  // Ignore stream cancel errors
+                }
+                const getHeaders: Record<string, string> = {};
+                getResp.headers.forEach((val, key) => {
+                  getHeaders[key.toLowerCase()] = val;
+                });
+                const getHasSecurityHeaders =
+                  'strict-transport-security' in getHeaders ||
+                  'content-security-policy' in getHeaders ||
+                  'x-frame-options' in getHeaders ||
+                  'x-content-type-options' in getHeaders;
+                if (
+                  (getResp.ok && resp.status >= 400) ||
+                  getHasSecurityHeaders ||
+                  Object.keys(getHeaders).length > Object.keys(headersMap).length
+                ) {
+                  resp = getResp;
+                  headerMethod = 'GET';
+                  respStatus = getResp.status;
+                  respStatusText = getResp.statusText;
+                  headerSource = 'HttpGetResponse';
+                  Object.keys(headersMap).forEach((k) => delete headersMap[k]);
+                  Object.assign(headersMap, getHeaders);
+                }
               } catch {
-                // Ignore stream cancel errors
+                // Keep HEAD headers if GET fallback fails
               }
-              const getHeaders: Record<string, string> = {};
-              getResp.headers.forEach((val, key) => {
-                getHeaders[key.toLowerCase()] = val;
-              });
-              const getHasSecurityHeaders =
-                'strict-transport-security' in getHeaders ||
-                'content-security-policy' in getHeaders ||
-                'x-frame-options' in getHeaders ||
-                'x-content-type-options' in getHeaders;
-              if (
-                (getResp.ok && resp.status >= 400) ||
-                getHasSecurityHeaders ||
-                Object.keys(getHeaders).length > Object.keys(headersMap).length
-              ) {
-                resp = getResp;
-                headerMethod = 'GET';
-                Object.keys(headersMap).forEach((k) => delete headersMap[k]);
-                Object.assign(headersMap, getHeaders);
-              }
-            } catch {
-              // Keep HEAD headers if GET fallback fails
             }
           }
 
           if (Object.keys(headersMap).length > 0) {
             const headersData = HeadersService.processHeaders(
               headersMap,
-              resp.status,
-              resp.statusText,
+              respStatus,
+              respStatusText,
               inspection.target.url,
               headerMethod,
             );
@@ -778,15 +807,24 @@ export class InspectionOrchestrator {
               collectedAt: Date.now(),
               data: headersData,
               coverage: { expected: 1, collected: 1, unavailable: 0, supported: true },
-              limitations: [],
+              limitations: isAuthoritative
+                ? []
+                : [
+                    'Response headers fetched via secondary request; may differ from initial navigation or be constrained by CORS.',
+                  ],
               errors: [],
-              sources: [headerMethod === 'GET' ? 'HttpGetResponse' : 'HttpHeadResponse'],
+              sources: [headerSource],
             };
 
             const secModule = inspection.modules['security'] || inspection.modules['securitySignals'];
             if (secModule && secModule.data) {
               (secModule.data as any).securityHeaders = headersMap;
               (secModule.data as any).responseHeaders = headersData;
+              (secModule.data as any).isAuthoritativeNetworkCapture = isAuthoritative;
+              (secModule.data as any).headersSource = isAuthoritative ? 'webRequest' : 'fetch';
+              if (headersMap['strict-transport-security']) {
+                (secModule.data as any).hstsPresent = true;
+              }
             }
 
             const techModule = inspection.modules['technology'];
@@ -1354,7 +1392,7 @@ export class InspectionOrchestrator {
         files: ['content-scripts/content.js'],
       });
     } catch (err: any) {
-      throw new Error(`Failed to inject inspection content script into tab: ${err.message}`);
+      throw new Error(`Failed to inject inspection content script into tab: ${err.message}`, { cause: err });
     }
 
     let retries = 3;

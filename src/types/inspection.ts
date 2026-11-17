@@ -27,6 +27,7 @@ export interface Evidence {
   location?: string;
   observedAt: number;
 }
+export type FindingEvidence = Evidence;
 
 export interface CollectionCoverage {
   expected: number;
@@ -68,6 +69,8 @@ export interface AuditFinding {
   blastWeight?: number;
   weightedDensity?: number;
   violationPressure?: number;
+  targetScope?: 'images' | 'interactive' | 'forms' | 'text_nodes' | 'landmarks' | 'dom_elements' | 'page';
+  universeDenominator?: number;
   corroborationTraces?: Array<{
     policyId: string;
     previousState: 'TRUE_DEFECT' | 'ARCHITECTURAL_PATTERN' | 'OBSERVABILITY_LIMIT' | 'SYNTHETIC_NOISE';
@@ -251,6 +254,7 @@ export interface LinksData {
   externalCount?: number;
   tabnabbingVulnerableCount?: number;
   protocolCounts?: Record<string, number>;
+  isolatedCheckoutOrigins?: string[];
 }
 
 export interface ImageItem {
@@ -352,6 +356,7 @@ export interface FormDetails {
   fields?: unknown[];
   isCrossOriginAction?: boolean;
   hasCsrfToken?: boolean;
+  isVisible?: boolean;
 }
 
 export interface FormsData {
@@ -359,10 +364,16 @@ export interface FormsData {
   forms: FormDetails[];
   containsUnencryptedSubmissions: boolean;
   hasPasswordForms?: boolean;
+  hasVisiblePasswordField?: boolean;
+  hasHiddenPasswordField?: boolean;
+  hasVisiblePostForm?: boolean;
+  hasHiddenPostForm?: boolean;
+  dormantModalFormsCount?: number;
   totalInputCount?: number;
   unlabeledInputCount?: number;
   autocompleteInputCount?: number;
   unlabeledInputSamples?: string[];
+  isolatedCheckoutOrigins?: string[];
 }
 
 export interface ResourceCategoryMetrics {
@@ -437,6 +448,8 @@ export interface SecuritySignalsData {
   sriLinkCoverage?: { total: number; withSri: number };
   upgradeInsecureRequests: boolean;
   securityHeaders?: Record<string, string | null>;
+  isAuthoritativeNetworkCapture?: boolean;
+  headersSource?: 'webRequest' | 'fetch' | 'direct' | 'unverified';
   cspPresent: boolean;
   hstsPresent: boolean;
   metaReferrerPolicy?: string;

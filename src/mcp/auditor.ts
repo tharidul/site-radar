@@ -2,6 +2,7 @@ import { Window as HappyWindow } from 'happy-dom';
 import type { AuditFinding, CategoryScore, CollectionResult, InspectionMode, InspectionSummary, TechnologyData, WebsiteTarget } from '../types/inspection';
 import { runAllAnalyzers } from '../analyzers';
 import { calculateInspectionScores } from '../scoring';
+import { CorroborationEngine } from '../corroborator';
 import { PAGE_COLLECTORS } from '../collectors/page';
 import { HeadersService } from '../services/headers.service';
 import { BrowserRunner, type BrowserPageData } from './browser';
@@ -76,7 +77,7 @@ export class SiteRadarAuditor {
         });
         html = await resp.text();
       } catch (fetchErr: any) {
-        throw new Error(`Failed to fetch URL ${targetUrl}: ${fetchErr.message}`);
+        throw new Error(`Failed to fetch URL ${targetUrl}: ${fetchErr.message}`, { cause: fetchErr });
       }
     }
 
@@ -97,6 +98,14 @@ export class SiteRadarAuditor {
           document: domDoc as any,
           window: domWin as any,
           url: effectiveUrl,
+          options:
+            modId === 'securitySignals'
+              ? {
+                  securityHeaders: responseHeaders,
+                  isAuthoritativeNetworkCapture: true,
+                  headersSource: 'direct',
+                }
+              : undefined,
         });
       } catch (err: any) {
         modules[modId] = {
@@ -129,6 +138,11 @@ export class SiteRadarAuditor {
     if (secModule && secModule.data) {
       (secModule.data as any).securityHeaders = responseHeaders;
       (secModule.data as any).responseHeaders = headersData;
+      (secModule.data as any).isAuthoritativeNetworkCapture = true;
+      (secModule.data as any).headersSource = 'direct';
+      if (responseHeaders['strict-transport-security']) {
+        (secModule.data as any).hstsPresent = true;
+      }
     }
 
     // If browser data is available, inject the live high-fidelity metrics
@@ -203,10 +217,18 @@ export class SiteRadarAuditor {
 
     // Run all analyzers
     const engineMode: InspectionMode = mode === 'fast' ? 'full' : 'deep';
-    const findings = await runAllAnalyzers({
+    let findings = await runAllAnalyzers({
       target,
       mode: engineMode,
       modules,
+    });
+
+    // Corroborate findings against contextual telemetry & reality states
+    const corroborator = new CorroborationEngine();
+    findings = corroborator.corroborate(findings, {
+      target,
+      modules,
+      isLocalDevelopment: false,
     });
 
     // Calculate score model

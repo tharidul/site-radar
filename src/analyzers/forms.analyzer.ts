@@ -32,9 +32,15 @@ export class FormsAnalyzer implements Analyzer {
     for (const form of formsData.forms) {
       if (form.action) {
         try {
-          const actionOrigin = new URL(form.action, target.url).origin;
-          if (actionOrigin !== target.origin) {
-            externalActionForms++;
+          const parsedAction = new URL(form.action, target.url);
+          const actionOrigin = parsedAction.origin;
+          if (actionOrigin !== target.origin && actionOrigin !== 'null' && parsedAction.protocol.startsWith('http')) {
+            const method = (form.method || 'get').toLowerCase();
+            const isPublicSearch =
+              method === 'get' && /algolia|google|bing|duckduckgo|search|query/i.test(form.action);
+            if (!isPublicSearch) {
+              externalActionForms++;
+            }
           }
         } catch {
         }

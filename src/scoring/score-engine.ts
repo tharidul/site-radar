@@ -12,11 +12,12 @@ const SEVERITY_WEIGHTS: Record<string, number> = {
 };
 
 const CATEGORY_WEIGHTS: Record<string, number> = {
-  security: 0.30,
+  security: 0.25,
   performance: 0.25,
   seo: 0.20,
   accessibility: 0.15,
   'best-practices': 0.10,
+  aeo: 0.05,
 };
 
 const RULE_CANONICAL_ALIASES: Record<string, string> = {
@@ -31,57 +32,99 @@ const RULE_CANONICAL_ALIASES: Record<string, string> = {
   'seo-missing-canonical': 'seo-canonical-matches',
   'resp-missing-viewport': 'resp-viewport-valid',
   'priv-missing-privacy-policy': 'privacy-policy-link',
+  'a11y-axe-image-alt': 'a11y-image-alt-canonical',
+  'a11y-missing-alt': 'a11y-image-alt-canonical',
+  'a11y-axe-html-has-lang': 'a11y-lang-canonical',
+  'a11y-missing-lang': 'a11y-lang-canonical',
+  'a11y-axe-landmark-one-main': 'a11y-landmarks-canonical',
+  'a11y-missing-landmarks': 'a11y-landmarks-canonical',
+  'a11y-axe-region': 'a11y-landmarks-canonical',
 };
 
 function extractAffectedAndTotal(finding: AuditFinding): { affected: number; total: number } | null {
-  if (!finding.evidence || !Array.isArray(finding.evidence) || finding.evidence.length === 0) {
-    return null;
-  }
-
+  const findingWithDenom = finding as AuditFinding & { universeDenominator?: number };
   let affected: number | undefined;
   let total: number | undefined;
 
-  for (const ev of finding.evidence) {
-    if (ev.value === undefined || ev.value === null) continue;
-    const val = typeof ev.value === 'number' ? ev.value : parseFloat(String(ev.value));
-    if (isNaN(val)) continue;
+  if (finding.evidence && Array.isArray(finding.evidence) && finding.evidence.length > 0) {
+    for (const ev of finding.evidence) {
+      if (ev.value === undefined || ev.value === null) continue;
 
-    const label = (ev.label || '').toLowerCase();
-
-    if (
-      label.includes('total') ||
-      label.includes('evaluated') ||
-      label.includes('all images') ||
-      label.includes('all nodes')
-    ) {
-      if (
-        !label.includes('missing') &&
-        !label.includes('affected') &&
-        !label.includes('without') &&
-        !label.includes('unlabeled') &&
-        !label.includes('failing') &&
-        !label.includes('violation')
-      ) {
-        total = val;
+      const strVal = String(ev.value);
+      // Parse patterns like "3 affected of 20 (15.0%)", "2 of 286", "5 / 100"
+      const ratioMatch = strVal.match(/(\d+(?:\.\d+)?)\s*(?:affected|failing|nodes|violations|items)?\s*(?:of|\/)\s*(\d+(?:\.\d+)?)/i);
+      if (ratioMatch && ratioMatch[1] && ratioMatch[2]) {
+        const parsedAffected = parseFloat(ratioMatch[1]);
+        const parsedTotal = parseFloat(ratioMatch[2]);
+        if (!isNaN(parsedAffected) && !isNaN(parsedTotal) && parsedTotal > 0) {
+          if (affected === undefined) affected = parsedAffected;
+          if (total === undefined) total = parsedTotal;
+        }
       }
-    }
 
-    if (
-      label.includes('missing') ||
-      label.includes('affected') ||
-      label.includes('without sri') ||
-      label.includes('without') ||
-      label.includes('unlabeled') ||
-      label.includes('failing') ||
-      (label.includes('violation') && !label.includes('total violations'))
-    ) {
-      if (!label.includes('total') || label.includes('missing') || label.includes('without') || label.includes('unlabeled')) {
-        affected = val;
+      const val = typeof ev.value === 'number' ? ev.value : parseFloat(strVal);
+      if (isNaN(val)) continue;
+
+      const label = (ev.label || '').toLowerCase();
+
+      if (
+        label.includes('total') ||
+        label.includes('evaluated') ||
+        label.includes('all images') ||
+        label.includes('all nodes') ||
+        label.includes('universe') ||
+        label.includes('denominator')
+      ) {
+        if (
+          !label.includes('missing') &&
+          !label.includes('affected') &&
+          !label.includes('without') &&
+          !label.includes('unlabeled') &&
+          !label.includes('failing') &&
+          !label.includes('violation')
+        ) {
+          if (total === undefined) {
+            total = val;
+          }
+        }
+      }
+
+      if (
+        label.includes('missing') ||
+        label.includes('affected') ||
+        label.includes('without sri') ||
+        label.includes('without') ||
+        label.includes('unlabeled') ||
+        label.includes('failing') ||
+        (label.includes('violation') && !label.includes('total violations'))
+      ) {
+        if (!label.includes('total') || label.includes('missing') || label.includes('without') || label.includes('unlabeled')) {
+          if (affected === undefined) {
+            affected = val;
+          }
+        }
       }
     }
   }
 
-  if (affected !== undefined && total !== undefined && total > 0) {
+  // Fallback / complement with universeDenominator
+  if (total === undefined && typeof findingWithDenom.universeDenominator === 'number' && findingWithDenom.universeDenominator > 0) {
+    total = findingWithDenom.universeDenominator;
+  }
+
+  // If total is known and weightedDensity is present, derive affected
+  if (total !== undefined && total > 0) {
+    if (affected === undefined && typeof finding.weightedDensity === 'number') {
+      affected = Math.max(0, Math.round(finding.weightedDensity * total));
+    }
+    if (affected !== undefined) {
+      return { affected, total };
+    }
+  }
+
+  // If affected is known and weightedDensity is present, derive total
+  if (affected !== undefined && affected > 0 && typeof finding.weightedDensity === 'number' && finding.weightedDensity > 0) {
+    total = Math.round(affected / finding.weightedDensity);
     return { affected, total };
   }
 
@@ -89,11 +132,18 @@ function extractAffectedAndTotal(finding: AuditFinding): { affected: number; tot
 }
 
 function isCriticalFlowControl(finding: AuditFinding, blastWeight: number): boolean {
+  const ruleIdLower = finding.ruleId.toLowerCase();
+  // Isolated image-alt, landmark or contrast issues must never flag critical failure
+  if (
+    ruleIdLower.includes('image') ||
+    ruleIdLower.includes('alt') ||
+    ruleIdLower.includes('contrast')
+  ) {
+    return false;
+  }
   if (finding.blastTier === 'critical_flow') return true;
   if (finding.blastTier === 'decorative' || finding.blastTier === 'content' || finding.blastTier === 'interactive') return false;
   if (blastWeight >= 3.0) return true;
-  if (finding.ruleId.includes('image') || finding.ruleId.includes('alt') || finding.ruleId.includes('color-contrast')) return false;
-  const ruleIdLower = finding.ruleId.toLowerCase();
   if (/checkout|payment|auth|password|login|submit/i.test(ruleIdLower)) return true;
   if (finding.category.toLowerCase() === 'security' && finding.severity === 'critical') return true;
   return false;
@@ -104,9 +154,27 @@ export function calculateCategoryScore(
   findings: AuditFinding[],
 ): DetailedCategoryScore {
   const catLower = category.toLowerCase();
-  const categoryFindings = findings.filter(
+  const rawFindings = findings.filter(
     (f) => f.category.toLowerCase() === catLower || (catLower === 'best-practices' && (f.category.toLowerCase() === 'privacy' || f.category.toLowerCase() === 'content')),
   );
+
+  // Deduplicate overlapping canonical rules, prioritizing corroborated findings with defects / violation pressure
+  const categoryFindings = rawFindings.toSorted((a, b) => {
+    const scoreFinding = (f: AuditFinding) => {
+      let score = 0;
+      if (f.status === 'failed') score += 40;
+      else if (f.status === 'warning') score += 30;
+      else if (f.status === 'passed') score += 20;
+      else score += 10;
+
+      if (f.realityState !== undefined) score += 8;
+      if (f.violationPressure !== undefined) score += 4;
+      if (f.weightedDensity !== undefined || (f as { universeDenominator?: number }).universeDenominator !== undefined) score += 2;
+      if (f.evidence && f.evidence.length > 0) score += 1;
+      return score;
+    };
+    return scoreFinding(b) - scoreFinding(a);
+  });
 
   let passed = 0;
   let failed = 0;
@@ -183,7 +251,11 @@ export function calculateCategoryScore(
         passed++;
         earnedPoints += weight * 1.0;
         maxPossiblePoints += weight;
-        realityCounts.PASS++;
+        if (finding.realityState === 'SYNTHETIC_NOISE') {
+          realityCounts.SYNTHETIC_NOISE++;
+        } else {
+          realityCounts.PASS++;
+        }
         break;
 
       case 'warning': {
@@ -229,14 +301,18 @@ export function calculateCategoryScore(
         );
 
         if (finding.violationPressure !== undefined) {
-          Pr = finding.violationPressure;
-          density = finding.weightedDensity;
+          Pr = Math.max(0, Math.min(1.0, finding.violationPressure));
+          density = finding.weightedDensity !== undefined
+            ? finding.weightedDensity
+            : (counts && counts.total > 0 ? counts.affected / counts.total : undefined);
         } else if (counts && counts.total > 0) {
-          density = counts.affected / counts.total;
+          density = finding.weightedDensity !== undefined ? finding.weightedDensity : counts.affected / counts.total;
           Pr = Math.min(1.0, Math.pow(density, 0.6) + 0.25 * (1.0 - Math.exp(-0.08 * blastWeight * counts.affected)));
         } else if (finding.weightedDensity !== undefined) {
           density = finding.weightedDensity;
-          const affected = 1;
+          const affected = (finding as { universeDenominator?: number }).universeDenominator
+            ? Math.max(1, Math.round(density * (finding as { universeDenominator?: number }).universeDenominator!))
+            : (counts?.affected ?? 1);
           Pr = Math.min(1.0, Math.pow(density, 0.6) + 0.25 * (1.0 - Math.exp(-0.08 * blastWeight * affected)));
         } else {
           Pr = 1.0;
@@ -251,9 +327,13 @@ export function calculateCategoryScore(
         earnedPoints += weight * (1.0 - Math.min(1.0, mu * Pr));
         maxPossiblePoints += weight;
 
-        if (finding.severity === 'critical' && mu > 0.5) {
+        if (
+          finding.severity === 'critical' &&
+          (finding.realityState === 'TRUE_DEFECT' || finding.realityState === undefined) &&
+          isCriticalFlowControl(finding, blastWeight)
+        ) {
           hasCriticalFailure = true;
-          if (Pr >= 0.8 && isCriticalFlowControl(finding, blastWeight)) {
+          if (Pr >= 0.8) {
             criticalCapTriggered = true;
           }
         }
@@ -308,18 +388,7 @@ export function calculateCategoryScore(
       deductionsExplanation.push('Critical failure override applied: score capped at 49 on critical flow control');
     }
 
-    let finalScore = rawScore;
-    if (coverageRate < 0.70 && totalApplicable > 0) {
-      const coverageCeiling = Math.round(75 + 25 * coverageRate);
-      if (finalScore > coverageCeiling) {
-        finalScore = coverageCeiling;
-        deductionsExplanation.push(
-          `Limited scan coverage (${coveragePercent}% evaluated): score capped at ${coverageCeiling} (unobservable properties require network inspection)`,
-        );
-      }
-    }
-
-    scoreRounded = Math.max(0, Math.min(100, Math.round(finalScore)));
+    scoreRounded = Math.max(0, Math.min(100, Math.round(rawScore)));
   }
 
   return {
@@ -337,8 +406,9 @@ export function calculateCategoryScore(
     realityCounts,
     isHeuristic,
     hasCriticalFailure,
+    criticalCapTriggered,
     deductionsExplanation,
-    scoringFormula: 'Continuous violation pressure & reality multipliers with severity weights, Coverage Ceiling if <70%, Unobservable (0 evaluated)=0',
+    scoringFormula: 'Continuous violation pressure & reality multipliers with severity weights, Unobservable (0 evaluated)=0',
   };
 }
 
@@ -353,8 +423,14 @@ export function calculateInspectionScores(
       f.category.toLowerCase() === 'privacy' ||
       f.category.toLowerCase() === 'content',
   );
+  const hasAeo = findings.some((f) => f.category.toLowerCase() === 'aeo');
 
-  const categories = targetCategories || (hasBestPractices ? [...defaultCats, 'best-practices'] : defaultCats);
+  let defaultCatsList = hasBestPractices ? [...defaultCats, 'best-practices'] : defaultCats;
+  if (hasAeo) {
+    defaultCatsList = [...defaultCatsList, 'aeo'];
+  }
+
+  const categories = targetCategories || defaultCatsList;
   const scores: Record<string, DetailedCategoryScore> = {};
 
   let weightedSum = 0;

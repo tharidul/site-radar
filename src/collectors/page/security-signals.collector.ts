@@ -71,6 +71,33 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
     const referrerMeta = doc.querySelector('meta[name="referrer" i]');
     const metaReferrerPolicy = referrerMeta?.getAttribute('content')?.trim() || undefined;
 
+    const options = context.options || {};
+    const securityHeaders =
+      (options.securityHeaders as Record<string, string | null> | undefined) || undefined;
+    const isAuthoritativeNetworkCapture = Boolean(options.isAuthoritativeNetworkCapture);
+    const headersSource =
+      (options.headersSource as 'webRequest' | 'fetch' | 'direct' | 'unverified' | undefined) ??
+      (isAuthoritativeNetworkCapture ? 'webRequest' : undefined);
+
+    let hstsPresent = false;
+    if (securityHeaders) {
+      const hstsVal = Object.entries(securityHeaders).find(
+        ([k]) => k.toLowerCase() === 'strict-transport-security',
+      )?.[1];
+      if (hstsVal && isHttps) {
+        hstsPresent = true;
+      }
+    }
+
+    if (securityHeaders) {
+      const cspHeaderVal = Object.entries(securityHeaders).find(
+        ([k]) => k.toLowerCase() === 'content-security-policy',
+      )?.[1];
+      if (cspHeaderVal) {
+        cspPresent = true;
+      }
+    }
+
     const data: SecuritySignalsData = {
       isHttps,
       mixedContentDetected,
@@ -84,9 +111,27 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
       },
       upgradeInsecureRequests,
       cspPresent,
-      hstsPresent: false,
+      hstsPresent,
       metaReferrerPolicy,
+      securityHeaders,
+      isAuthoritativeNetworkCapture,
+      headersSource,
     };
+
+    const sources: string[] = ['DOM:location.protocol', 'DOM:meta[http-equiv]', 'DOM:subresources'];
+    if (isAuthoritativeNetworkCapture) {
+      sources.unshift('webRequest.onHeadersReceived');
+    } else if (securityHeaders) {
+      sources.unshift('HTTPResponseHeaders');
+    }
+
+    const limitations: string[] = [];
+    if (!isAuthoritativeNetworkCapture) {
+      limitations.push(
+        'HTTP response headers (HSTS, X-Frame-Options, server-delivered CSP) require background network observation (webRequest).',
+      );
+    }
+    limitations.push('Active mixed content already blocked by browser network layers may not appear in the live DOM.');
 
     return createCollectionResult<SecuritySignalsData>({
       module: this.id,
@@ -98,11 +143,8 @@ export class SecuritySignalsCollector implements PageCollector<SecuritySignalsDa
         unavailable: 0,
         supported: true,
       },
-      limitations: [
-        'HTTP response headers (HSTS, X-Frame-Options, server-delivered CSP) require background network observation.',
-        'Active mixed content already blocked by browser network layers may not appear in the live DOM.',
-      ],
-      sources: ['DOM:location.protocol', 'DOM:meta[http-equiv]', 'DOM:subresources'],
+      limitations,
+      sources,
     });
   }
 }

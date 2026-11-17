@@ -1,6 +1,7 @@
 
 import type { LinksData, LinkItem } from '../../types/inspection';
 import { redactSecretsFromString } from '../../security/secret-redactor';
+import { isAuthOrCheckoutOrigin } from '../../security/url-normalizer';
 import { type CollectorContext, type PageCollector, createCollectionResult } from './types';
 
 export class LinksCollector implements PageCollector<LinksData> {
@@ -11,10 +12,14 @@ export class LinksCollector implements PageCollector<LinksData> {
     const doc = context.document;
     const pageUrl = context.url || (doc.location?.href !== 'about:blank' ? doc.location?.href : '') || '';
     let pageOrigin = '';
+    let pageHostname = '';
     try {
-      pageOrigin = new URL(pageUrl || 'http://localhost').origin;
+      const parsedPageUrl = new URL(pageUrl || 'http://localhost');
+      pageOrigin = parsedPageUrl.origin;
+      pageHostname = parsedPageUrl.hostname;
     } catch {
       pageOrigin = '';
+      pageHostname = '';
     }
 
     const anchorElements = doc.querySelectorAll('a, area');
@@ -23,6 +28,7 @@ export class LinksCollector implements PageCollector<LinksData> {
     const externalLinks: LinkItem[] = [];
     const invalidProtocols = new Set<string>();
     const protocolCounts: Record<string, number> = {};
+    const isolatedCheckoutOrigins = new Set<string>();
     let emptyHrefs = 0;
     let tabnabbingVulnerableCount = 0;
     let internalCount = 0;
@@ -66,6 +72,9 @@ export class LinksCollector implements PageCollector<LinksData> {
           resolved.password = '';
           sanitizedHref = resolved.toString();
           isExternal = Boolean(pageOrigin && resolved.origin !== pageOrigin);
+          if (pageHostname && isAuthOrCheckoutOrigin(resolved.origin, pageHostname)) {
+            isolatedCheckoutOrigins.add(resolved.hostname);
+          }
         } catch {
           sanitizedHref = redactSecretsFromString(trimmedHref);
         }
@@ -110,6 +119,7 @@ export class LinksCollector implements PageCollector<LinksData> {
       externalCount,
       tabnabbingVulnerableCount,
       protocolCounts,
+      isolatedCheckoutOrigins: Array.from(isolatedCheckoutOrigins),
     };
 
     return createCollectionResult<LinksData>({

@@ -97,22 +97,12 @@ export class TlsEvaluator {
     return {
       host,
       port,
-      protocol: isHttps ? 'TLSv1.3' : undefined,
+      protocol: isHttps ? 'TLS (Browser Verified)' : undefined,
       valid: isHttps,
       authorized: isHttps,
       queriedAt: Date.now(),
-      provider: 'browser-synthesized',
-      certificate: isHttps
-        ? {
-            subject: `CN=${host}`,
-            issuer: 'Observable via CT logs',
-            validFrom: '',
-            validTo: '',
-            daysUntilExpiration: 90,
-            hasExpired: false,
-            san: [host],
-          }
-        : undefined,
+      provider: 'browser-context',
+      certificate: undefined,
     };
   }
 }

@@ -9,6 +9,7 @@ import { PrivacyAnalyzer } from './privacy.analyzer';
 import { TechnologyAnalyzer } from './technology.analyzer';
 import { FormsAnalyzer } from './forms.analyzer';
 import { ResponsiveAnalyzer } from './responsive.analyzer';
+import { AeoAnalyzer } from './aeo.analyzer';
 
 export * from './types';
 export * from './rule-catalog';
@@ -21,6 +22,7 @@ export * from './privacy.analyzer';
 export * from './technology.analyzer';
 export * from './forms.analyzer';
 export * from './responsive.analyzer';
+export * from './aeo.analyzer';
 
 export const ALL_ANALYZERS: Analyzer[] = [
   new SecurityAnalyzer(),
@@ -31,6 +33,7 @@ export const ALL_ANALYZERS: Analyzer[] = [
   new TechnologyAnalyzer(),
   new FormsAnalyzer(),
   new ResponsiveAnalyzer(),
+  new AeoAnalyzer(),
 ];
 
 export const CATEGORY_PRIORITY: Record<string, number> = {
@@ -39,6 +42,7 @@ export const CATEGORY_PRIORITY: Record<string, number> = {
   accessibility: 3,
   seo: 4,
   'best-practices': 5,
+  aeo: 6,
 };
 
 export function getFindingSortRank(finding: AuditFinding): number {
@@ -84,7 +88,7 @@ export function getFindingSortRank(finding: AuditFinding): number {
 }
 
 export function sortFindingsByPriority(findings: AuditFinding[]): AuditFinding[] {
-  return [...findings].sort((a, b) => {
+  return findings.toSorted((a, b) => {
     const rankA = getFindingSortRank(a);
     const rankB = getFindingSortRank(b);
     if (rankA !== rankB) {

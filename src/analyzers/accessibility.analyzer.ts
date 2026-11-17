@@ -6,7 +6,6 @@ import type {
   ImagesData,
   IdentityData,
   ResponsiveData,
-  FormsData,
 } from '../types/inspection';
 import type { Analyzer, AnalyzerContext } from './types';
 import { getModuleData } from './types';
@@ -187,106 +186,6 @@ export class AccessibilityAnalyzer implements Analyzer {
               .build(),
           );
         }
-      }
-    }
-
-    const formsRes = getModuleData<FormsData>(modules, 'forms');
-    const totalInputs = formsRes.data?.totalInputCount ?? 0;
-    const unlabeledInputs = formsRes.data?.unlabeledInputCount ?? 0;
-    const autocompleteInputs = formsRes.data?.autocompleteInputCount ?? 0;
-    const unlabeledSamples = formsRes.data?.unlabeledInputSamples || [];
-
-    if (totalInputs === 0) {
-      findings.push(
-        new FindingBuilder('ago-form-labels')
-          .setStatus('not-applicable')
-          .setConfidence(1.0)
-          .addEvidence('Form Inputs', 0)
-          .build(),
-      );
-    } else if (unlabeledInputs > 0) {
-      findings.push(
-        new FindingBuilder('ago-form-labels')
-          .setStatus('warning')
-          .setSeverity('medium')
-          .setConfidence(1.0)
-          .addEvidence('Total Editable Inputs', totalInputs)
-          .addEvidence('Inputs Missing Accessible Labels', unlabeledInputs)
-          .addEvidence('Unlabeled Field Samples', unlabeledSamples.join(', '))
-          .setExpectedBehavior('All interactive inputs have an associated <label for="...">, aria-label, or title.')
-          .setExplanation('Autonomous AI agents (such as Claude Computer Use, OpenAI Operator, and agentic autofill bots) parse accessibility labels to identify and populate input fields. Missing labels cause agents to misfill or fail submissions.')
-          .setRecommendation('Add explicit <label for="id"> tags or aria-label attributes to all interactive form controls.')
-          .build(),
-      );
-    } else {
-      findings.push(
-        new FindingBuilder('ago-form-labels')
-          .setStatus('passed')
-          .setConfidence(1.0)
-          .addEvidence('Total Labeled Inputs', `${totalInputs}/${totalInputs}`)
-          .addEvidence('Autocomplete Configured', `${autocompleteInputs}/${totalInputs}`)
-          .build(),
-      );
-    }
-
-    if (domRes.data) {
-      const nonSemanticCount = domRes.data.nonSemanticClickableCount ?? 0;
-      const nativeButtons = domRes.data.nativeButtonsCount ?? 0;
-      const nonSemanticSamples = domRes.data.nonSemanticClickableSamples || [];
-
-      if (nonSemanticCount > 0) {
-        findings.push(
-          new FindingBuilder('ago-interactive-elements')
-            .setStatus('warning')
-            .setSeverity('medium')
-            .setConfidence(0.9)
-            .addEvidence('Non-semantic Clickable Elements', nonSemanticCount)
-            .addEvidence('Native Buttons / Action Links', nativeButtons)
-            .addEvidence('Non-semantic Samples', nonSemanticSamples.join(', '))
-            .setExpectedBehavior('Click targets should use native <button> or <a> tags or declare role="button" with tabindex="0".')
-            .setExplanation('Autonomous browser agents discover actionable elements through the accessibility tree. Clickable <div> or <span> elements without role="button" and tabindex="0" are invisible or unreliable to AI agent action drivers.')
-            .setRecommendation('Replace custom clickable <div>/<span> elements with native <button> tags or apply role="button" with tabindex="0" and keyboard enter/space event handlers.')
-            .build(),
-        );
-      } else {
-        findings.push(
-          new FindingBuilder('ago-interactive-elements')
-            .setStatus('passed')
-            .setConfidence(1.0)
-            .addEvidence('Non-semantic Clickables Detected', 0)
-            .addEvidence('Semantic Action Targets', nativeButtons)
-            .build(),
-        );
-      }
-
-      const maxDepth = domRes.data.maxDomDepth ?? 0;
-      const elementCount = domRes.data.elementCount ?? 0;
-
-      if (maxDepth > 32 || elementCount > 2000) {
-        const bloatReasons: string[] = [];
-        if (maxDepth > 32) bloatReasons.push(`deeply nested wrapper hierarchies (${maxDepth} > 32 levels)`);
-        if (elementCount > 2000) bloatReasons.push(`bloated node trees (${elementCount} > 2,000 elements)`);
-        findings.push(
-          new FindingBuilder('ago-dom-token-bloat')
-            .setStatus('warning')
-            .setSeverity('low')
-            .setConfidence(0.9)
-            .addEvidence('Max DOM Nesting Depth', `${maxDepth} (Threshold: <= 32)`)
-            .addEvidence('Total DOM Elements', `${elementCount} (Threshold: <= 2000)`)
-            .setExpectedBehavior('Keep DOM nesting depth under 32 levels and total elements under 2,000 for efficient AI agent parsing.')
-            .setExplanation(`Excessive DOM complexity (${bloatReasons.join(' and ')}) consumes excessive token context when parsed by AI agent vision and accessibility drivers, risking prompt truncation and slower agent response times.`)
-            .setRecommendation('Flatten wrapper <div> nesting and implement virtualized scrolling or clean component structures to keep agent DOM parsing lightweight.')
-            .build(),
-        );
-      } else {
-        findings.push(
-          new FindingBuilder('ago-dom-token-bloat')
-            .setStatus('passed')
-            .setConfidence(1.0)
-            .addEvidence('Max DOM Nesting Depth', `${maxDepth} (Optimal <= 32)`)
-            .addEvidence('Total DOM Elements', `${elementCount} (Optimal <= 2000)`)
-            .build(),
-        );
       }
     }
 

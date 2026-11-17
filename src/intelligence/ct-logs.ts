@@ -27,18 +27,13 @@ export class CtLogsClient {
       consentManager.assertConsent(origin, 'crt-sh');
     }
 
-    const timeoutCtrl = new AbortController();
-    const timer = setTimeout(() => timeoutCtrl.abort(), this.timeoutMs);
-
     try {
       const url = `https://crt.sh/?q=${encodeURIComponent('%.' + cleanDomain)}&output=json`;
       const response = await fetch(url, {
         method: 'GET',
         headers: { Accept: 'application/json' },
-        signal: timeoutCtrl.signal,
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
-
-      clearTimeout(timer);
 
       if (!response.ok) {
         throw new Error(`crt.sh responded with HTTP status ${response.status}`);
@@ -78,7 +73,7 @@ export class CtLogsClient {
         subdomainsDiscovered,
       };
     } catch (err: any) {
-      clearTimeout(timer);
+      const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
       return {
         domain: cleanDomain,
         totalFound: 0,
@@ -87,7 +82,7 @@ export class CtLogsClient {
         subdomainsDiscovered: [],
         queriedAt: Date.now(),
         provider: 'crt.sh',
-        error: err?.message || 'Certificate Transparency lookup failed',
+        error: isTimeout ? 'Request timed out' : (err?.message || 'Certificate Transparency lookup failed'),
       };
     }
   }

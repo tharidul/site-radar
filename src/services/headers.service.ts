@@ -232,9 +232,9 @@ export class HeadersService {
         name: 'Strict-Transport-Security',
         severity: 'high',
         title: 'Missing HSTS (HTTP Strict Transport Security)',
-        description: 'Without HSTS, initial connections may be vulnerable to SSL-stripping and man-in-the-middle attacks.',
-        recommendation: 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains; preload',
-        exampleValue: 'max-age=31536000; includeSubDomains',
+        description: 'Enforces encrypted HTTPS connections on all requests and protects against SSL-stripping attacks.',
+        recommendation: 'Add HSTS to enforce HTTPS on all current and future subdomains.',
+        exampleValue: 'max-age=31536000; includeSubDomains; preload',
       });
     }
 
@@ -243,8 +243,8 @@ export class HeadersService {
         name: 'Content-Security-Policy',
         severity: 'high',
         title: 'Missing Content Security Policy (CSP)',
-        description: 'CSP provides critical defense-in-depth against Cross-Site Scripting (XSS), clickjacking, and packet sniffing.',
-        recommendation: 'Define a Content-Security-Policy directive restricting script-src, style-src, and object-src.',
+        description: 'Restricts script execution sources and resource origins, mitigating XSS and cross-site injection.',
+        recommendation: 'Declare trusted source origins for scripts, styles, and frames.',
         exampleValue: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;",
       });
     }
@@ -254,8 +254,8 @@ export class HeadersService {
         name: 'X-Content-Type-Options',
         severity: 'high',
         title: 'Missing X-Content-Type-Options: nosniff',
-        description: 'Allows older browsers to MIME-sniff response bodies away from declared Content-Types, enabling executable payload execution.',
-        recommendation: 'Set X-Content-Type-Options: nosniff on all responses.',
+        description: 'Prevents browsers from MIME-sniffing file types away from the declared Content-Type.',
+        recommendation: 'Set nosniff on all responses so browsers do not execute non-script files as code.',
         exampleValue: 'nosniff',
       });
     }
@@ -265,8 +265,8 @@ export class HeadersService {
         name: 'X-Frame-Options',
         severity: 'medium',
         title: 'Missing Frame Ancestors / Clickjacking Protection',
-        description: 'The page can be embedded inside external iframes, leaving users vulnerable to clickjacking attacks.',
-        recommendation: 'Set X-Frame-Options: SAMEORIGIN or CSP frame-ancestors directive.',
+        description: 'Blocks unauthorized external sites from embedding this page in iframes, preventing clickjacking.',
+        recommendation: 'Set X-Frame-Options: SAMEORIGIN or CSP frame-ancestors to control iframe embedding.',
         exampleValue: 'SAMEORIGIN',
       });
     }
@@ -276,8 +276,8 @@ export class HeadersService {
         name: 'Referrer-Policy',
         severity: 'medium',
         title: 'Missing Referrer-Policy',
-        description: 'Without an explicit Referrer-Policy, full sensitive URLs (including tokens or search queries) may leak in the Referer header to external destinations.',
-        recommendation: 'Set Referrer-Policy: strict-origin-when-cross-origin',
+        description: 'Controls how much referrer information is sent when users navigate to external links.',
+        recommendation: 'Send full URL to same-origin and only the origin domain to external HTTPS links.',
         exampleValue: 'strict-origin-when-cross-origin',
       });
     }
@@ -287,8 +287,8 @@ export class HeadersService {
         name: 'Permissions-Policy',
         severity: 'low',
         title: 'Missing Permissions-Policy',
-        description: 'Does not explicitly disable unused sensitive browser APIs like camera, microphone, or geolocation.',
-        recommendation: 'Add Permissions-Policy: camera=(), microphone=(), geolocation=()',
+        description: 'Disables access to unused device hardware APIs such as camera, microphone, and geolocation.',
+        recommendation: 'Explicitly deny unused browser device permissions.',
         exampleValue: 'camera=(), microphone=(), geolocation=()',
       });
     }
@@ -312,19 +312,21 @@ export class HeadersService {
     }
 
     const server = headers['server'];
-    if (server && (/\d+\.\d+/.test(server) || /ubuntu|debian|centos/i.test(server))) {
+    if (server && (/\d+\.\d+/.test(server) || /ubuntu|debian|centos|apache|nginx/i.test(server))) {
       leaks.push({
         name: 'Server',
         value: server,
         risk: 'Reveals operating system or precise server software version numbers.',
-        recommendation: 'Suppress verbose version details in server configuration.',
+        recommendation: 'Suppress verbose version details in server configuration (e.g. ServerTokens Prod in Apache, server_tokens off in Nginx).',
       });
     }
 
-    if (headers['x-aspnet-version']) {
+    const aspNetVal = headers['x-aspnet-version'] || headers['x-aspnetmvc-version'];
+    if (aspNetVal) {
+      const name = headers['x-aspnetmvc-version'] ? 'X-AspNetMvc-Version' : 'X-AspNet-Version';
       leaks.push({
-        name: 'X-AspNet-Version',
-        value: headers['x-aspnet-version'],
+        name,
+        value: aspNetVal,
         risk: 'Exposes ASP.NET framework version.',
         recommendation: 'Disable enableVersionHeader in web.config.',
       });

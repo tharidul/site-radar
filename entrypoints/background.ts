@@ -4,7 +4,7 @@ import { MESSAGE_CHANNELS } from '../src/types/messaging';
 import { isInternalExtensionSender, messageBus } from '../src/messaging/bus';
 import { inspectionOrchestrator } from '../src/core/orchestrator';
 import { consentManager } from '../src/intelligence';
-import { BadgeService } from '../src/services/badge.service';
+import { BadgeService, networkCaptureService } from '../src/services';
 import { getBrowserAdapter } from '../src/browser/adapters';
 import {
   clearPendingPermissionScan,
@@ -107,6 +107,7 @@ function isAuthorizedBackgroundSender(sender?: chrome.runtime.MessageSender | nu
 
 export default defineBackground(() => {
   const api = getWebExtApi();
+  networkCaptureService.init(api);
   void consentManager.ensureLoaded();
   void ensureEphemeralBrowserSessionPermissions(getBrowserAdapter());
 
@@ -153,10 +154,16 @@ export default defineBackground(() => {
     const mergedLimits = { ...storedLimits, ...payloadLimits };
     const crawlLimits = Object.keys(mergedLimits).length > 0 ? mergedLimits : undefined;
 
+    const networkHeaders =
+      typeof params.tabId === 'number'
+        ? networkCaptureService.getCapturedHeaders(params.tabId)
+        : undefined;
+
     const options = {
       crawlLimits,
       externalConsent: params.externalConsent as any,
       refreshPage: params.refreshPage,
+      networkHeaders,
     };
 
     const inspectionPromise = inspectionOrchestrator.startInspection(params.mode, params.tabId, options);
@@ -313,6 +320,7 @@ export default defineBackground(() => {
       }
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
+      networkCaptureService.clear();
       return { success: true };
     },
     { requireInternalSender: true },
@@ -350,6 +358,7 @@ export default defineBackground(() => {
     api.runtime.onStartup.addListener(() => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
+      networkCaptureService.clear();
       BadgeService.clear();
       void resetGrantedOriginPermissionsOnStartup(getBrowserAdapter());
     });
@@ -380,6 +389,7 @@ export default defineBackground(() => {
 
   if (api?.tabs?.onRemoved) {
     api.tabs.onRemoved.addListener((tabId: number) => {
+      networkCaptureService.removeTab(tabId);
       if (badgedTabIds.delete(tabId)) {
         BadgeService.clear(tabId);
       }
@@ -390,6 +400,7 @@ export default defineBackground(() => {
     api.runtime.onInstalled.addListener((details: chrome.runtime.InstalledDetails) => {
       badgedTabIds.clear();
       inspectionOrchestrator.clearSessions();
+      networkCaptureService.clear();
       void resetGrantedOriginPermissionsOnStartup(getBrowserAdapter());
 
       // On first install, open the onboarding & MCP welcome tab

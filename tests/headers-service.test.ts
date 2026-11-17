@@ -79,6 +79,9 @@ describe('HeadersService', () => {
     expect(result.rawHeadersText).toContain('content-type: text/html');
     expect(result.rawHeadersText).toContain('server: nginx');
     expect(result.statusCode).toBe(200);
+    expect(result.leaks).toHaveLength(1);
+    expect(result.leaks[0]?.name).toBe('Server');
+    expect(result.categorizedHeaders.find((h) => h.name.toLowerCase() === 'server')?.status).toBe('leak');
   });
 });
 

@@ -13,6 +13,7 @@ import type {
   ImageItem,
 } from '@/types/inspection';
 import { openExtensionTab } from '../ext-api';
+import { TechIcon } from './TechIcon';
 
 interface ResourcesViewProps {
   inspection: WebsiteInspection;
@@ -148,7 +149,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           : filteredOrigins.length;
 
   return (
-    <div className="p-4 space-y-3.5 bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
+    <div className="p-4 space-y-3.5 bg-app-bg dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 select-none">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100">
@@ -169,20 +170,20 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           }}
           className={`rounded-md p-3 text-center transition-colors duration-100 cursor-pointer ${
             activeTab === 'scripts'
-              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] border border-transparent'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-accent border border-transparent'
               : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800'
           }`}
           title="Click to view loaded scripts"
         >
           <FileCode
-            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'scripts' ? 'text-[#152E40] dark:text-[#CEFF52]' : 'text-zinc-500 dark:text-zinc-400'}`}
+            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'scripts' ? 'text-accent' : 'text-zinc-500 dark:text-zinc-400'}`}
           />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {scriptCount}
           </div>
           <div
             className={`text-xs font-semibold ${
-              activeTab === 'scripts' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
+              activeTab === 'scripts' ? 'text-accent font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
             Scripts
@@ -197,13 +198,13 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           }}
           className={`rounded-md p-3 text-center transition-colors duration-100 cursor-pointer ${
             activeTab === 'stylesheets'
-              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] border border-transparent'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-accent border border-transparent'
               : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800'
           }`}
           title="Click to view loaded stylesheets"
         >
           <FileSpreadsheet
-            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'stylesheets' ? 'text-[#152E40] dark:text-[#CEFF52]' : 'text-zinc-500 dark:text-zinc-400'}`}
+            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'stylesheets' ? 'text-accent' : 'text-zinc-500 dark:text-zinc-400'}`}
           />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {stylesheetCount}
@@ -211,7 +212,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           <div
             className={`text-xs font-semibold ${
               activeTab === 'stylesheets'
-                ? 'text-[#152E40] dark:text-[#CEFF52] font-bold'
+                ? 'text-accent font-bold'
                 : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
@@ -227,20 +228,20 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           }}
           className={`rounded-md p-3 text-center transition-colors duration-100 cursor-pointer ${
             activeTab === 'images'
-              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] border border-transparent'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-accent border border-transparent'
               : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800'
           }`}
           title="Click to view image assets"
         >
           <ImageIcon
-            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'images' ? 'text-[#152E40] dark:text-[#CEFF52]' : 'text-zinc-500 dark:text-zinc-400'}`}
+            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'images' ? 'text-accent' : 'text-zinc-500 dark:text-zinc-400'}`}
           />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {imageCount}
           </div>
           <div
             className={`text-xs font-semibold ${
-              activeTab === 'images' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
+              activeTab === 'images' ? 'text-accent font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
             Images
@@ -255,20 +256,20 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
           }}
           className={`rounded-md p-3 text-center transition-colors duration-100 cursor-pointer ${
             activeTab === 'origins'
-              ? 'bg-white dark:bg-zinc-900 ring-2 ring-[#CEFF52] border border-transparent'
+              ? 'bg-white dark:bg-zinc-900 ring-2 ring-accent border border-transparent'
               : 'bg-white dark:bg-zinc-900 hover:bg-zinc-100 dark:hover:bg-zinc-800 border border-zinc-200/80 dark:border-zinc-800'
           }`}
           title="Click to view third-party origins"
         >
           <Globe
-            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'origins' ? 'text-[#152E40] dark:text-[#CEFF52]' : 'text-zinc-500 dark:text-zinc-400'}`}
+            className={`w-4 h-4 mx-auto mb-1 ${activeTab === 'origins' ? 'text-accent' : 'text-zinc-500 dark:text-zinc-400'}`}
           />
           <div className="text-base font-extrabold text-zinc-900 dark:text-zinc-100 tabular-nums">
             {origins.length}
           </div>
           <div
             className={`text-xs font-semibold ${
-              activeTab === 'origins' ? 'text-[#152E40] dark:text-[#CEFF52] font-bold' : 'text-zinc-600 dark:text-zinc-400'
+              activeTab === 'origins' ? 'text-accent font-bold' : 'text-zinc-600 dark:text-zinc-400'
             }`}
           >
             Origins
@@ -279,10 +280,10 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
       <div className="rounded-md bg-white dark:bg-zinc-900 p-3.5 border border-zinc-200/80 dark:border-zinc-800 space-y-3">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            {activeTab === 'scripts' && <FileCode className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />}
-            {activeTab === 'stylesheets' && <FileSpreadsheet className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />}
-            {activeTab === 'images' && <ImageIcon className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />}
-            {activeTab === 'origins' && <Globe className="w-4 h-4 text-[#152E40] dark:text-[#CEFF52]" />}
+            {activeTab === 'scripts' && <FileCode className="w-4 h-4 text-accent" />}
+            {activeTab === 'stylesheets' && <FileSpreadsheet className="w-4 h-4 text-accent" />}
+            {activeTab === 'images' && <ImageIcon className="w-4 h-4 text-accent" />}
+            {activeTab === 'origins' && <Globe className="w-4 h-4 text-accent" />}
             <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100">
               {activeTab === 'scripts' && `Loaded Scripts (${filteredScripts.length})`}
               {activeTab === 'stylesheets' && `Stylesheets & CSS (${filteredStylesheets.length})`}
@@ -298,7 +299,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Filter ${activeTab}...`}
-              className="w-full pl-8 pr-2.5 py-1 text-xs rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-[#CEFF52]"
+              className="w-full pl-8 pr-2.5 py-1 text-xs rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200/80 dark:border-zinc-700/80 text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 focus:outline-none focus:ring-1 focus:ring-accent"
             />
           </div>
         </div>
@@ -322,38 +323,38 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <span
                       className={`font-mono text-xs text-zinc-800 dark:text-zinc-200 truncate flex items-center gap-1.5 ${
-                        s.src ? 'group-hover:text-[#152E40] dark:group-hover:text-[#CEFF52] transition-colors' : ''
+                        s.src ? 'group-hover:text-accent transition-colors' : ''
                       }`}
                       title={s.src || 'Inline Script'}
                     >
                       <span>{s.src ? getFilenameOrTruncated(s.src) : '<inline script>'}</span>
                       {s.src && (
-                        <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <ExternalLink className="w-3 h-3 text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       )}
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       {s.isRenderBlocking && (
-                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
+                        <span className="text-2xs font-medium px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200">
                           blocking
                         </span>
                       )}
                       {s.isAsync && (
-                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           async
                         </span>
                       )}
                       {s.isDefer && (
-                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           defer
                         </span>
                       )}
                       {s.isModule && (
-                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           module
                         </span>
                       )}
                       {s.hasSri && (
-                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                        <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-accent/15 text-accent">
                           SRI
                         </span>
                       )}
@@ -387,28 +388,28 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <span
                       className={`font-mono text-xs text-zinc-800 dark:text-zinc-200 truncate flex items-center gap-1.5 ${
-                        sheet.href ? 'group-hover:text-[#152E40] dark:group-hover:text-[#CEFF52] transition-colors' : ''
+                        sheet.href ? 'group-hover:text-accent transition-colors' : ''
                       }`}
                       title={sheet.href || 'Inline Style'}
                     >
                       <span>{sheet.href ? getFilenameOrTruncated(sheet.href) : '<inline style>'}</span>
                       {sheet.href && (
-                        <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <ExternalLink className="w-3 h-3 text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       )}
                     </span>
                     <div className="flex items-center gap-1 shrink-0">
                       {sheet.isExternal && (
-                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs font-medium px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           external
                         </span>
                       )}
                       {sheet.media && (
-                        <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                        <span className="text-2xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                           {sheet.media}
                         </span>
                       )}
                       {sheet.hasSri && (
-                        <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                        <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-accent/15 text-accent">
                           SRI
                         </span>
                       )}
@@ -453,34 +454,34 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                   <div className="flex-1 min-w-0 flex flex-col gap-0.5">
                     <div className="flex items-center justify-between gap-2 min-w-0">
                       <span
-                        className="font-mono text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-[#152E40] dark:group-hover:text-[#CEFF52] transition-colors truncate flex items-center gap-1.5"
+                        className="font-mono text-xs text-zinc-800 dark:text-zinc-200 group-hover:text-accent transition-colors truncate flex items-center gap-1.5"
                         title={img.src}
                       >
                         <span>{getFilenameOrTruncated(img.src)}</span>
-                        <ExternalLink className="w-3 h-3 text-[#152E40] dark:text-[#CEFF52] opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+                        <ExternalLink className="w-3 h-3 text-accent opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                       </span>
                       <div className="flex items-center gap-1 shrink-0">
                         {img.format && (
-                          <span className="text-2xs font-mono uppercase px-1.5 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
+                          <span className="text-2xs uppercase px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 font-medium">
                             {img.format}
                           </span>
                         )}
                         {img.width && img.height && (
-                          <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
+                          <span className="text-2xs tabular-nums px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-500 dark:text-zinc-400">
                             {img.width}×{img.height}
                           </span>
                         )}
                         {img.isLazy && (
-                          <span className="text-2xs font-mono px-1 py-0.2 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
+                          <span className="text-2xs px-1.5 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400">
                             lazy
                           </span>
                         )}
                         {!img.hasAlt ? (
-                          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
+                          <span className="text-2xs font-medium px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300">
                             no alt
                           </span>
                         ) : (
-                          <span className="text-2xs font-semibold px-1.5 py-0.2 rounded bg-[#CEFF52]/15 text-[#152E40] dark:text-[#CEFF52]">
+                          <span className="text-2xs font-semibold px-1.5 py-0.5 rounded bg-accent/15 text-accent">
                             alt
                           </span>
                         )}
@@ -513,7 +514,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                     key={idx}
                     type="button"
                     onClick={() => openResourceUrl(`https://${origin}`)}
-                    className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono hover:bg-[#CEFF52]/15 hover:text-[#152E40] dark:hover:text-[#CEFF52] hover:border-[#CEFF52]/30 transition-colors duration-100 cursor-pointer border border-transparent"
+                    className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-md bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 font-mono hover:bg-accent/15 hover:text-accent hover:border-accent/30 transition-colors duration-100 cursor-pointer border border-transparent"
                     title={`Open https://${origin} in new tab`}
                   >
                     <span>{origin}</span>
@@ -548,7 +549,7 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
         <div className="rounded-md bg-white dark:bg-zinc-900 p-4 border border-zinc-200/80 dark:border-zinc-800 space-y-2.5">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-bold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <Cpu className="w-3.5 h-3.5 text-[#152E40] dark:text-[#CEFF52]" />
+              <Cpu className="w-3.5 h-3.5 text-accent" />
               <span>Detected Frontend Frameworks &amp; Technologies</span>
             </h4>
             <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium tabular-nums">
@@ -572,11 +573,14 @@ export const ResourcesView: React.FC<ResourcesViewProps> = ({ inspection }) => {
                 title={tech.evidence ? `Detected via: ${tech.evidence}` : undefined}
               >
                 <div className="flex items-center justify-between gap-1.5 min-w-0">
-                  <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 truncate">
-                    {tech.name}
-                  </span>
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <TechIcon name={tech.name} className="w-3.5 h-3.5 shrink-0" />
+                    <span className="font-semibold text-xs text-zinc-900 dark:text-zinc-100 truncate">
+                      {tech.name}
+                    </span>
+                  </div>
                   {tech.version && (
-                    <span className="shrink-0 text-2xs font-mono font-medium px-1.5 py-0.2 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
+                    <span className="shrink-0 text-2xs font-medium px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-zinc-700/60 text-zinc-800 dark:text-zinc-300">
                       v{tech.version}
                     </span>
                   )}

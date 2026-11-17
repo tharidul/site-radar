@@ -159,17 +159,17 @@ class TabErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundary
     if (this.state.hasError) {
       return (
         <div className="p-8 text-center space-y-3">
-          <div className="text-[#152E40] dark:text-[#CEFF52] font-bold text-sm">Failed to render this view</div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400 max-w-sm mx-auto font-mono">
+          <div className="text-accent font-bold text-sm">Failed to render this view</div>
+          <code className="block p-2 rounded-md bg-zinc-100 dark:bg-zinc-800 text-2xs text-zinc-600 dark:text-zinc-400 max-w-sm mx-auto font-mono break-all text-left">
             {this.state.error?.message || 'An unexpected rendering error occurred.'}
-          </p>
+          </code>
           <button
             type="button"
             onClick={() => {
               this.setState({ hasError: false, error: undefined });
               this.props.fallbackTab?.();
             }}
-            className="px-3 py-1.5 rounded-lg bg-[#CEFF52] text-[#152E40] text-xs font-bold hover:bg-[#bbf03e] transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-lg bg-accent text-accent-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
           >
             Back to Overview
           </button>
@@ -747,7 +747,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         isSidepanel
           ? 'h-screen w-full min-w-0 rounded-none'
           : 'h-[600px] w-[580px] rounded-none'
-      } bg-[#f8f8fa] dark:bg-zinc-950 text-zinc-900 dark:text-zinc-100 font-sans select-none overflow-hidden ${theme}`}
+      } bg-app-bg text-app-fg font-sans select-none overflow-hidden ${theme}`}
     >
       <div className="shrink-0">
         <Header
@@ -803,9 +803,9 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         )}
 
         {scanStatus === 'cancelled' && (
-          <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
+          <div className="border-b border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs flex items-center justify-between text-zinc-800 dark:text-zinc-200">
             <span className="text-zinc-900 dark:text-zinc-100 font-medium">
-              <span className="text-[#CEFF52] font-bold mr-1.5">•</span>
+              <span className="text-accent font-bold mr-1.5">•</span>
               Inspection was cancelled.
             </span>
             <button
@@ -814,7 +814,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 setScanStatus('idle');
                 setActiveDashboardTab('overview');
               }}
-              className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
+              className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-accent cursor-pointer"
             >
               Back to Launcher
             </button>
@@ -822,9 +822,9 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
         )}
 
         {scanStatus === 'failed' && (
-          <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
+          <div className="border-b border-zinc-200/80 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 p-3 text-xs text-zinc-800 dark:text-zinc-200 space-y-1">
             <div className="font-semibold text-zinc-900 dark:text-zinc-100 flex items-center gap-1.5">
-              <span className="text-[#CEFF52] font-bold">•</span>
+              <span className="text-accent font-bold">•</span>
               <span>Inspection Failed</span>
             </div>
             <p className="text-xs text-zinc-600 dark:text-zinc-400">{errorMessage || 'An unknown error occurred.'}</p>
@@ -834,7 +834,7 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 setScanStatus('idle');
                 setActiveDashboardTab('overview');
               }}
-              className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:underline cursor-pointer"
+              className="mt-1 text-xs font-semibold text-zinc-700 dark:text-zinc-300 hover:text-accent cursor-pointer"
             >
               Try Again
             </button>
@@ -877,19 +877,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
                 scores={inspection.scores}
               />
             ) : (
-              <div className="p-8 text-center space-y-3">
-                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">No findings collected yet</div>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  Run an inspection from the Overview tab to detect security, SEO, performance, and accessibility issues.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('overview')}
-                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Go to Overview
-                </button>
-              </div>
+              <EmptyTabState
+                title="No findings collected yet"
+                onGoToOverview={() => setActiveDashboardTab('overview')}
+              />
             )
           )}
 
@@ -897,19 +888,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             inspection ? (
               <HeadersView inspection={inspection} />
             ) : (
-              <div className="p-8 text-center space-y-3">
-                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">HTTP Response Headers</div>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  Run an inspection from the Overview tab to inspect raw server response headers, security directives, and cURL commands.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('overview')}
-                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Go to Overview
-                </button>
-              </div>
+              <EmptyTabState
+                title="HTTP Response Headers"
+                onGoToOverview={() => setActiveDashboardTab('overview')}
+              />
             )
           )}
 
@@ -917,19 +899,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             inspection ? (
               <SocialPreviewView inspection={inspection} />
             ) : (
-              <div className="p-8 text-center space-y-3">
-                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Social Media &amp; Search Preview</div>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  Run an inspection from the Overview tab to view live previews of Twitter/X cards, Facebook/LinkedIn feeds, and Google search snippets.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('overview')}
-                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Go to Overview
-                </button>
-              </div>
+              <EmptyTabState
+                title="Social Media & Search Preview"
+                onGoToOverview={() => setActiveDashboardTab('overview')}
+              />
             )
           )}
 
@@ -937,19 +910,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             inspection ? (
               <ModuleAccordions modules={inspection.modules as any} />
             ) : (
-              <div className="p-8 text-center space-y-3">
-                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Rules &amp; Standards</div>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  Run an audit from the Overview tab to view evaluated rules and specifications.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('overview')}
-                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Go to Overview
-                </button>
-              </div>
+              <EmptyTabState
+                title="Rules & Standards"
+                onGoToOverview={() => setActiveDashboardTab('overview')}
+              />
             )
           )}
 
@@ -957,19 +921,10 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
             inspection ? (
               <ResourcesView inspection={inspection} />
             ) : (
-              <div className="p-8 text-center space-y-3">
-                <div className="text-xs font-bold text-zinc-700 dark:text-zinc-300">Resource Inventory</div>
-                <p className="text-xs text-zinc-500 max-w-xs mx-auto">
-                  Run an audit from the Overview tab to inspect network payloads, scripts, and stylesheets.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveDashboardTab('overview')}
-                  className="px-3 py-1.5 rounded-md bg-[#152E40] dark:bg-[#CEFF52] text-white dark:text-[#152E40] text-xs font-bold hover:opacity-90 cursor-pointer"
-                >
-                  Go to Overview
-                </button>
-              </div>
+              <EmptyTabState
+                title="Resource Inventory"
+                onGoToOverview={() => setActiveDashboardTab('overview')}
+              />
             )
           )}
 
@@ -984,6 +939,30 @@ export function App({ isSidepanel: propIsSidepanel }: { isSidepanel?: boolean } 
           )}
         </TabErrorBoundary>
       </main>
+    </div>
+  );
+}
+
+function EmptyTabState({
+  title,
+  onGoToOverview,
+}: {
+  title: string;
+  onGoToOverview: () => void;
+}) {
+  return (
+    <div className="p-8 text-center space-y-2.5">
+      <div className="text-xs font-semibold text-zinc-700 dark:text-zinc-300">{title}</div>
+      <p className="text-xs text-zinc-500 dark:text-zinc-400">
+        Run an audit from the Overview tab to populate this view.
+      </p>
+      <button
+        type="button"
+        onClick={onGoToOverview}
+        className="px-3 py-1.5 rounded-md bg-accent text-accent-fg text-xs font-semibold hover:opacity-90 transition-opacity cursor-pointer"
+      >
+        Go to Overview
+      </button>
     </div>
   );
 }

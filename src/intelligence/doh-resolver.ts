@@ -71,19 +71,14 @@ export class DohResolver {
     url.searchParams.set('name', cleanDomain);
     url.searchParams.set('type', String(typeNum));
 
-    const timeoutCtrl = new AbortController();
-    const timer = setTimeout(() => timeoutCtrl.abort(), this.timeoutMs);
-
     try {
       const response = await fetch(url.toString(), {
         method: 'GET',
         headers: {
           Accept: 'application/dns-json',
         },
-        signal: timeoutCtrl.signal,
+        signal: AbortSignal.timeout(this.timeoutMs),
       });
-
-      clearTimeout(timer);
 
       if (!response.ok) {
         throw new Error(`DoH server responded with HTTP status ${response.status}`);
@@ -129,7 +124,7 @@ export class DohResolver {
         dnssecValid: isDnssecValidated,
       };
     } catch (err: any) {
-      clearTimeout(timer);
+      const isTimeout = err?.name === 'TimeoutError' || err?.name === 'AbortError';
       return {
         domain: cleanDomain,
         resolver: this.endpoint,
@@ -137,7 +132,7 @@ export class DohResolver {
         queriedAt: Date.now(),
         responseCode: 2,
         status: 2,
-        error: err?.message || 'DoH lookup failed',
+        error: isTimeout ? 'Request timed out' : (err?.message || 'DoH lookup failed'),
       };
     }
   }
